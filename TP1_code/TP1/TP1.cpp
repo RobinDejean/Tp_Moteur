@@ -76,9 +76,23 @@ struct Mesh{
 Mesh terrain;
 
 
+struct Node{
+    Mesh mesh;
+    Node *parent;
+    glm::mat4 transformation;
+    Node(){
+        transformation = glm::mat4();
+    }
+};
+
+struct SceneGraph{
+    Node racine;
+};
+
+
 /*******************************************************************************/
 
-void framebuffer(Mesh &mesh){
+void world(Mesh &mesh){
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
     mesh.triangles.clear();
@@ -114,14 +128,19 @@ void framebuffer(Mesh &mesh){
             mesh.indices.push_back((j + 1) * longueur + i + 1);
         }
     }
+}
+
+
+void framebuffer(){
+    world(terrain);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), mesh.indexed_vertices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, mesh.uvs.size() * sizeof(glm::vec2), mesh.uvs.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data(), GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data(), GL_DYNAMIC_DRAW);
 }
 
 
@@ -200,7 +219,7 @@ int main( void )
     
     heightMap.load("Assets/Heightmap_Mountain.pgm");
     
-    framebuffer(terrain);
+    framebuffer();
     std::cout << terrain.indexed_vertices[0][0] << std::endl;
     std::cout << terrain.indices.size() << std::endl;
     std::cout << terrain.uvs.size() << std::endl;
@@ -415,7 +434,7 @@ void processInput(GLFWwindow *window)
         if (longueur < 506 && hauteur < 506){
             longueur += 5;
             hauteur += 5;
-            framebuffer(terrain);
+            framebuffer();
         }
     }
     if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || 
@@ -423,7 +442,7 @@ void processInput(GLFWwindow *window)
         if (longueur > 6 && hauteur > 6){
             longueur -= 5   ;
             hauteur -= 5;
-            framebuffer(terrain);
+            framebuffer();
             
         }
     }
