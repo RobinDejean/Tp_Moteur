@@ -38,7 +38,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-glm::vec3 camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
+glm::vec3 camera_position   = glm::vec3(0.0f, 50.8f,  0.f);
 glm::vec3 camera_target = glm::vec3(1.f, 0.8f, 0.f);
 glm::vec3 camera_up    = glm::vec3(0.f,1.0f,  0.f);
 glm::vec3 camera_front = glm::normalize(camera_target - camera_position);
@@ -138,16 +138,11 @@ void openOBJ(const std::string& filename, Mesh& mesh)
         // Face
         else if (prefix == "f")
         {
-            std::vector<unsigned int> triangle;
+            std::vector<unsigned int> faceIndices;
 
-            for (int i = 0; i < 3; ++i)
+            std::string vertexData;
+            while (ss >> vertexData)
             {
-                std::string vertexData;
-                ss >> vertexData;
-
-                if (vertexData.empty())
-                    continue;
-
                 std::stringstream vs(vertexData);
                 std::string vStr, vtStr, vnStr;
 
@@ -156,19 +151,13 @@ void openOBJ(const std::string& filename, Mesh& mesh)
                 std::getline(vs, vnStr, '/');
 
                 unsigned int vIndex = std::stoi(vStr);
-
                 unsigned int uvIndex = 0;
+
                 if (!vtStr.empty())
                     uvIndex = std::stoi(vtStr);
 
-                if (vIndex == 0 || vIndex > temp_vertices.size())
-                {
-                    std::cout << "Vertex index out of range!" << std::endl;
-                    continue;
-                }
-
                 glm::vec3 position = temp_vertices[vIndex - 1];
-                glm::vec2 uv(0.0f, 0.0f);
+                glm::vec2 uv(0.0f);
 
                 if (uvIndex > 0 && uvIndex <= temp_uvs.size())
                     uv = temp_uvs[uvIndex - 1];
@@ -177,12 +166,22 @@ void openOBJ(const std::string& filename, Mesh& mesh)
                 mesh.uvs.push_back(uv);
 
                 unsigned int newIndex = mesh.indexed_vertices.size() - 1;
-                mesh.indices.push_back(newIndex);
-                triangle.push_back(newIndex);
+                faceIndices.push_back(newIndex);
             }
 
-            if (triangle.size() == 3)
-                mesh.triangles.push_back(triangle);
+            // 🔥 Triangulation automatique (fan triangulation)
+            for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
+            {
+                mesh.indices.push_back(faceIndices[0]);
+                mesh.indices.push_back(faceIndices[i]);
+                mesh.indices.push_back(faceIndices[i + 1]);
+
+                mesh.triangles.push_back({
+                    faceIndices[0],
+                    faceIndices[i],
+                    faceIndices[i + 1]
+                });
+            }
         }
     }
 
@@ -297,7 +296,7 @@ int main( void )
     glDepthFunc(GL_LESS);
 
     // Cull triangles which normal is not towards the camera
-    //glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -490,7 +489,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             cameraSpeed = 2.5 * deltaTime;
             mode = 1;
             camera_target = glm::vec3(0.f, 0.f, 0.f);
-            camera_position   = glm::vec3(0.0f, 2.f,  -2.f);
+            camera_position   = glm::vec3(0.0f, 30.f,  -2.f);
             camera_up    = normalize(glm::vec3(0.f,-1.0f,  1.f));
         } else {
             mode = 0;
