@@ -38,7 +38,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-glm::vec3 camera_position   = glm::vec3(0.0f, 50.8f,  0.f);
+glm::vec3 camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
 glm::vec3 camera_target = glm::vec3(1.f, 0.8f, 0.f);
 glm::vec3 camera_up    = glm::vec3(0.f,1.0f,  0.f);
 glm::vec3 camera_front = glm::normalize(camera_target - camera_position);
@@ -75,14 +75,20 @@ struct Mesh{
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indices;
+
+    GLuint VAO = 0;
+    GLuint indexed_vertices_vbo = 0;
+    GLuint uvs_vbo = 0;
+    GLuint indices_vbo = 0;
 };
 
 Mesh terrain;
+Mesh boat;
 
 
 struct Node{
     Mesh mesh;
-    Node *parent;
+    std::vector<Node> enfants;
     glm::mat4 transformation;
     Node(){
         transformation = glm::mat4();
@@ -92,6 +98,8 @@ struct Node{
 struct SceneGraph{
     Node racine;
 };
+
+
 
 
 /*******************************************************************************/
@@ -188,6 +196,16 @@ void openOBJ(const std::string& filename, Mesh& mesh)
     file.close();
 }
 
+void clear(Mesh &mesh){
+    
+
+    glDeleteBuffers(1, &mesh.indexed_vertices_vbo);
+    glDeleteBuffers(1, &mesh.indices_vbo);
+    glDeleteBuffers(1, &mesh.uvs_vbo);
+    glDeleteVertexArrays(1, &mesh.VAO);
+    // glDeleteProgram(programID);
+}
+
 void world(Mesh &mesh){
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
@@ -226,19 +244,50 @@ void world(Mesh &mesh){
     }
 }
 
+void drawMesh(Mesh& mesh)
+{
+    glGenVertexArrays(1, &mesh.VAO);
+    glBindVertexArray(mesh.VAO);
+
+    glGenBuffers(1, &mesh.indexed_vertices_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.indexed_vertices_vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), mesh.indexed_vertices.data(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.indexed_vertices_vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glGenBuffers(1, &mesh.uvs_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.uvs_vbo);
+    glBufferData(GL_ARRAY_BUFFER, mesh.uvs.size() * sizeof(glm::vec2), mesh.uvs.data(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.uvs_vbo);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    glGenBuffers(1, &mesh.indices_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indices_vbo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+}
+
+void render(Mesh &mesh){
+    glBindVertexArray(mesh.VAO);
+
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(2);
+    glDrawElements(GL_TRIANGLES, mesh.indices.size(),GL_UNSIGNED_INT, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(2);
+}
 
 void framebuffer(){
-    //world(terrain);
-
-    openOBJ("Assets/airboat.obj", terrain);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data(), GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data(), GL_DYNAMIC_DRAW);
+    world(terrain);
+    clear(terrain);
+    drawMesh(terrain);
+    
+    render(terrain);
 }
 
 
@@ -258,6 +307,8 @@ int main( void )
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+
 
     // Open a window and create its OpenGL context
     window = glfwCreateWindow( 1024, 768, "TP1 - GLFW", NULL, NULL);
@@ -298,7 +349,7 @@ int main( void )
     // Cull triangles which normal is not towards the camera
     glDisable(GL_CULL_FACE);
 
-    GLuint VertexArrayID;
+    
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
@@ -317,33 +368,27 @@ int main( void )
     
     heightMap.load("Assets/Heightmap_Mountain.pgm");
     
-    framebuffer();
-    std::cout << terrain.indexed_vertices[0][0] << std::endl;
-    std::cout << terrain.indices.size() << std::endl;
-    std::cout << terrain.uvs.size() << std::endl;
-    
-    
 
     
     
 
-    // Load it into a VBO
+    // // Load it into a VBO
 
     
-    glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
+    // glGenBuffers(1, &vertexbuffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    // glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
 
-    // Generate a buffer for the indices as well
+    // // Generate a buffer for the indices as well
     
-    glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data() , GL_DYNAMIC_DRAW);
+    // glGenBuffers(1, &elementbuffer);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data() , GL_DYNAMIC_DRAW);
 
     
-    glGenBuffers(1,&uvbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data() , GL_DYNAMIC_DRAW);
+    // glGenBuffers(1,&uvbuffer);
+    // glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    // glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data() , GL_DYNAMIC_DRAW);
 
     GLuint TextureID1 = loadDDS("Assets/rock.dds");
     GLuint TextureUniform1 = glGetUniformLocation(programID,"myRockSampler");
@@ -358,6 +403,11 @@ int main( void )
     glUseProgram(programID);
     GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
 
+    world(terrain);
+    openOBJ("Assets/airboat.obj",boat);
+
+    drawMesh(terrain);
+    drawMesh(boat);
 
 
     // For speed computation
@@ -412,20 +462,20 @@ int main( void )
 
 
 
-        // 1rst attribute buffer : vertices
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                    0,                  // attribute
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    0,                  // stride
-                    (void*)0            // array buffer offset
-                    );
+        // // 1rst attribute buffer : vertices
+        // glEnableVertexAttribArray(0);
+        // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        // glVertexAttribPointer(
+        //             0,                  // attribute
+        //             3,                  // size
+        //             GL_FLOAT,           // type
+        //             GL_FALSE,           // normalized?
+        //             0,                  // stride
+        //             (void*)0            // array buffer offset
+        //             );
 
-        // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        // // Index buffer
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 
 
         // Texture
@@ -444,22 +494,25 @@ int main( void )
         // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
         // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-        // // UVs
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        // // // UVs
+        // glEnableVertexAttribArray(1);
+        // glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+        // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
 
         // Draw the triangles !
-        glDrawElements(
-                    GL_TRIANGLES,      // mode
-                    terrain.indices.size(),    // count
-                    GL_UNSIGNED_INT,   // type
-                    (void*)0           // element array buffer offset
-                    );
+        // glDrawElements(
+        //             GL_TRIANGLES,      // mode
+        //             terrain.indices.size(),    // count
+        //             GL_UNSIGNED_INT,   // type
+        //             (void*)0           // element array buffer offset
+        //             );
 
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        render(terrain);
+        render(boat);
+
+        // glDisableVertexAttribArray(0);
+        // glDisableVertexAttribArray(1);
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -470,10 +523,10 @@ int main( void )
            glfwWindowShouldClose(window) == 0 );
 
     // Cleanup VBO and shader
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteBuffers(1, &elementbuffer);
+    clear(boat);
+    clear(terrain);
+
     glDeleteProgram(programID);
-    glDeleteVertexArrays(1, &VertexArrayID);
 
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
