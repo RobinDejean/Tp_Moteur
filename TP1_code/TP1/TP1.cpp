@@ -43,10 +43,11 @@ int longueur = 256;
 int hauteur = 256;
 ImageBase heightMap;
 std::vector<unsigned int> indices; //Triangles concaténés dans une liste
-    std::vector<std::vector<unsigned int> > triangles;
-    std::vector<glm::vec3> indexed_vertices;
-    std::vector<glm::vec2> uvs;
-    GLuint vertexbuffer;
+
+std::vector<std::vector<unsigned int> > triangles;
+std::vector<glm::vec3> indexed_vertices;
+std::vector<glm::vec2> uvs;
+GLuint vertexbuffer;
 GLuint VertexArrayID;
 GLuint elementbuffer;
 GLuint uvbuffer;
@@ -54,6 +55,7 @@ GLuint uvbuffer;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 float cameraSpeed;
+
 
 int mode = 0;
 
@@ -64,13 +66,23 @@ float zoom = 1.;
 float theta = 1.;
 glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
 
+struct Mesh{
+    std::vector<std::vector<unsigned int> > triangles;
+    std::vector<glm::vec3> indexed_vertices;
+    std::vector<glm::vec2> uvs;
+    std::vector<unsigned int> indices;
+};
+
+Mesh terrain;
+
+
 /*******************************************************************************/
 
-void framebuffer(){
-    indexed_vertices.clear();
-    indices.clear();
-    triangles.clear();
-    uvs.clear();
+void framebuffer(Mesh &mesh){
+    mesh.indexed_vertices.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+    mesh.uvs.clear();
         for(unsigned int i = 0; i < longueur; i++){
         for(unsigned int j = 0; j < hauteur; j++){
             float y = (float)heightMap[j][i]/255.;
@@ -78,9 +90,9 @@ void framebuffer(){
             // if(i == 0 || i == longueur - 1 || j == 0 || j == hauteur - 1){
             //     y = 0.;
             // }
-            indexed_vertices.push_back(vec3(((float) i / longueur) - 0.5, y, ((float) j / hauteur) - 0.5));
+            mesh.indexed_vertices.push_back(vec3(((float) i / longueur) - 0.5, y, ((float) j / hauteur) - 0.5));
 
-            uvs.push_back(
+            mesh.uvs.push_back(
                 vec2((float)i / (longueur - 1),
                     (float)j / (hauteur - 1))
             );
@@ -89,27 +101,27 @@ void framebuffer(){
 
     for(unsigned int i = 0; i < longueur - 1; i++){
         for(unsigned int j = 0; j < hauteur - 1; j++){
-            triangles.push_back({j * longueur + i, j * longueur + i + 1, (j + 1) * longueur + i + 1});
+            mesh.triangles.push_back({j * longueur + i, j * longueur + i + 1, (j + 1) * longueur + i + 1});
 
-            indices.push_back(j * longueur + i);
-            indices.push_back(j * longueur + i + 1);
-            indices.push_back((j + 1) * longueur + i + 1);
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back(j * longueur + i + 1);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
 
-            triangles.push_back({j * longueur + i, (j + 1) * longueur + i, (j + 1) * longueur + i + 1});
+            mesh.triangles.push_back({j * longueur + i, (j + 1) * longueur + i, (j + 1) * longueur + i + 1});
             
-            indices.push_back(j * longueur + i);
-            indices.push_back((j + 1) * longueur + i);
-            indices.push_back((j + 1) * longueur + i + 1);
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
         }
     }
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), mesh.indexed_vertices.data(), GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.uvs.size() * sizeof(glm::vec2), mesh.uvs.data(), GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_DYNAMIC_DRAW);
 }
 
 
@@ -187,8 +199,11 @@ int main( void )
     //loadOFF(filename, indexed_vertices, indices, triangles );
     
     heightMap.load("Assets/Heightmap_Mountain.pgm");
-    framebuffer();
-
+    
+    framebuffer(terrain);
+    std::cout << terrain.indexed_vertices[0][0] << std::endl;
+    std::cout << terrain.indices.size() << std::endl;
+    std::cout << terrain.uvs.size() << std::endl;
     
     
 
@@ -200,18 +215,18 @@ int main( void )
     
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
 
     // Generate a buffer for the indices as well
     
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0] , GL_DYNAMIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data() , GL_DYNAMIC_DRAW);
 
     
     glGenBuffers(1,&uvbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0] , GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data() , GL_DYNAMIC_DRAW);
 
     GLuint TextureID1 = loadDDS("Assets/rock.dds");
     GLuint TextureUniform1 = glGetUniformLocation(programID,"myRockSampler");
@@ -321,7 +336,7 @@ int main( void )
         // Draw the triangles !
         glDrawElements(
                     GL_TRIANGLES,      // mode
-                    indices.size(),    // count
+                    terrain.indices.size(),    // count
                     GL_UNSIGNED_INT,   // type
                     (void*)0           // element array buffer offset
                     );
@@ -400,7 +415,7 @@ void processInput(GLFWwindow *window)
         if (longueur < 506 && hauteur < 506){
             longueur += 5;
             hauteur += 5;
-            framebuffer();
+            framebuffer(terrain);
         }
     }
     if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || 
@@ -408,7 +423,7 @@ void processInput(GLFWwindow *window)
         if (longueur > 6 && hauteur > 6){
             longueur -= 5   ;
             hauteur -= 5;
-            framebuffer();
+            framebuffer(terrain);
             
         }
     }
