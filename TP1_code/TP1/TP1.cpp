@@ -183,10 +183,10 @@ int main( void )
     
 
     //Chargement du fichier de maillage
-    std::string filename("chair.off");
+    std::string filename("Assets/chair.off");
     //loadOFF(filename, indexed_vertices, indices, triangles );
     
-    heightMap.load("Heightmap_Mountain.pgm");
+    heightMap.load("Assets/Heightmap_Mountain.pgm");
     framebuffer();
 
     
@@ -213,11 +213,11 @@ int main( void )
     glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
     glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), &uvs[0] , GL_DYNAMIC_DRAW);
 
-    GLuint TextureID1 = loadDDS("rock.dds");
+    GLuint TextureID1 = loadDDS("Assets/rock.dds");
     GLuint TextureUniform1 = glGetUniformLocation(programID,"myRockSampler");
-    GLuint TextureID2 = loadDDS("grass.dds");
+    GLuint TextureID2 = loadDDS("Assets/grass.dds");
     GLuint TextureUniform2 = glGetUniformLocation(programID,"myGrassSampler");
-    GLuint TextureID3 = loadDDS("snowrocks.dds");
+    GLuint TextureID3 = loadDDS("Assets/snowrocks.dds");
     GLuint TextureUniform3 = glGetUniformLocation(programID,"mySnowRocksSampler");
 
 

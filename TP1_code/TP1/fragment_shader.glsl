@@ -13,7 +13,8 @@ float rand(vec2 co){
         }
 void main(){
         
-        float r = rand(uv);
+        //float r = rand(uv);
+        float r = 0;
         if (position.y+r < 0.5) {
             color = texture(myGrassSampler,uv).rgb;
         } else if (position.y+r <0.7) {
