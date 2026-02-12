@@ -26,6 +26,10 @@ using namespace glm;
 #include "common/image_ppm.h"
 #include "common/ImageBase.h"
 #include <common/ImageBase.cpp>
+#include <sstream>
+#include <unordered_map>
+#include <fstream>
+#include <algorithm>
 
 void processInput(GLFWwindow *window);
 
@@ -92,6 +96,99 @@ struct SceneGraph{
 
 /*******************************************************************************/
 
+void openOBJ(const std::string& filename, Mesh& mesh)
+{
+    std::ifstream file(filename);
+    if (!file.is_open())
+    {
+        std::cout << "Cannot open " << filename << std::endl;
+        return;
+    }
+
+    mesh.indexed_vertices.clear();
+    mesh.uvs.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+
+    std::vector<glm::vec3> temp_vertices;
+    std::vector<glm::vec2> temp_uvs;
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string prefix;
+        ss >> prefix;
+
+        // Vertex position
+        if (prefix == "v")
+        {
+            glm::vec3 v;
+            ss >> v.x >> v.y >> v.z;
+            temp_vertices.push_back(v);
+        }
+        // Texture coordinates
+        else if (prefix == "vt")
+        {
+            glm::vec2 uv;
+            ss >> uv.x >> uv.y;
+            temp_uvs.push_back(uv);
+        }
+        // Face
+        else if (prefix == "f")
+        {
+            std::vector<unsigned int> triangle;
+
+            for (int i = 0; i < 3; ++i)
+            {
+                std::string vertexData;
+                ss >> vertexData;
+
+                if (vertexData.empty())
+                    continue;
+
+                std::stringstream vs(vertexData);
+                std::string vStr, vtStr, vnStr;
+
+                std::getline(vs, vStr, '/');
+                std::getline(vs, vtStr, '/');
+                std::getline(vs, vnStr, '/');
+
+                unsigned int vIndex = std::stoi(vStr);
+
+                unsigned int uvIndex = 0;
+                if (!vtStr.empty())
+                    uvIndex = std::stoi(vtStr);
+
+                if (vIndex == 0 || vIndex > temp_vertices.size())
+                {
+                    std::cout << "Vertex index out of range!" << std::endl;
+                    continue;
+                }
+
+                glm::vec3 position = temp_vertices[vIndex - 1];
+                glm::vec2 uv(0.0f, 0.0f);
+
+                if (uvIndex > 0 && uvIndex <= temp_uvs.size())
+                    uv = temp_uvs[uvIndex - 1];
+
+                mesh.indexed_vertices.push_back(position);
+                mesh.uvs.push_back(uv);
+
+                unsigned int newIndex = mesh.indexed_vertices.size() - 1;
+                mesh.indices.push_back(newIndex);
+                triangle.push_back(newIndex);
+            }
+
+            if (triangle.size() == 3)
+                mesh.triangles.push_back(triangle);
+        }
+    }
+
+    file.close();
+}
+
 void world(Mesh &mesh){
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
@@ -132,7 +229,9 @@ void world(Mesh &mesh){
 
 
 void framebuffer(){
-    world(terrain);
+    //world(terrain);
+
+    openOBJ("Assets/airboat.obj", terrain);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
 
