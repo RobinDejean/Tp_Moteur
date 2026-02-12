@@ -84,20 +84,32 @@ struct Mesh{
 
 Mesh terrain;
 Mesh boat;
+Mesh soleil;
+Mesh lune;
 
 
 struct Node{
-    Mesh mesh;
+    Mesh &mesh;
     std::vector<Node> enfants;
     glm::mat4 transformation;
     Node(){
         transformation = glm::mat4();
+        enfants = std::vector<Node>();
     }
 };
 
 struct SceneGraph{
     Node racine;
 };
+
+SceneGraph Planete;
+Node NodeSoleil;
+Planete.racine = NodeSoleil;
+
+Node NodeLune;
+NodeLune.mesh = lune;
+NodeSoleil.mesh = soleil;
+NodeSoleil.enfants.push_back(NodeLune);
 
 
 
@@ -206,6 +218,57 @@ void clear(Mesh &mesh){
     // glDeleteProgram(programID);
 }
 
+void sphere(Mesh &mesh, float radius, int nblignes)
+{
+    mesh.indexed_vertices.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+    mesh.uvs.clear();
+
+    // Génération des sommets
+    for (unsigned int j = 0; j <= nblignes; j++)
+    {
+        float v = (float)j / nblignes;
+        float theta = v * glm::pi<float>(); // latitude [0, PI]
+
+        for (unsigned int i = 0; i <= nblignes; i++)
+        {
+            float u = (float)i / nblignes;
+            float phi = u * glm::two_pi<float>(); // longitude [0, 2PI]
+
+            float x = radius * sin(theta) * cos(phi);
+            float y = radius * cos(theta);
+            float z = radius * sin(theta) * sin(phi);
+
+            mesh.indexed_vertices.push_back(glm::vec3(x, y, z));
+            mesh.uvs.push_back(glm::vec2(u, 1.0f - v));
+        }
+    }
+
+    // Génération des indices
+    for (unsigned int j = 0; j < nblignes; j++)
+    {
+        for (unsigned int i = 0; i < nblignes; i++)
+        {
+            unsigned int first  = j * (nblignes + 1) + i;
+            unsigned int second = first + nblignes + 1;
+
+            // Triangle 1
+            mesh.indices.push_back(first);
+            mesh.indices.push_back(second);
+            mesh.indices.push_back(first + 1);
+
+            // Triangle 2
+            mesh.indices.push_back(second);
+            mesh.indices.push_back(second + 1);
+            mesh.indices.push_back(first + 1);
+
+            mesh.triangles.push_back({ first, second, first + 1 });
+            mesh.triangles.push_back({ second, second + 1, first + 1 });
+        }
+    }
+}
+
 void world(Mesh &mesh){
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
@@ -288,6 +351,13 @@ void framebuffer(){
     drawMesh(terrain);
     
     render(terrain);
+}
+
+void SceneRender(Node node, glm::mat4 transformation){
+    Mesh tempMesh = node.mesh;
+    for (glm::vec3 v : tempMesh.indexed_vertices){
+        transformation * glm:vec4(v,1.);
+    }
 }
 
 
@@ -404,10 +474,14 @@ int main( void )
     GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
 
     world(terrain);
-    openOBJ("Assets/airboat.obj",boat);
+    //openOBJ("Assets/airboat.obj",boat);
+    sphere(soleil,0.5,20);
+    sphere(lune,0.1,20);
 
-    drawMesh(terrain);
-    drawMesh(boat);
+    //drawMesh(terrain);
+    //drawMesh(boat);
+    drawMesh(soleil);
+    drawMesh(lune);
 
 
     // For speed computation
@@ -508,8 +582,17 @@ int main( void )
         //             (void*)0           // element array buffer offset
         //             );
 
-        render(terrain);
-        render(boat);
+        //render(terrain);
+        //render(boat);
+
+        while(Planete.racine.enfants.size()!=0){
+            Planete.
+        }
+
+
+
+        render(soleil);
+        render(lune);
 
         // glDisableVertexAttribArray(0);
         // glDisableVertexAttribArray(1);
@@ -525,6 +608,8 @@ int main( void )
     // Cleanup VBO and shader
     clear(boat);
     clear(terrain);
+    clear(soleil);
+    clear(lune);
 
     glDeleteProgram(programID);
 
@@ -542,7 +627,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             cameraSpeed = 2.5 * deltaTime;
             mode = 1;
             camera_target = glm::vec3(0.f, 0.f, 0.f);
-            camera_position   = glm::vec3(0.0f, 30.f,  -2.f);
+            camera_position   = glm::vec3(0.0f, 3.f,  -2.f);
             camera_up    = normalize(glm::vec3(0.f,-1.0f,  1.f));
         } else {
             mode = 0;

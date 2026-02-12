@@ -1,4 +1,4 @@
-# Install script for directory: /home/e20220006292/Bureau/vscode/M1/moteur/tp/Tp_Moteur/TP1_code/external
+# Install script for directory: /home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/external
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/e20220006292/Bureau/vscode/M1/moteur/tp/Tp_Moteur/TP1_code/build/external/glfw-3.1.2/cmake_install.cmake")
+  include("/home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/build/external/glfw-3.1.2/cmake_install.cmake")
 
 endif()
 

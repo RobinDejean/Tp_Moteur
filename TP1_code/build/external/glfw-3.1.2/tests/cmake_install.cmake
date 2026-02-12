@@ -1,4 +1,4 @@
-# Install script for directory: /home/e20220006292/Bureau/vscode/M1/moteur/tp/Tp_Moteur/TP1_code/external/glfw-3.1.2/tests
+# Install script for directory: /home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/external/glfw-3.1.2/tests
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
