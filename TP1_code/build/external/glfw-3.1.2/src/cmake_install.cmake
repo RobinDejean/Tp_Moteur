@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/external/glfw-3.1.2/src
+# Install script for directory: /home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/external/glfw-3.1.2/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -42,11 +42,7 @@ if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/build/external/glfw-3.1.2/src/libglfw3.a")
-endif()
-
-if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/build/external/glfw-3.1.2/src/CMakeFiles/glfw.dir/install-cxx-module-bmi-noconfig.cmake" OPTIONAL)
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/build/external/glfw-3.1.2/src/libglfw3.a")
 endif()
 

@@ -1,17 +1,17 @@
 #!/bin/sh
 bindir=$(pwd)
-cd /mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/TP1/
+cd /home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/TP1/
 export 
 
 if test "x$1" = "x--debugger"; then
 	shift
-	if test "x" = "xYES"; then
+	if test "xYES" = "xYES"; then
 		echo "r  " > $bindir/gdbscript
 		echo "bt" >> $bindir/gdbscript
-		GDB_COMMAND-NOTFOUND -batch -command=$bindir/gdbscript  /mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/build/TP1 
+		/usr/bin/gdb -batch -command=$bindir/gdbscript --return-child-result /home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/build/TP1 
 	else
-		"/mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/build/TP1"  
+		"/home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/build/TP1"  
 	fi
 else
-	"/mnt/c/Users/robin/Desktop/M1/M1/S2/Moteur/TP1_code/build/TP1"  
+	"/home/e20210007648/M1/MoteurTP/Tp_Moteur/TP1_code/build/TP1"  
 fi
