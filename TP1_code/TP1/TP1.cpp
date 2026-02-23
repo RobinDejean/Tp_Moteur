@@ -31,54 +31,39 @@ using namespace glm;
 #include <fstream>
 #include <algorithm>
 
-void processInput(GLFWwindow *window);
-
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
-// camera
 glm::vec3 camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
 glm::vec3 camera_target = glm::vec3(1.f, 0.8f, 0.f);
 glm::vec3 camera_up    = glm::vec3(0.f,1.0f,  0.f);
 glm::vec3 camera_front = glm::normalize(camera_target - camera_position);
 
-int longueur = 256;
-int hauteur = 256;
-ImageBase heightMap;
-std::vector<unsigned int> indices; //Triangles concaténés dans une liste
-
-std::vector<std::vector<unsigned int> > triangles;
-std::vector<glm::vec3> indexed_vertices;
-std::vector<glm::vec2> uvs;
-GLuint vertexbuffer;
-GLuint VertexArrayID;
-GLuint elementbuffer;
-GLuint uvbuffer;
-// timing
-float deltaTime = 0.0f;	// time between current frame and last frame
-float lastFrame = 0.0f;
-float cameraSpeed;
 
 
 int mode = 0;
-
-//rotation
-
+float cameraSpeed;
 float angle = 0.;
 float zoom = 1.;
 float theta = 1.;
 glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
+
+
+float deltaTime = 0.0f; // Temps écoulé entre la frame actuelle et la précédente
+float lastFrame = 0.0f;
+
+int longueur = 512;
+int hauteur = 512;
+ImageBase heightMap;
 
 struct Mesh{
     std::vector<std::vector<unsigned int> > triangles;
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indices;
+    std::vector<float> noise;
 
     GLuint VAO = 0;
     GLuint indexed_vertices_vbo = 0;
     GLuint uvs_vbo = 0;
+    GLuint noise_vbo = 0;
     GLuint indices_vbo = 0;
 };
 
@@ -86,35 +71,41 @@ Mesh terrain;
 Mesh boat;
 Mesh soleil;
 Mesh lune;
-
+Mesh terre;
+Mesh mars;
 
 struct Node{
-    Mesh &mesh;
-    std::vector<Node> enfants;
+    Mesh* mesh;
+    std::vector<Node*> enfants;
     glm::mat4 transformation;
+    GLuint textureID;
+    int mode;
     Node(){
+        mesh = nullptr;
+        mode = 0;
+        textureID = 0;
         transformation = glm::mat4();
-        enfants = std::vector<Node>();
     }
 };
 
+
 struct SceneGraph{
-    Node racine;
+    Node* racine;
 };
 
 SceneGraph Planete;
 Node NodeSoleil;
-Planete.racine = NodeSoleil;
-
 Node NodeLune;
-NodeLune.mesh = lune;
-NodeSoleil.mesh = soleil;
-NodeSoleil.enfants.push_back(NodeLune);
+Node NodeTerrain;
+Node NodeTerre;
+Node NodeMars;
 
 
 
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow *window);
 
-/*******************************************************************************/
 
 void openOBJ(const std::string& filename, Mesh& mesh)
 {
@@ -189,7 +180,7 @@ void openOBJ(const std::string& filename, Mesh& mesh)
                 faceIndices.push_back(newIndex);
             }
 
-            // 🔥 Triangulation automatique (fan triangulation)
+            //  Triangulation automatique (fan triangulation)
             for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
             {
                 mesh.indices.push_back(faceIndices[0]);
@@ -208,22 +199,13 @@ void openOBJ(const std::string& filename, Mesh& mesh)
     file.close();
 }
 
-void clear(Mesh &mesh){
-    
-
-    glDeleteBuffers(1, &mesh.indexed_vertices_vbo);
-    glDeleteBuffers(1, &mesh.indices_vbo);
-    glDeleteBuffers(1, &mesh.uvs_vbo);
-    glDeleteVertexArrays(1, &mesh.VAO);
-    // glDeleteProgram(programID);
-}
-
 void sphere(Mesh &mesh, float radius, int nblignes)
 {
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
     mesh.triangles.clear();
     mesh.uvs.clear();
+    mesh.noise.clear();
 
     // Génération des sommets
     for (unsigned int j = 0; j <= nblignes; j++)
@@ -241,7 +223,8 @@ void sphere(Mesh &mesh, float radius, int nblignes)
             float z = radius * sin(theta) * sin(phi);
 
             mesh.indexed_vertices.push_back(glm::vec3(x, y, z));
-            mesh.uvs.push_back(glm::vec2(u, 1.0f - v));
+            mesh.uvs.push_back(glm::vec2(u,v));
+            mesh.noise.push_back(0.0f);
         }
     }
 
@@ -269,24 +252,99 @@ void sphere(Mesh &mesh, float radius, int nblignes)
     }
 }
 
+void setupMesh(Mesh& mesh) {
+    // On crée et on "bind" le VAO
+    glGenVertexArrays(1, &mesh.VAO);
+    glBindVertexArray(mesh.VAO);
+
+    // Création du VBO pour les positions
+    glGenBuffers(1, &mesh.indexed_vertices_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.indexed_vertices_vbo);
+    // on copie les positions
+    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), mesh.indexed_vertices.data(), GL_STATIC_DRAW);
+
+    // lecture VAO
+    glEnableVertexAttribArray(0);
+    // 0,3 = canal 0 vertex shader, 3 = nb float a lire
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    // creation ebo pour les indices
+    glGenBuffers(1, &mesh.indices_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indices_vbo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_STATIC_DRAW);
+
+    // creation uvs vbo
+    if (!mesh.uvs.empty()) {
+        glGenBuffers(1, &mesh.uvs_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.uvs_vbo);
+        glBufferData(GL_ARRAY_BUFFER, mesh.uvs.size() * sizeof(glm::vec2), mesh.uvs.data(), GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(1);
+        // 1,2 = canal 1 vertex shader, 2 = nb float a lire
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    }
+
+    //creation noise vbo
+    if (!mesh.noise.empty()) {
+        glGenBuffers(1, &mesh.noise_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh.noise_vbo);
+        glBufferData(GL_ARRAY_BUFFER, mesh.noise.size() * sizeof(float), mesh.noise.data(), GL_STATIC_DRAW);
+        
+        glEnableVertexAttribArray(2); // Canal 2 !
+        // 2 = Canal 2, 1 = un seul float a lire
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    }
+
+    // On debind
+    glBindVertexArray(0);
+}
+
+void render(Mesh& mesh) {
+    //bind vao
+    glBindVertexArray(mesh.VAO);
+    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
+void SceneRender(Node* node, glm::mat4 transformationParent, GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
+    if (node == nullptr) return;
+    glm::mat4 modelMatrix = transformationParent * node->transformation;
+
+    if (node->mesh != nullptr) {
+        glm::mat4 MVP = viewProj * modelMatrix;
+        
+        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(MVP));
+
+        glUniform1i(glGetUniformLocation(programID, "mode"), node->mode);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, node->textureID); 
+        
+        render(*(node->mesh));
+    }
+    for (Node* enfant : node->enfants) {
+        SceneRender(enfant, modelMatrix, MatrixID, viewProj,programID);
+    }
+}
+
 void world(Mesh &mesh){
     mesh.indexed_vertices.clear();
     mesh.indices.clear();
     mesh.triangles.clear();
     mesh.uvs.clear();
+    mesh.noise.clear();
         for(unsigned int i = 0; i < longueur; i++){
         for(unsigned int j = 0; j < hauteur; j++){
             float y = (float)heightMap[j][i]/255.;
             
-            // if(i == 0 || i == longueur - 1 || j == 0 || j == hauteur - 1){
-            //     y = 0.;
-            // }
             mesh.indexed_vertices.push_back(vec3(((float) i / longueur) - 0.5, y, ((float) j / hauteur) - 0.5));
 
             mesh.uvs.push_back(
                 vec2((float)i / (longueur - 1),
                     (float)j / (hauteur - 1))
             );
+
+            float random_val = ((float)rand() / RAND_MAX) * 0.1f - 0.05f;
+            mesh.noise.push_back(random_val);
         }
     }
 
@@ -307,80 +365,41 @@ void world(Mesh &mesh){
     }
 }
 
-void drawMesh(Mesh& mesh)
-{
-    glGenVertexArrays(1, &mesh.VAO);
-    glBindVertexArray(mesh.VAO);
+// pour modifier la taille du terrain, obligé de delete puis recreer
+void updateTerrain() {
+    // on delete les anciens buffers
+    glDeleteBuffers(1, &terrain.indexed_vertices_vbo);
+    glDeleteBuffers(1, &terrain.indices_vbo);
+    glDeleteBuffers(1, &terrain.uvs_vbo);
+    glDeleteBuffers(1,&terrain.noise_vbo);
+    glDeleteVertexArrays(1, &terrain.VAO);
 
-    glGenBuffers(1, &mesh.indexed_vertices_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.indexed_vertices_vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), mesh.indexed_vertices.data(), GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.indexed_vertices_vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glGenBuffers(1, &mesh.uvs_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.uvs_vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh.uvs.size() * sizeof(glm::vec2), mesh.uvs.data(), GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.uvs_vbo);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glGenBuffers(1, &mesh.indices_vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indices_vbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), mesh.indices.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindVertexArray(0);
-}
-
-void render(Mesh &mesh){
-    glBindVertexArray(mesh.VAO);
-
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(2);
-    glDrawElements(GL_TRIANGLES, mesh.indices.size(),GL_UNSIGNED_INT, 0);
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(2);
-}
-
-void framebuffer(){
+    //on regenere le terrain
     world(terrain);
-    clear(terrain);
-    drawMesh(terrain);
-    
-    render(terrain);
-}
 
-void SceneRender(Node node, glm::mat4 transformation){
-    Mesh tempMesh = node.mesh;
-    for (glm::vec3 v : tempMesh.indexed_vertices){
-        transformation * glm:vec4(v,1.);
-    }
+    // on recreer les buffers
+    setupMesh(terrain);
 }
 
 
 
-int main( void )
-{
-    // Initialise GLFW
-    if( !glfwInit() )
-    {
-        fprintf( stderr, "Failed to initialize GLFW\n" );
-        getchar();
+
+
+int main() {
+    // 1. INITIALISATION DE GLFW
+    if (!glfwInit()) {
+        std::cerr << "Erreur lors de l'initialisation de GLFW\n";
         return -1;
     }
 
+    // initialisation
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
-
-    // Open a window and create its OpenGL context
+    // creation fenetre
     window = glfwCreateWindow( 1024, 768, "TP1 - GLFW", NULL, NULL);
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
@@ -388,9 +407,11 @@ int main( void )
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, keyCallback);
+    glfwMakeContextCurrent(window); 
 
-    // Initialize GLEW
+    // 3. INITIALISATION DE GLEW
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
         fprintf(stderr, "Failed to initialize GLEW\n");
@@ -399,17 +420,20 @@ int main( void )
         return -1;
     }
 
+
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     // Hide the mouse and enable unlimited mouvement
     //  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // 4. CONFIGURATION GLOBALE OPENGL
+
 
     // Set the mouse at the center of the screen
     glfwPollEvents();
     glfwSetCursorPos(window, 1024/2, 768/2);
 
     // Dark blue background
-    glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
+    glClearColor(0.2f, 0.2f, 0.3f, 0.0f);
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
@@ -419,203 +443,185 @@ int main( void )
     // Cull triangles which normal is not towards the camera
     glDisable(GL_CULL_FACE);
 
-    
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+    // charger les shaders
+    GLuint programID = LoadShaders("vertex_shader.glsl", "fragment_shader.glsl");
 
-    // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "vertex_shader.glsl", "fragment_shader.glsl" );
 
-    /*****************TODO***********************/
-    // Get a handle for our "Model View Projection" matrices uniforms
-
-    /****************************************/
-    
-
-    //Chargement du fichier de maillage
-    std::string filename("Assets/chair.off");
-    //loadOFF(filename, indexed_vertices, indices, triangles );
-    
     heightMap.load("Assets/Heightmap_Mountain.pgm");
-    
+    Planete.racine = &NodeTerrain;
 
-    
-    
 
-    // // Load it into a VBO
-
+    //associer mesh au noeud
+    NodeSoleil.mesh = &soleil;
+    NodeLune.mesh = &lune;
+    NodeTerrain.mesh = &terrain;
+    NodeTerre.mesh = &terre;
+    NodeMars.mesh = &mars;
     
-    // glGenBuffers(1, &vertexbuffer);
-    // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    // glBufferData(GL_ARRAY_BUFFER, terrain.indexed_vertices.size() * sizeof(glm::vec3), terrain.indexed_vertices.data(), GL_DYNAMIC_DRAW);
-
-    // // Generate a buffer for the indices as well
-    
-    // glGenBuffers(1, &elementbuffer);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, terrain.indices.size() * sizeof(unsigned int), terrain.indices.data() , GL_DYNAMIC_DRAW);
+    //ajouter les enfants
+    NodeTerrain.enfants.push_back(&NodeSoleil);
+    NodeSoleil.enfants.push_back(&NodeTerre);
+    NodeTerre.enfants.push_back(&NodeLune);
+    NodeSoleil.enfants.push_back(&NodeMars);
 
     
-    // glGenBuffers(1,&uvbuffer);
-    // glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    // glBufferData(GL_ARRAY_BUFFER, terrain.uvs.size() * sizeof(glm::vec2), terrain.uvs.data() , GL_DYNAMIC_DRAW);
+    float angleSoleil = 0.0f;
+    float angleTerre  = 0.0f;
+    float angleLune   = 0.0f;
 
-    GLuint TextureID1 = loadDDS("Assets/rock.dds");
-    GLuint TextureUniform1 = glGetUniformLocation(programID,"myRockSampler");
-    GLuint TextureID2 = loadDDS("Assets/grass.dds");
-    GLuint TextureUniform2 = glGetUniformLocation(programID,"myGrassSampler");
-    GLuint TextureID3 = loadDDS("Assets/snowrocks.dds");
-    GLuint TextureUniform3 = glGetUniformLocation(programID,"mySnowRocksSampler");
-
-
-
-    // Get a handle for our "LightPosition" uniform
-    glUseProgram(programID);
-    GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
-
+    //creer les mesh
+    sphere(mars,0.075,20);
+    sphere(soleil,0.2,20);
+    sphere(lune,0.05,20);
+    sphere(terre,0.1,20);
     world(terrain);
-    //openOBJ("Assets/airboat.obj",boat);
-    sphere(soleil,0.5,20);
-    sphere(lune,0.1,20);
 
-    //drawMesh(terrain);
-    //drawMesh(boat);
-    drawMesh(soleil);
-    drawMesh(lune);
+    //setup des mesh
+    setupMesh(soleil);
+    setupMesh(lune);
+    setupMesh(terre);
+    setupMesh(terrain);
+    setupMesh(mars);
+
+    // TEXTURES
+    //charge la texture
+    GLuint TextureIDRock = loadDDS("Assets/rock.dds");
+    // recup l'emplacement du shader
+    GLuint TextureUniformRock = glGetUniformLocation(programID,"myRockSampler");
+
+    GLuint TextureIDGrass = loadDDS("Assets/grass.dds");
+    GLuint TextureUniformGrass = glGetUniformLocation(programID,"myGrassSampler");
+    GLuint TextureIDSnowRocks = loadDDS("Assets/snowrocks.dds");
+    GLuint TextureUniformSnowRocks = glGetUniformLocation(programID,"mySnowRocksSampler");
+
+    GLuint TextureIDTerre = loadDDS("Assets/terre.dds");
+    GLuint TextureIDSoleil = loadDDS("Assets/soleil.dds");
+    GLuint TextureIDLune = loadDDS("Assets/lune.dds");
+    GLuint TextureIDMars = loadDDS("Assets/mars.dds");
+    
+    glUseProgram(programID);
+     // active le slot de texture 1 = GL_TEXTURE1
+    glActiveTexture(GL_TEXTURE1);
+    //on bind notre texture
+    glBindTexture(GL_TEXTURE_2D, TextureIDRock);
+    // on dit que slot 0 = notre texture
+    glUniform1i(TextureUniformRock, 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, TextureIDGrass);
+    glUniform1i(TextureUniformGrass, 2);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, TextureIDSnowRocks);
+    glUniform1i(TextureUniformSnowRocks, 3);
+
+    glUniform1i(glGetUniformLocation(programID, "myPlaneteSampler"), 0);
+
+    NodeTerrain.mode = 1;
+    NodeSoleil.mode = 0;
+    NodeTerre.mode = 0;
+    NodeLune.mode = 0;
+    NodeMars.mode = 0;
+    NodeSoleil.textureID = TextureIDSoleil;
+    NodeTerre.textureID = TextureIDTerre;
+    NodeLune.textureID = TextureIDLune;
+    NodeMars.textureID = TextureIDMars;
 
 
-    // For speed computation
-    double lastTime = glfwGetTime();
-    int nbFrames = 0;
 
+    // 5. LA BOUCLE DE RENDU
     do{
+        
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Measure speed
-        // per-frame time logic
-        // --------------------
+        //temps
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // input
-        // -----
+        //clavier
         processInput(window);
+        
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+        float ratio = (float)width / (float)height;
 
 
-        // Clear the screen
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // matrice projection (perspective)
+        glm::mat4 projectionMatrix = glm::perspective (glm::radians (45.f), ratio, 0.1f, 100.f);
 
-        // Use our shader
-        glUseProgram(programID);
-
-
-        // Model matrix : an identity matrix (model will be at the origin) then change
-        glm::mat4 modelMatrix = glm::mat4();
-                                            
-        // View matrix : camera/view transformation lookat() utiliser camera_position camera_target camera_up
-
+        // matrice view
         glm::mat4 viewMatrix = glm::lookAt(
             camera_position,
             camera_target,
             camera_up
         );
-        // glm::mat4 depthModelMatrix = glm::mat4(1.0);
-        // depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-        // Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
-        glm::mat4 projectionMatrix = glm::perspective (glm::radians (45.), 4./3., 0.1, 100.);
+        //matrice model
+        glm::mat4 modelMatrix = glm::mat4();
 
+        //mat viewProj
+        glm::mat4 viewProj = projectionMatrix * viewMatrix;
+
+        // matrice mvp
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
-        // Send our transformation to the currently bound shader,
-        // in the "Model View Projection" to the shader uniforms
-        glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
+        //mettre a jour angle pour vitesse de roatation
 
-        /****************************************/
+        angleSoleil += 1.0f * deltaTime;
+        angleTerre  += 0.5f * deltaTime;
+        angleLune   += 3.0f * deltaTime;
 
+        NodeSoleil.transformation = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.5f, 0.0f))
+                                * glm::rotate(glm::mat4(1.0f), angleSoleil, glm::vec3(0, 1, 0));
 
+        NodeLune.transformation = glm::rotate(glm::mat4(1.0f), angleLune, glm::vec3(0, 1, 0)) 
+                             * glm::translate(glm::mat4(1.0f), glm::vec3(0.3f, 0.0f, 0.0f));
 
-
-        // // 1rst attribute buffer : vertices
-        // glEnableVertexAttribArray(0);
-        // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        // glVertexAttribPointer(
-        //             0,                  // attribute
-        //             3,                  // size
-        //             GL_FLOAT,           // type
-        //             GL_FALSE,           // normalized?
-        //             0,                  // stride
-        //             (void*)0            // array buffer offset
-        //             );
-
-        // // Index buffer
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        NodeTerre.transformation = glm::rotate(glm::mat4(1.0f), angleTerre, glm::vec3(0, 1, 0)) // vitesse de rotation autour du soleil
+                                * glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)) // translation
+                                * glm::rotate(glm::mat4(1.0f), angleTerre, glm::vec3(0, 1, 0)); // rotation autour d'elle meme
 
 
-        // Texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, TextureID1);
-        glUniform1i(TextureUniform1, 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, TextureID2);
-        glUniform1i(TextureUniform2, 1);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, TextureID3);
-        glUniform1i(TextureUniform3, 2);
-
-        // Position
-        // glEnableVertexAttribArray(0);
-        // glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        // // // UVs
-        // glEnableVertexAttribArray(1);
-        // glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-        // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+        NodeMars.transformation = glm::rotate(glm::mat4(1.0f), angleTerre*0.8f, glm::vec3(0, 1, 0)) // vitesse de rotation autour du soleil
+                                * glm::translate(glm::mat4(1.0f), glm::vec3(1.3f, 0.0f, 0.0f)) // translation
+                                * glm::rotate(glm::mat4(1.0f), angleTerre*0.8f, glm::vec3(0, 1, 0)); // rotation autour d'elle meme
 
 
-        // Draw the triangles !
-        // glDrawElements(
-        //             GL_TRIANGLES,      // mode
-        //             terrain.indices.size(),    // count
-        //             GL_UNSIGNED_INT,   // type
-        //             (void*)0           // element array buffer offset
-        //             );
+        // choix des shaders a utiliser
+        //glUseProgram(programID);
 
-        //render(terrain);
-        //render(boat);
+        // On trouve où est la variable "MVP" dans le Vertex Shader, et on lui envoie notre calcul
+        GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+        //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
-        while(Planete.racine.enfants.size()!=0){
-            Planete.
-        }
+
+        SceneRender(Planete.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+
+       
 
 
 
-        render(soleil);
+
+
+
+
+
+
+
+        /* render(soleil);
         render(lune);
+        render(terrain);*/
 
-        // glDisableVertexAttribArray(0);
-        // glDisableVertexAttribArray(1);
-
-        // Swap buffers
+        // b. Échanger les buffers (Double Buffering : on affiche ce qu'on vient de dessiner)
         glfwSwapBuffers(window);
+        
+        // c. Récupérer les événements (clavier, souris, redimensionnement)
         glfwPollEvents();
-
-    } // Check if the ESC key was pressed or the window was closed
-    while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
+    }while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
            glfwWindowShouldClose(window) == 0 );
 
-    // Cleanup VBO and shader
-    clear(boat);
-    clear(terrain);
-    clear(soleil);
-    clear(lune);
-
-    glDeleteProgram(programID);
-
-    // Close OpenGL window and terminate GLFW
+    // 6. NETTOYAGE ET FERMETURE
     glfwTerminate();
-
     return 0;
 }
 
@@ -627,13 +633,18 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             cameraSpeed = 2.5 * deltaTime;
             mode = 1;
             camera_target = glm::vec3(0.f, 0.f, 0.f);
-            camera_position   = glm::vec3(0.0f, 3.f,  -2.f);
+            camera_position   = glm::vec3(0.0f, 4.f,  -3.f);
             camera_up    = normalize(glm::vec3(0.f,-1.0f,  1.f));
         } else {
             mode = 0;
             cameraSpeed = 0.25;
             camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
+            //camera_position   = glm::vec3(0.0f, 0.0f,  -2.f);
             camera_target = glm::vec3(1.f, 0.8f, 0.f);
+            //camera_target = glm::vec3(0.f, 0.0f, 0.f);
+
+
+            
             camera_up    = glm::vec3(0.f,1.0f,  0.f);
             camera_front = glm::normalize(camera_target - camera_position);
             rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
@@ -642,18 +653,12 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 }
 
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
     glm::vec3 camera_right = glm::cross(camera_front, camera_up);
-
-    
-
-    glfwSetKeyCallback(window, keyCallback);
     
 
     // ancien tp 1
@@ -670,7 +675,7 @@ void processInput(GLFWwindow *window)
         if (longueur < 506 && hauteur < 506){
             longueur += 5;
             hauteur += 5;
-            framebuffer();
+            updateTerrain();
         }
     }
     if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || 
@@ -678,7 +683,7 @@ void processInput(GLFWwindow *window)
         if (longueur > 6 && hauteur > 6){
             longueur -= 5   ;
             hauteur -= 5;
-            framebuffer();
+            updateTerrain();
             
         }
     }
