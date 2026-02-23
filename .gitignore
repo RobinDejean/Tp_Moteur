@@ -1,0 +1,28 @@
+# --- Dossiers de build (Le plus important) ---
+build/
+bin/
+obj/
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- Fichiers système & Compilateur ---
+*.o
+*.a
+*.so
+*.out
+*.exe
+.cache/
+
+# --- Windows (souvent présents via /mnt/c/) ---
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# --- CMake (fichiers générés à la racine si tu oublies le dossier build) ---
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
