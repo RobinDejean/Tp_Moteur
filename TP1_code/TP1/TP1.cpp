@@ -73,6 +73,7 @@ Mesh soleil;
 Mesh lune;
 Mesh terre;
 Mesh mars;
+Mesh macaque;
 
 struct Node{
     Mesh* mesh;
@@ -99,6 +100,7 @@ Node NodeLune;
 Node NodeTerrain;
 Node NodeTerre;
 Node NodeMars;
+Node NodeMacaque;
 
 
 
@@ -457,8 +459,10 @@ int main() {
     NodeTerrain.mesh = &terrain;
     NodeTerre.mesh = &terre;
     NodeMars.mesh = &mars;
+    NodeMacaque.mesh = &macaque;
     
     //ajouter les enfants
+    NodeTerrain.enfants.push_back(&NodeMacaque);
     NodeTerrain.enfants.push_back(&NodeSoleil);
     NodeSoleil.enfants.push_back(&NodeTerre);
     NodeTerre.enfants.push_back(&NodeLune);
@@ -475,6 +479,7 @@ int main() {
     sphere(lune,0.05,20);
     sphere(terre,0.1,20);
     world(terrain);
+    openOBJ("Assets/Macaque.obj", macaque);
 
     //setup des mesh
     setupMesh(soleil);
@@ -482,6 +487,7 @@ int main() {
     setupMesh(terre);
     setupMesh(terrain);
     setupMesh(mars);
+    setupMesh(macaque);
 
     // TEXTURES
     //charge la texture
@@ -521,6 +527,7 @@ int main() {
     NodeTerre.mode = 0;
     NodeLune.mode = 0;
     NodeMars.mode = 0;
+    NodeMacaque.mode = 0;
     NodeSoleil.textureID = TextureIDSoleil;
     NodeTerre.textureID = TextureIDTerre;
     NodeLune.textureID = TextureIDLune;
@@ -570,6 +577,8 @@ int main() {
         angleSoleil += 1.0f * deltaTime;
         angleTerre  += 0.5f * deltaTime;
         angleLune   += 3.0f * deltaTime;
+
+        NodeMacaque.transformation = glm::scale(glm::mat4(1.0), glm::vec3(0.03));
 
         NodeSoleil.transformation = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.5f, 0.0f))
                                 * glm::rotate(glm::mat4(1.0f), angleSoleil, glm::vec3(0, 1, 0));
