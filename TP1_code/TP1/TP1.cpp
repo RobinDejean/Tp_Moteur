@@ -35,6 +35,7 @@ glm::vec3 camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
 glm::vec3 camera_target = glm::vec3(1.f, 0.8f, 0.f);
 glm::vec3 camera_up    = glm::vec3(0.f,1.0f,  0.f);
 glm::vec3 camera_front = glm::normalize(camera_target - camera_position);
+glm::vec3 macaqueTranslate = glm::vec3(0.f);
 
 
 
@@ -54,7 +55,7 @@ int hauteur = 512;
 ImageBase heightMap;
 
 struct Mesh{
-    std::vector<std::vector<unsigned int> > triangles;
+    std::vector<std::vector<unsigned int> > triangles; // pas utilies
     std::vector<glm::vec3> indexed_vertices;
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indices;
@@ -383,6 +384,29 @@ void updateTerrain() {
     setupMesh(terrain);
 }
 
+void updateHeight(glm::vec3 &position){
+    float z = position.z;
+    float x = position.x;
+    int tri = longueur *z * longueur + hauteur * x * 2 ;
+
+    int tri1 = terrain.indices[tri *3];
+    int tri2 = terrain.indices[tri *3+1];
+    int tri3 = terrain.indices[tri *3+2];
+
+    glm::vec3 p1 = terrain.indexed_vertices[tri1];
+    glm::vec3 p2 = terrain.indexed_vertices[tri2];
+    glm::vec3 p3 = terrain.indexed_vertices[tri3];
+
+    float D=(p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+    float lambda1 = ((p2.z - p3.z) * (x - p3.x) + (p3.x - p2.x) * (z - p3.z)) / D;
+    float lambda2 = ((p3.z - p1.z) * (x - p3.x) + (p1.x - p3.x) * (z - p3.z)) / D;
+    float lambda3 = 1 - lambda1 - lambda2;
+
+    position.y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y;
+    std::cout << position.y << std::endl;
+
+}
+
 
 
 
@@ -578,7 +602,11 @@ int main() {
         angleTerre  += 0.5f * deltaTime;
         angleLune   += 3.0f * deltaTime;
 
-        NodeMacaque.transformation = glm::scale(glm::mat4(1.0), glm::vec3(0.03));
+        updateHeight(macaqueTranslate);
+        
+
+        NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
+                                        * glm::scale(glm::mat4(1.0), glm::vec3(0.03,0.03, -0.03));
 
         NodeSoleil.transformation = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.5f, 0.0f))
                                 * glm::rotate(glm::mat4(1.0f), angleSoleil, glm::vec3(0, 1, 0));
@@ -639,12 +667,26 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
     {
         if (mode == 0){
+
+            // mode 1
             cameraSpeed = 2.5 * deltaTime;
             mode = 1;
             camera_target = glm::vec3(0.f, 0.f, 0.f);
-            camera_position   = glm::vec3(0.0f, 4.f,  -3.f);
+            camera_position   = glm::vec3(0.0f, 3.f,  3.f);
             camera_up    = normalize(glm::vec3(0.f,-1.0f,  1.f));
-        } else {
+        }
+        else if (mode == 1){
+            mode = 2;
+            camera_target = glm::vec3(0.f, 0.5f, 0.f);
+            camera_position   = glm::vec3(0.0f, 2.f,  1.5f);
+            camera_up    = normalize(glm::vec3(0.f,1.0f,  -1.f));
+        }
+
+
+
+        else if (mode == 2){
+
+            //mode 0
             mode = 0;
             cameraSpeed = 0.25;
             camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
@@ -749,6 +791,24 @@ void processInput(GLFWwindow *window)
         }
         if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS){
             cameraSpeed -= 0.5 * deltaTime;
+        }
+    }
+    if (mode == 2){
+        if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
+            
+            macaqueTranslate.z -= 0.1f * deltaTime ;
+        }
+        // Move backward
+        if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
+            macaqueTranslate.z += 0.1f * deltaTime;
+        }
+        // Strafe right
+        if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
+            macaqueTranslate.x += 0.1f * deltaTime;
+        }
+        // Strafe left
+        if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
+            macaqueTranslate.x -= 0.1f * deltaTime;
         }
     }
 
