@@ -719,6 +719,14 @@ void processInput(GLFWwindow *window)
             camera_front = glm::vec3(glm::inverse(rotationY) * glm::vec4(camera_front, 0.0));
             camera_target = camera_front + camera_position;
         }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT ) == GLFW_PRESS){ // up
+            camera_position += camera_up * deltaTime * cameraSpeed*2;
+            camera_target = camera_front + camera_position;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){ // down
+            camera_position -= camera_up * deltaTime * cameraSpeed*2;
+            camera_target = camera_front + camera_position;
+        }
     }
 
     if (mode == 1 ) {
