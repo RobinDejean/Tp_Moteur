@@ -75,6 +75,7 @@ Mesh lune;
 Mesh terre;
 Mesh mars;
 Mesh macaque;
+Mesh macaqueLow;
 
 struct Node{
     Mesh* mesh;
@@ -147,6 +148,7 @@ void openOBJ(const std::string& filename, Mesh& mesh)
         {
             glm::vec2 uv;
             ss >> uv.x >> uv.y;
+            uv.y = 1-uv.y;
             temp_uvs.push_back(uv);
         }
         // Face
@@ -387,7 +389,10 @@ void updateTerrain() {
 void updateHeight(glm::vec3 &position){
     float z = position.z;
     float x = position.x;
-
+    if (x > 0.5f || x < -0.5f || z > 0.5f || z < -0.5f ){
+        return;
+    }
+    
     float gridX = (x + 0.5f) * (longueur - 1);
     float gridZ = (z + 0.5f) * (hauteur - 1);
 
@@ -418,6 +423,15 @@ void updateHeight(glm::vec3 &position){
 
     position.y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y +0.02;
 
+}
+
+void updateMeshResolution(Node &node){
+    if(glm::distance(macaqueTranslate, camera_position) > 2.f ){
+        node.mesh = &macaqueLow;
+    }
+    if(glm::distance(macaqueTranslate, camera_position) < 2.f ){
+        node.mesh = &macaque;
+    }
 }
 
 
@@ -517,6 +531,7 @@ int main() {
     sphere(terre,0.1,20);
     world(terrain);
     openOBJ("Assets/Macaque.obj", macaque);
+    openOBJ("Assets/MacaqueLow.obj", macaqueLow);
 
     //setup des mesh
     setupMesh(soleil);
@@ -525,6 +540,7 @@ int main() {
     setupMesh(terrain);
     setupMesh(mars);
     setupMesh(macaque);
+    setupMesh(macaqueLow);
 
     // TEXTURES
     //charge la texture
@@ -541,6 +557,7 @@ int main() {
     GLuint TextureIDSoleil = loadDDS("Assets/soleil.dds");
     GLuint TextureIDLune = loadDDS("Assets/lune.dds");
     GLuint TextureIDMars = loadDDS("Assets/mars.dds");
+    GLuint TextureIDMacaque = loadDDS("Assets/Macaque_texture.dds");
     
     glUseProgram(programID);
      // active le slot de texture 1 = GL_TEXTURE1
@@ -569,6 +586,7 @@ int main() {
     NodeTerre.textureID = TextureIDTerre;
     NodeLune.textureID = TextureIDLune;
     NodeMars.textureID = TextureIDMars;
+    NodeMacaque.textureID = TextureIDMacaque;
 
 
 
@@ -616,6 +634,7 @@ int main() {
         angleLune   += 3.0f * deltaTime;
 
         updateHeight(macaqueTranslate);
+        updateMeshResolution(NodeMacaque);
         
 
         NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
