@@ -387,7 +387,21 @@ void updateTerrain() {
 void updateHeight(glm::vec3 &position){
     float z = position.z;
     float x = position.x;
-    int tri = longueur *z * longueur + hauteur * x * 2 ;
+
+    float gridX = (x + 0.5f) * (longueur - 1);
+    float gridZ = (z + 0.5f) * (hauteur - 1);
+
+    int i = (int)gridX;
+    int j = (int)gridZ;
+
+    int cell = j * (longueur - 1) + i;
+    int tri = cell * 2;
+
+    float fx = gridX - i;
+    float fz = gridZ - j;
+
+    if (fx + fz > 1.0f)
+        tri += 1;
 
     int tri1 = terrain.indices[tri *3];
     int tri2 = terrain.indices[tri *3+1];
@@ -402,8 +416,7 @@ void updateHeight(glm::vec3 &position){
     float lambda2 = ((p3.z - p1.z) * (x - p3.x) + (p1.x - p3.x) * (z - p3.z)) / D;
     float lambda3 = 1 - lambda1 - lambda2;
 
-    position.y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y;
-    std::cout << position.y << std::endl;
+    position.y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y +0.02;
 
 }
 
