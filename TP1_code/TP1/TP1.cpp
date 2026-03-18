@@ -76,6 +76,7 @@ Mesh terre;
 Mesh mars;
 Mesh macaque;
 Mesh macaqueLow;
+Mesh cube;
 
 struct Node{
     Mesh* mesh;
@@ -83,11 +84,15 @@ struct Node{
     glm::mat4 transformation;
     GLuint textureID;
     int mode;
+    glm::vec3 vitesse;
+    float poids;
     Node(){
         mesh = nullptr;
         mode = 0;
         textureID = 0;
         transformation = glm::mat4();
+        vitesse = glm::vec3(0);
+        poids = 0.f;
     }
 };
 
@@ -103,7 +108,9 @@ Node NodeTerrain;
 Node NodeTerre;
 Node NodeMars;
 Node NodeMacaque;
+Node NodeCube;
 
+bool mouvement = false;
 
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -257,6 +264,81 @@ void sphere(Mesh &mesh, float radius, int nblignes)
     }
 }
 
+void setupCube(Mesh &mesh, float taille)
+{
+    mesh.indexed_vertices.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+    mesh.uvs.clear();
+    mesh.noise.clear();
+
+    mesh.indexed_vertices.push_back(glm::vec3(0,0,0));
+    mesh.indexed_vertices.push_back(glm::vec3(taille,0,0));
+    mesh.indexed_vertices.push_back(glm::vec3(taille,0,taille));
+    mesh.indexed_vertices.push_back(glm::vec3(0,0, taille));
+    mesh.indexed_vertices.push_back(glm::vec3(0,taille,0));
+    mesh.indexed_vertices.push_back(glm::vec3(taille,taille,0));
+    mesh.indexed_vertices.push_back(glm::vec3(taille,taille,taille));
+    mesh.indexed_vertices.push_back(glm::vec3(0,taille, taille));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(0,0));
+
+
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(2);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(3);
+
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(6);
+
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(6);
+    mesh.indices.push_back(7);
+
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(5);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(4);
+
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(6);
+
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(6);
+    mesh.indices.push_back(5);
+
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(7);
+
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(6);
+
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(4);
+
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(7);
+}
+
 void setupMesh(Mesh& mesh) {
     // On crée et on "bind" le VAO
     glGenVertexArrays(1, &mesh.VAO);
@@ -358,8 +440,43 @@ void world(Mesh &mesh){
             mesh.triangles.push_back({j * longueur + i, j * longueur + i + 1, (j + 1) * longueur + i + 1});
 
             mesh.indices.push_back(j * longueur + i);
-            mesh.indices.push_back(j * longueur + i + 1);
             mesh.indices.push_back((j + 1) * longueur + i + 1);
+            mesh.indices.push_back(j * longueur + i + 1);
+
+            mesh.triangles.push_back({j * longueur + i, (j + 1) * longueur + i, (j + 1) * longueur + i + 1});
+            
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
+        }
+    }
+}
+
+void worldFlat(Mesh &mesh){
+    mesh.indexed_vertices.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+    mesh.uvs.clear();
+    mesh.noise.clear();
+        for(unsigned int i = 0; i < longueur; i++){
+        for(unsigned int j = 0; j < hauteur; j++){
+            
+            mesh.indexed_vertices.push_back(vec3(((float) i / longueur) - 0.5, 0., ((float) j / hauteur) - 0.5));
+
+            mesh.uvs.push_back(
+                vec2((float)i / (longueur - 1),
+                    (float)j / (hauteur - 1))
+            );
+        }
+    }
+
+    for(unsigned int i = 0; i < longueur - 1; i++){
+        for(unsigned int j = 0; j < hauteur - 1; j++){
+            mesh.triangles.push_back({j * longueur + i, j * longueur + i + 1, (j + 1) * longueur + i + 1});
+
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
+            mesh.indices.push_back(j * longueur + i + 1);
 
             mesh.triangles.push_back({j * longueur + i, (j + 1) * longueur + i, (j + 1) * longueur + i + 1});
             
@@ -424,6 +541,66 @@ void updateHeight(glm::vec3 &position){
     position.y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y +0.02;
 
 }
+
+void updatePos(Node &node){
+    glm:vec3 a = glm::vec3(0,-9.81f,0);
+    node.vitesse += a * deltaTime; 
+    node.transformation =  glm::translate(
+    node.transformation,
+    node.vitesse * deltaTime);
+
+}
+
+void collisionTerrain(Node &node){
+    float z = node.transformation[3][2];
+    float x = node.transformation[3][0];
+    if (x > 0.5f || x < -0.5f || z > 0.5f || z < -0.5f ){
+        return;
+    }
+    
+    float gridX = (x + 0.5f) * (longueur - 1);
+    float gridZ = (z + 0.5f) * (hauteur - 1);
+
+    int i = (int)gridX;
+    int j = (int)gridZ;
+
+    int cell = j * (longueur - 1) + i;
+    int tri = cell * 2;
+
+    float fx = gridX - i;
+    float fz = gridZ - j;
+
+    if (fx + fz > 1.0f)
+        tri += 1;
+
+    int tri1 = terrain.indices[tri *3];
+    int tri2 = terrain.indices[tri *3+1];
+    int tri3 = terrain.indices[tri *3+2];
+
+    glm::vec3 p1 = terrain.indexed_vertices[tri1];
+    glm::vec3 p2 = terrain.indexed_vertices[tri2];
+    glm::vec3 p3 = terrain.indexed_vertices[tri3];
+
+    float D=(p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+    float lambda1 = ((p2.z - p3.z) * (x - p3.x) + (p3.x - p2.x) * (z - p3.z)) / D;
+    float lambda2 = ((p3.z - p1.z) * (x - p3.x) + (p1.x - p3.x) * (z - p3.z)) / D;
+    float lambda3 = 1 - lambda1 - lambda2;
+
+    glm::vec3 n = glm::normalize(glm::cross(p2-p1,p3 - p1));
+
+    float terrain_y = lambda1 * p1.y + lambda2 * p2.y + lambda3 *p3.y;
+    if(node.transformation[3][1] - terrain_y >= 0){
+        return;
+    }
+    else{
+        node.transformation[3][1] = terrain_y;
+        node.vitesse =  node.vitesse - 2*glm::dot(node.vitesse, n) * n;
+        //node.vitesse.x = -node.vitesse.x;
+
+    }
+
+}
+
 
 void updateMeshResolution(Node &node){
     if(glm::distance(macaqueTranslate, camera_position) > 2.f ){
@@ -511,13 +688,15 @@ int main() {
     NodeTerre.mesh = &terre;
     NodeMars.mesh = &mars;
     NodeMacaque.mesh = &macaque;
+    NodeCube.mesh = &cube;
     
     //ajouter les enfants
-    NodeTerrain.enfants.push_back(&NodeMacaque);
-    NodeTerrain.enfants.push_back(&NodeSoleil);
+    //NodeTerrain.enfants.push_back(&NodeMacaque);
+    //NodeTerrain.enfants.push_back(&NodeSoleil);
     NodeSoleil.enfants.push_back(&NodeTerre);
     NodeTerre.enfants.push_back(&NodeLune);
     NodeSoleil.enfants.push_back(&NodeMars);
+    NodeTerrain.enfants.push_back(&NodeCube);
 
     
     float angleSoleil = 0.0f;
@@ -533,6 +712,8 @@ int main() {
     openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow);
 
+    setupCube(cube,0.05);
+
     //setup des mesh
     setupMesh(soleil);
     setupMesh(lune);
@@ -541,6 +722,8 @@ int main() {
     setupMesh(mars);
     setupMesh(macaque);
     setupMesh(macaqueLow);
+    setupMesh(cube);
+
 
     // TEXTURES
     //charge la texture
@@ -588,8 +771,7 @@ int main() {
     NodeMars.textureID = TextureIDMars;
     NodeMacaque.textureID = TextureIDMacaque;
 
-
-
+   
     // 5. LA BOUCLE DE RENDU
     do{
         
@@ -633,12 +815,18 @@ int main() {
         angleTerre  += 0.5f * deltaTime;
         angleLune   += 3.0f * deltaTime;
 
-        updateHeight(macaqueTranslate);
-        updateMeshResolution(NodeMacaque);
-        
+        //updateHeight(macaqueTranslate);
+        //updateMeshResolution(NodeMacaque);
 
-        NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
-                                        * glm::scale(glm::mat4(1.0), glm::vec3(0.03,0.03, -0.03));
+        if (mouvement){
+            updatePos(NodeCube);
+            collisionTerrain(NodeCube);
+        }
+
+        // NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
+        //                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.03,0.03, -0.03));
+
+        //NodeCube.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate);
 
         NodeSoleil.transformation = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.5f, 0.0f))
                                 * glm::rotate(glm::mat4(1.0f), angleSoleil, glm::vec3(0, 1, 0));
@@ -733,6 +921,24 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
         }
     }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
+            mouvement ? mouvement = false : mouvement = true;
+            NodeCube.vitesse = glm::vec3(0,0,0);
+            if (NodeCube.transformation[3][1] < - 0.5f){
+                NodeCube.transformation[3][1] = 1.f;
+                NodeCube.transformation[3][0] = 0.f;
+                NodeCube.transformation[3][2] = 0.f;
+
+            }
+        }
+        if (key == GLFW_KEY_R && action == GLFW_PRESS){
+            NodeCube.vitesse = glm::vec3(0,0,0);
+            NodeCube.transformation[3][1] = 1.f;
+            NodeCube.transformation[3][0] = 0.f;
+            NodeCube.transformation[3][2] = 0.f;
+
+            }
+        
 }
 
 
