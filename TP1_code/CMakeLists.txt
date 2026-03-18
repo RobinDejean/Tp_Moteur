@@ -66,7 +66,13 @@ add_executable(TP1
 	common/objloader.hpp
 	common/vboindexer.cpp
 	common/vboindexer.hpp
-	
+	TP1/globals.cpp
+	TP1/globals.hpp
+	TP1/fonctions.cpp
+	TP1/fonctions.hpp
+	common/ImageBase.cpp
+	common/ImageBase.h
+	common/image_ppm.h
         TP1/vertex_shader.glsl
         TP1/fragment_shader.glsl
 )
