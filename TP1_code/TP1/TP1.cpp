@@ -23,9 +23,9 @@ using namespace glm;
 #include <common/objloader.hpp>
 #include <common/vboindexer.hpp>
 #include <common/texture.hpp>
-#include "common/image_ppm.h"
+//#include "common/image_ppm.h"
 #include "common/ImageBase.h"
-#include <common/ImageBase.cpp>
+//#include <common/ImageBase.cpp>
 #include <sstream>
 #include <unordered_map>
 #include <fstream>

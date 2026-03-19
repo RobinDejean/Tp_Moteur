@@ -71,8 +71,6 @@ add_executable(TP1
 	TP1/fonctions.cpp
 	TP1/fonctions.hpp
 	common/ImageBase.cpp
-	common/ImageBase.h
-	common/image_ppm.h
         TP1/vertex_shader.glsl
         TP1/fragment_shader.glsl
 )

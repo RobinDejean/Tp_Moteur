@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <string>
+//#include "common/image_ppm.h"
 
 struct Mesh;
 struct Node;
