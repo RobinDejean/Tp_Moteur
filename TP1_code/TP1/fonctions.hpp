@@ -18,6 +18,7 @@ void render(Mesh& mesh);
 
 void world(Mesh &mesh);
 void worldFlat(Mesh &mesh);
+void worldPenche(Mesh &mesh, double pourcentage);
 
 void updateTerrain();
 void updatePos(Node &Node);

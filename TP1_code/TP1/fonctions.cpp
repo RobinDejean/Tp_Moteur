@@ -1,5 +1,6 @@
 #include "fonctions.hpp"
 #include "globals.hpp"
+#include <glm/geometric.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -403,6 +404,41 @@ void worldFlat(Mesh &mesh){
     }
 }
 
+void worldPenche(Mesh &mesh, double pourcentage){
+    mesh.indexed_vertices.clear();
+    mesh.indices.clear();
+    mesh.triangles.clear();
+    mesh.uvs.clear();
+    mesh.noise.clear();
+        for(unsigned int i = 0; i < longueur; i++){
+        for(unsigned int j = 0; j < hauteur; j++){
+            
+            mesh.indexed_vertices.push_back(vec3(((float) i / (longueur-1)) - 0.5, (((float) i / (longueur-1)) - 0.5) * pourcentage, ((float) j / (hauteur-1)) - 0.5));
+
+            mesh.uvs.push_back(
+                vec2((float)i / (longueur - 1),
+                    (float)j / (hauteur - 1))
+            );
+        }
+    }
+
+    for(unsigned int i = 0; i < longueur - 1; i++){
+        for(unsigned int j = 0; j < hauteur - 1; j++){
+            mesh.triangles.push_back({j * longueur + i, j * longueur + i + 1, (j + 1) * longueur + i + 1});
+
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
+            mesh.indices.push_back(j * longueur + i + 1);
+
+            mesh.triangles.push_back({j * longueur + i, (j + 1) * longueur + i, (j + 1) * longueur + i + 1});
+            
+            mesh.indices.push_back(j * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i);
+            mesh.indices.push_back((j + 1) * longueur + i + 1);
+        }
+    }
+}
+
 // pour modifier la taille du terrain, obligé de delete puis recreer
 void updateTerrain() {
     // on delete les anciens buffers
@@ -513,9 +549,28 @@ void collisionTerrain(Node &node){
         return;
     }
     else{
-        node.translation.y = terrain_y + 0.001;
-        node.vitesse =  node.vitesse - 2*glm::dot(node.vitesse, n) * n;
-        //node.vitesse.x = -node.vitesse.x;
+        node.translation.y = terrain_y;
+        glm::vec3 v = node.vitesse;
+
+        glm::vec3 v_n = glm::dot(v, n) * n;
+        glm::vec3 v_t = v - v_n;
+
+        double v_n_len = glm::length(v_n);
+
+        v_n = -node.coeff.rebond * v_n;
+
+        if(glm::length(v_t) < node.coeff.friction_statique * v_n_len){
+            v_t = glm::vec3(0.);
+            std::cout << glm::length(v_n) << std::endl;
+            if(glm::length(v_n) < 0.03){
+                v_n = glm::vec3(0.);
+            }
+        }
+        else{
+            v_t *= (1.0f - node.coeff.friction_cinetique);
+        }
+
+        node.vitesse = v_n + v_t;
 
     }
 

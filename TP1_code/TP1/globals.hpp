@@ -24,6 +24,15 @@ struct Mesh{
     GLuint indices_vbo = 0;
 };
 
+struct Coeff{
+    double friction_statique;
+    double friction_cinetique;
+    double rebond;
+
+    Coeff();
+    Coeff(double fs, double fc, double r);
+};
+
 struct Node{
     Mesh* mesh;
     std::vector<Node*> enfants;
@@ -35,11 +44,14 @@ struct Node{
     GLuint textureID;
     int mode;
     glm::vec3 vitesse;
-    float poids;
+    double masse;
+
+    Coeff coeff;
 
     Node();
     glm::mat4 computeMatTransformation();
 };
+
 
 struct SceneGraph{
     Node* racine;

@@ -726,7 +726,7 @@ int main() {
     sphere(soleil,0.2,20);
     sphere(lune,0.05,20);
     sphere(terre,0.1,20);
-    world(terrain);
+    worldPenche(terrain, 0.5);
     openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow);
 
@@ -790,7 +790,7 @@ int main() {
     NodeMacaque.textureID = TextureIDMacaque;
 
 
-   
+    FILE * f = fopen("pos.csv", "w");
     // 5. LA BOUCLE DE RENDU
     do{
         
@@ -840,7 +840,10 @@ int main() {
         if (mouvement){
             updatePos(NodeCube);
             collisionTerrain(NodeCube);
+            fprintf(f,"%f %f %f %f %f %f \n", NodeCube.translation.x, NodeCube.translation.y, NodeCube.translation.z, NodeCube.vitesse.x, NodeCube.vitesse.y, NodeCube.vitesse.z);
         }
+
+        
 
         // NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
         //                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.03,0.03, -0.03));
@@ -952,8 +955,8 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         }
         if (key == GLFW_KEY_R && action == GLFW_PRESS){
             NodeCube.vitesse = glm::vec3(0,0,0);
-            NodeCube.translation.y = 1.f;
-            NodeCube.translation.x = 0.f;
+            NodeCube.translation.y = 0.3f;
+            NodeCube.translation.x = 0.4f;
             NodeCube.translation.z = 0.f;
 
             }

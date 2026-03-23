@@ -56,6 +56,19 @@ bool mouvement = false;
 // NODE
 // =====================
 
+
+Coeff::Coeff(){
+    friction_statique = 0.4;
+    friction_cinetique = 0.3;
+    rebond = 0.5;
+}
+
+Coeff::Coeff(double fs, double fc, double r){
+    friction_statique = fs;
+    friction_cinetique = fc;
+    rebond = r;
+}
+
 Node::Node(){
     mesh = nullptr;
     mode = 0;
@@ -64,7 +77,8 @@ Node::Node(){
     rotation = glm::vec3(0,0,0);
     translation = glm::vec3(0,0,0);
     vitesse = glm::vec3(0);
-    poids = 0.f;
+    masse = 0.f;
+    coeff = Coeff();
 }
 
 glm::mat4 Node::computeMatTransformation(){
