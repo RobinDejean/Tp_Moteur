@@ -496,23 +496,33 @@ void updateHeight(glm::vec3 &position){
 
 void updatePos(Node &node){
     glm::vec3 a = glm::vec3(0,-9.81f,0);
-    node.vitesse += a * deltaTime; 
-    // node.transformation =  glm::translate(
-    // node.transformation,
-    // node.vitesse * deltaTime);
+    
+    // double volume = node.volume*node.scale.x*node.scale.y*node.scale.z;
+    double volume = node.volume;
+    double densite = node.masse / volume;
 
+    glm::vec3 flotaison = glm::vec3(0,(d_eau / densite) * 9.81 * volume,0);
+
+    
+    if(node.translation.y < 0.){
+        // a -= (densite / d_eau) * a * volume;
+    }
+    else{
+        //a -= (densite / d_air) * a * volume;
+        flotaison *= 0;
+    }
+    node.vitesse += (a + flotaison) * deltaTime; 
     node.translation +=  node.vitesse * deltaTime;
-
 }
 
 void collisionTerrain(Node &node){
     float z = node.translation.z;
     float x = node.translation.x;
-    if (x > 0.49f || x < -0.49f || z > 0.49f || z < -0.49f ){
-        node.vitesse = glm::vec3(0.f);
-        node.translation -= 0.01 * node.translation;
-        return;
-    }
+    // if (x > 0.49f || x < -0.49f || z > 0.49f || z < -0.49f ){
+    //     node.vitesse = glm::vec3(0.f);
+    //     node.translation -= 0.01 * node.translation;
+    //     return;
+    // }
     
     float gridX = (x + 0.5f) * (longueur - 1);
     float gridZ = (z + 0.5f) * (hauteur - 1);

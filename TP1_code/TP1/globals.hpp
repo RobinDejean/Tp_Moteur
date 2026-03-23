@@ -35,6 +35,7 @@ struct Coeff{
 
 struct Node{
     Mesh* mesh;
+    double volume;
     std::vector<Node*> enfants;
 
     glm::vec3 translation;
@@ -111,6 +112,8 @@ extern Node NodeCube;
 // autres
 extern int mode;
 extern bool mouvement;
+extern double d_air;
+extern double d_eau;
 
 // =====================
 // FONCTIONS

@@ -1,4 +1,5 @@
 // Include standard headers
+#include <glm/ext/vector_float3.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
@@ -714,7 +715,7 @@ int main() {
     NodeSoleil.enfants.push_back(&NodeTerre);
     NodeTerre.enfants.push_back(&NodeLune);
     NodeSoleil.enfants.push_back(&NodeMars);
-    NodeTerrain.enfants.push_back(&NodeCube);
+    //NodeTerrain.enfants.push_back(&NodeCube);
 
     
     float angleSoleil = 0.0f;
@@ -789,6 +790,9 @@ int main() {
     NodeMars.textureID = TextureIDMars;
     NodeMacaque.textureID = TextureIDMacaque;
 
+    NodeTerrain.scale = glm::vec3(100.,100.,100.);
+    //NodeCube.scale = glm::vec3(0.01,0.01,0.01);
+
 
     FILE * f = fopen("pos.csv", "w");
     // 5. LA BOUCLE DE RENDU
@@ -841,6 +845,8 @@ int main() {
             updatePos(NodeCube);
             collisionTerrain(NodeCube);
             fprintf(f,"%f %f %f %f %f %f \n", NodeCube.translation.x, NodeCube.translation.y, NodeCube.translation.z, NodeCube.vitesse.x, NodeCube.vitesse.y, NodeCube.vitesse.z);
+            // camera_target = NodeCube.translation;
+            // camera_position = NodeCube.translation + glm::vec3(0.,2.,2.);
         }
 
         

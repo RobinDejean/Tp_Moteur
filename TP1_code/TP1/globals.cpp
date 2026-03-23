@@ -48,9 +48,14 @@ Node NodeMars;
 Node NodeMacaque;
 Node NodeCube;
 
+
+
+
 // autres
 int mode = 0;
 bool mouvement = false;
+double d_air = 1;
+double d_eau = 1000;
 
 // =====================
 // NODE
@@ -60,7 +65,7 @@ bool mouvement = false;
 Coeff::Coeff(){
     friction_statique = 0.4;
     friction_cinetique = 0.3;
-    rebond = 0.5;
+    rebond = 1.;
 }
 
 Coeff::Coeff(double fs, double fc, double r){
@@ -71,13 +76,14 @@ Coeff::Coeff(double fs, double fc, double r){
 
 Node::Node(){
     mesh = nullptr;
+    volume = 1;
     mode = 0;
     textureID = 0;
     scale = glm::vec3(1,1,1);
     rotation = glm::vec3(0,0,0);
     translation = glm::vec3(0,0,0);
     vitesse = glm::vec3(0);
-    masse = 0.f;
+    masse = 500;
     coeff = Coeff();
 }
 
