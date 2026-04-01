@@ -33,24 +33,36 @@ struct Coeff{
     Coeff(double fs, double fc, double r);
 };
 
+struct Ressort;
+
 struct Node{
     Mesh* mesh;
     double volume;
     std::vector<Node*> enfants;
-
+    std::vector<Node*> gravite;
+    std::vector<Ressort*> ressort;
+    
     glm::vec3 translation;
     glm::vec3 rotation;
     glm::vec3 scale;
-
+    
     GLuint textureID;
     int mode;
     glm::vec3 vitesse;
     double masse;
-
+    
     Coeff coeff;
-
+    
     Node();
     glm::mat4 computeMatTransformation();
+};
+
+struct Ressort {
+    Node* autre;
+    double raideur;
+    double amortissement;
+    double longueurRepos;
+    Ressort(Node *autre, double raideur, double longueurRepos);
 };
 
 
@@ -90,6 +102,7 @@ extern ImageBase heightMap;
 
 // meshes
 extern Mesh terrain;
+extern Mesh eau;
 extern Mesh boat;
 extern Mesh soleil;
 extern Mesh lune;
@@ -101,13 +114,18 @@ extern Mesh cube;
 
 // scene graph
 extern SceneGraph Planete;
+extern SceneGraph Cube;
+extern SceneGraph Soleil;
 extern Node NodeSoleil;
 extern Node NodeLune;
 extern Node NodeTerrain;
+extern Node NodeEau;
 extern Node NodeTerre;
 extern Node NodeMars;
 extern Node NodeMacaque;
 extern Node NodeCube;
+
+extern Ressort ressortSoleil;
 
 // autres
 extern int mode;

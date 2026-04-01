@@ -29,6 +29,7 @@ ImageBase heightMap;
 
 // meshes
 Mesh terrain;
+Mesh eau;
 Mesh boat;
 Mesh soleil;
 Mesh lune;
@@ -40,15 +41,18 @@ Mesh cube;
 
 // scene
 SceneGraph Planete;
+SceneGraph Cube;
+SceneGraph Soleil;
 Node NodeSoleil;
 Node NodeLune;
 Node NodeTerrain;
+Node NodeEau;
 Node NodeTerre;
 Node NodeMars;
 Node NodeMacaque;
 Node NodeCube;
 
-
+Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
 
 // autres
@@ -65,13 +69,20 @@ double d_eau = 1000;
 Coeff::Coeff(){
     friction_statique = 0.4;
     friction_cinetique = 0.3;
-    rebond = 1.;
+    rebond = 0.5;
 }
 
 Coeff::Coeff(double fs, double fc, double r){
     friction_statique = fs;
     friction_cinetique = fc;
     rebond = r;
+}
+
+Ressort::Ressort(Node* autre, double raideur, double longueurRepos){
+    this->autre = autre;
+    this->raideur = raideur;
+    this->longueurRepos = longueurRepos;
+    this->amortissement = 0.2;
 }
 
 Node::Node(){
@@ -83,7 +94,7 @@ Node::Node(){
     rotation = glm::vec3(0,0,0);
     translation = glm::vec3(0,0,0);
     vitesse = glm::vec3(0);
-    masse = 500;
+    masse = 500.f;
     coeff = Coeff();
 }
 

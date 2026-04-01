@@ -198,13 +198,13 @@ void setupCube(Mesh &mesh, float taille)
     mesh.indexed_vertices.push_back(glm::vec3(taille,taille,taille));
     mesh.indexed_vertices.push_back(glm::vec3(0,taille, taille));
     mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(1,0));
+    mesh.uvs.push_back(glm::vec2(0,1));
+    mesh.uvs.push_back(glm::vec2(1,1));
     mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
-    mesh.uvs.push_back(glm::vec2(0,0));
+    mesh.uvs.push_back(glm::vec2(1,0));
+    mesh.uvs.push_back(glm::vec2(0,1));
+    mesh.uvs.push_back(glm::vec2(1,1));
 
 
     mesh.indices.push_back(0);
@@ -338,7 +338,7 @@ void world(Mesh &mesh){
     mesh.noise.clear();
         for(unsigned int i = 0; i < longueur; i++){
         for(unsigned int j = 0; j < hauteur; j++){
-            float y = (float)heightMap[j][i]/255.;
+            float y = (float)heightMap[j][i]/255. - 0.5f;
             
             mesh.indexed_vertices.push_back(vec3(((float) i / (longueur-1)) - 0.5, y, ((float) j / (hauteur-1)) - 0.5));
 
@@ -496,39 +496,69 @@ void updateHeight(glm::vec3 &position){
 
 void updatePos(Node &node){
     glm::vec3 a = glm::vec3(0,-9.81f,0);
+    //glm::vec3 a = glm::vec3(0,0,0);
+    double b = 0.1;
+    double G = 6.67430e-11;
     
     // double volume = node.volume*node.scale.x*node.scale.y*node.scale.z;
     double volume = node.volume;
+    if (volume <= 1e-8) return;
     double densite = node.masse / volume;
 
     glm::vec3 flotaison = glm::vec3(0,(d_eau / densite) * 9.81 * volume,0);
 
     
     if(node.translation.y < 0.){
-        // a -= (densite / d_eau) * a * volume;
+        a -= (densite / d_eau) * a * volume;
     }
     else{
         //a -= (densite / d_air) * a * volume;
         flotaison *= 0;
+        b = 0.0000001;
+    }
+
+    for(Node* gravite : node.gravite){
+        glm::vec3 dir = gravite->translation - node.translation;
+        float dist = glm::length(dir);
+        if(dist > 0.01f){
+            dir = glm::normalize(dir);
+            a += (G * (gravite->masse * node.masse) / (dist * dist)) * dir;
+        }
+    }
+
+    for(Ressort* ressort : node.ressort){
+        glm::vec3 dir = ressort->autre->translation - node.translation;
+        float dist = glm::length(dir);
+        if(dist > 0.01f){
+            dir = glm::normalize(dir);
+            float force = ressort->raideur * (dist - ressort->longueurRepos);
+            a += force * dir;
+        }
+        glm::vec3 FC = -ressort->amortissement * (node.vitesse - ressort->autre->vitesse);
+        a+= FC;
     }
     node.vitesse += (a + flotaison) * deltaTime; 
+    node.vitesse -= b * node.vitesse * deltaTime;
     node.translation +=  node.vitesse * deltaTime;
 }
 
 void collisionTerrain(Node &node){
     float z = node.translation.z;
     float x = node.translation.x;
-    // if (x > 0.49f || x < -0.49f || z > 0.49f || z < -0.49f ){
-    //     node.vitesse = glm::vec3(0.f);
-    //     node.translation -= 0.01 * node.translation;
-    //     return;
-    // }
+    if (x > NodeTerrain.scale.x/2 - 0.01 || x < - NodeTerrain.scale.x/2 + 0.01 || z > NodeTerrain.scale.z/2 - 0.01 || z < - NodeTerrain.scale.x/2 + 0.01 ){
+        // node.vitesse = glm::vec3(0.f);
+        // node.translation -= 0.01 * node.translation;
+        return;
+    }
     
-    float gridX = (x + 0.5f) * (longueur - 1);
-    float gridZ = (z + 0.5f) * (hauteur - 1);
+    float gridX = ((x / NodeTerrain.scale.x) + 0.5f) * (longueur - 1);
+    float gridZ = ((z / NodeTerrain.scale.z) + 0.5f) * (hauteur - 1);
 
     int i = (int)gridX;
     int j = (int)gridZ;
+
+    // i = std::clamp(i, 0, longueur - 2);
+    // j = std::clamp(j, 0, hauteur - 2);
 
     int cell = j * (longueur - 1) + i;
     int tri = cell * 2;
@@ -543,11 +573,14 @@ void collisionTerrain(Node &node){
     int tri2 = terrain.indices[tri *3+1];
     int tri3 = terrain.indices[tri *3+2];
 
-    glm::vec3 p1 = terrain.indexed_vertices[tri1];
-    glm::vec3 p2 = terrain.indexed_vertices[tri2];
-    glm::vec3 p3 = terrain.indexed_vertices[tri3];
+    glm::vec3 p1 = terrain.indexed_vertices[tri1] * NodeTerrain.scale;
+    glm::vec3 p2 = terrain.indexed_vertices[tri2] * NodeTerrain.scale;
+    glm::vec3 p3 = terrain.indexed_vertices[tri3] * NodeTerrain.scale;
 
     float D=(p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+    if (std::abs(D) < 1e-8f) {
+        return; // triangle dégénéré
+    }
     float lambda1 = ((p2.z - p3.z) * (x - p3.x) + (p3.x - p2.x) * (z - p3.z)) / D;
     float lambda2 = ((p3.z - p1.z) * (x - p3.x) + (p1.x - p3.x) * (z - p3.z)) / D;
     float lambda3 = 1 - lambda1 - lambda2;
@@ -571,7 +604,7 @@ void collisionTerrain(Node &node){
 
         if(glm::length(v_t) < node.coeff.friction_statique * v_n_len){
             v_t = glm::vec3(0.);
-            std::cout << glm::length(v_n) << std::endl;
+            //std::cout << glm::length(v_n) << std::endl;
             if(glm::length(v_n) < 0.03){
                 v_n = glm::vec3(0.);
             }
