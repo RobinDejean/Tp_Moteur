@@ -102,16 +102,20 @@ extern int hauteur;
 extern ImageBase heightMap;
 
 // meshes
-extern Mesh car;
-extern Mesh wheel;
+extern Mesh MeshCar;
+extern Mesh MeshWheel;
+extern Mesh MeshTerrain;
 
 // scene graph
-extern SceneGraph Scene;
+extern SceneGraph SceneCar;
 extern Node NodeCar;
 extern Node NodeFrontLeftWheel;
 extern Node NodeFrontRightWheel;
 extern Node NodeBackLeftWheel;
 extern Node NodeBackRightWheel;
+
+extern SceneGraph SceneTerrain;
+extern Node NodeTerrain;
 
 extern Ressort ressortSoleil;
 

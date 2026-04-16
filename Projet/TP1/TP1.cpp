@@ -106,16 +106,19 @@ int main() {
 
     //heightMap.load("Assets/Heightmap_Mountain.pgm");
     //Planete.racine = &NodeTerrain;
-    Scene.racine = &NodeCar;
+    SceneCar.racine = &NodeCar;
+    SceneTerrain.racine = &NodeTerrain;
 
 
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
-    NodeCar.setMesh(&car);
-    NodeFrontLeftWheel.setMesh(&wheel);
-    NodeFrontRightWheel.setMesh(&wheel);
-    NodeBackLeftWheel.setMesh(&wheel);
-    NodeBackRightWheel.setMesh(&wheel);
+    NodeCar.setMesh(&MeshCar);
+    NodeFrontLeftWheel.setMesh(&MeshWheel);
+    NodeFrontRightWheel.setMesh(&MeshWheel);
+    NodeBackLeftWheel.setMesh(&MeshWheel);
+    NodeBackRightWheel.setMesh(&MeshWheel);
+
+    NodeTerrain.setMesh(&MeshTerrain);
     
 
     //ajouter les enfants
@@ -129,8 +132,12 @@ int main() {
     //mars.sphere(0.075,20);
     /* openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
-    car.car(1.);
-    wheel.createWheel(0.2,0.1, 32);
+    MeshCar.car(1.);
+    MeshWheel.createWheel(0.2,0.1, 32);
+    MeshTerrain.worldPenche(500,500,0);
+
+
+    NodeTerrain.transformation.setScale(100.);
 
     // TEXTURES
     //charge la texture
@@ -166,7 +173,7 @@ int main() {
 
     glUniform1i(glGetUniformLocation(programID, "myPlaneteSampler"), 0);
 
-    //NodeTerrain.setMode(1);
+    NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
     NodeCar.setTextureID(TextureIDSoleil);
     NodeFrontLeftWheel.setTextureID(TextureIDRock);
@@ -238,7 +245,8 @@ int main() {
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
 
-        SceneRender(Scene.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
 
         /* render(soleil);
         render(lune);
