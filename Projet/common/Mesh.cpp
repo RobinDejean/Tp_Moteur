@@ -262,6 +262,127 @@ void Mesh::cube(float taille)
     setupMesh();
 }
 
+void Mesh::car(float taille){
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
+
+    this->indexed_vertices.push_back(glm::vec3(0,0,0));
+    this->indexed_vertices.push_back(glm::vec3(taille * 2,0,0));
+    this->indexed_vertices.push_back(glm::vec3(taille * 2,0,taille));
+    this->indexed_vertices.push_back(glm::vec3(0,0, taille));
+    this->indexed_vertices.push_back(glm::vec3(taille / 2,taille,0));
+    this->indexed_vertices.push_back(glm::vec3(taille * 1.5,taille,0));
+    this->indexed_vertices.push_back(glm::vec3(taille * 1.5,taille,taille));
+    this->indexed_vertices.push_back(glm::vec3(taille / 2,taille, taille));
+    this->uvs.push_back(glm::vec2(0,0));
+    this->uvs.push_back(glm::vec2(1,0));
+    this->uvs.push_back(glm::vec2(0,1));
+    this->uvs.push_back(glm::vec2(1,1));
+    this->uvs.push_back(glm::vec2(0,0));
+    this->uvs.push_back(glm::vec2(1,0));
+    this->uvs.push_back(glm::vec2(0,1));
+    this->uvs.push_back(glm::vec2(1,1));
+
+    this->indices.push_back(0);
+    this->indices.push_back(1);
+    this->indices.push_back(2);
+    
+    this->indices.push_back(0);
+    this->indices.push_back(2);
+    this->indices.push_back(3);
+
+    this->indices.push_back(4);
+    this->indices.push_back(5);
+    this->indices.push_back(6);
+
+    this->indices.push_back(4);
+    this->indices.push_back(6);
+    this->indices.push_back(7);
+
+    this->indices.push_back(0);
+    this->indices.push_back(1);
+    this->indices.push_back(5);
+    
+    this->indices.push_back(0);
+    this->indices.push_back(5);
+    this->indices.push_back(4);
+
+    this->indices.push_back(1);
+    this->indices.push_back(2);
+    this->indices.push_back(6);
+
+    this->indices.push_back(1);
+    this->indices.push_back(6);
+    this->indices.push_back(5);
+
+    this->indices.push_back(2);
+    this->indices.push_back(3);
+    this->indices.push_back(7);
+
+    this->indices.push_back(2);
+    this->indices.push_back(7);
+    this->indices.push_back(6);
+
+    this->indices.push_back(3);
+    this->indices.push_back(0);
+    this->indices.push_back(4);
+
+    this->indices.push_back(3);
+    this->indices.push_back(4);
+    this->indices.push_back(7);
+
+    setupMesh();
+}
+
+void Mesh::createWheel(float radius, float width, int segments)
+{
+    float halfWidth = width / 2.0f;
+
+    this->indexed_vertices.clear();
+    this->indices.clear();
+    this->triangles.clear();
+    this->uvs.clear();
+    this->noise.clear();
+
+    deleteBuffers();
+
+    // Générer les vertices
+    for (int i = 0; i < segments; i++) {
+        float angle = 2.0f * M_PI * i / segments;
+        float x = cos(angle) * radius;
+        float y = sin(angle) * radius;
+
+        // cercle avant
+        indexed_vertices.push_back({x, y, -halfWidth});
+        // cercle arrière
+        indexed_vertices.push_back({x, y, halfWidth});
+    }
+
+    // Générer les faces (côtés du cylindre)
+    for (int i = 0; i < segments; i++) {
+        int next = (i + 1) % segments;
+
+        int i0 = i * 2;
+        int i1 = i * 2 + 1;
+        int i2 = next * 2;
+        int i3 = next * 2 + 1;
+
+        // triangle 1
+        indices.push_back(i0);
+        indices.push_back(i2);
+        indices.push_back(i1);
+
+        // triangle 2
+        indices.push_back(i1);
+        indices.push_back(i2);
+        indices.push_back(i3);
+    }
+    setupMesh();
+}
 
 void Mesh::world(int longueur, int hauteur, ImageBase& heightMap) {
     indexed_vertices.clear();

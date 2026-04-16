@@ -28,8 +28,16 @@ int hauteur = 512;
 ImageBase heightMap;
 
 // meshes
+Mesh car;
+Mesh wheel;
 
 // scene
+SceneGraph Scene;
+Node NodeCar;
+Node NodeFrontLeftWheel;
+Node NodeFrontRightWheel;
+Node NodeBackLeftWheel;
+Node NodeBackRightWheel;
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 

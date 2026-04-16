@@ -106,31 +106,31 @@ int main() {
 
     //heightMap.load("Assets/Heightmap_Mountain.pgm");
     //Planete.racine = &NodeTerrain;
+    Scene.racine = &NodeCar;
 
 
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
+    NodeCar.setMesh(&car);
+    NodeFrontLeftWheel.setMesh(&wheel);
+    NodeFrontRightWheel.setMesh(&wheel);
+    NodeBackLeftWheel.setMesh(&wheel);
+    NodeBackRightWheel.setMesh(&wheel);
+    
 
     //ajouter les enfants
     //NodeTerrain.enfants.push_back(&NodeMacaque);
+    NodeCar.addEnfant(&NodeFrontLeftWheel);
+    NodeCar.addEnfant(&NodeFrontRightWheel);
+    NodeCar.addEnfant(&NodeBackLeftWheel);
+    NodeCar.addEnfant(&NodeBackRightWheel);
 
     //creer les mesh
     //mars.sphere(0.075,20);
     /* openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
-
-
-    //setup des mesh
-    /* setupMesh(soleil);
-    setupMesh(lune);
-    setupMesh(terre);
-    setupMesh(terrain);
-    setupMesh(eau);
-    setupMesh(mars);
-    setupMesh(macaque);
-    setupMesh(macaqueLow);
-    setupMesh(cube); */
-
+    car.car(1.);
+    wheel.createWheel(0.2,0.1, 32);
 
     // TEXTURES
     //charge la texture
@@ -168,6 +168,11 @@ int main() {
 
     //NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
+    NodeCar.setTextureID(TextureIDSoleil);
+    NodeFrontLeftWheel.setTextureID(TextureIDRock);
+    NodeFrontRightWheel.setTextureID(TextureIDRock);
+    NodeBackLeftWheel.setTextureID(TextureIDRock);
+    NodeBackRightWheel.setTextureID(TextureIDRock);
 
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
@@ -175,6 +180,10 @@ int main() {
     // NodeSoleil.transformation.setScale(glm::vec3(10.,10.,10.));
     // NodeSoleil.transformation.setTranslation(glm::vec3(0.f, 50.f, 0.0f));
     // NodeSoleil.setMasse(10000000000.f);
+    NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(0.2, 0., 1.));
+    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(0.2, 0., 0.));
+    NodeBackLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
+    NodeBackRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
 
 
     FILE * f = fopen("pos.csv", "w");
@@ -229,7 +238,7 @@ int main() {
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
 
-        //SceneRender(Planete.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        SceneRender(Scene.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
 
         /* render(soleil);
         render(lune);

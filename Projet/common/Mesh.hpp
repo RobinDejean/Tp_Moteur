@@ -81,6 +81,8 @@ class Mesh{
         //CREATE MESHES
         void sphere(float radius, int nblignes);
         void cube(float taille);
+        void car(float taille);
+        void createWheel(float radius, float width, int segments);
 
 };
 
