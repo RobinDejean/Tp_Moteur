@@ -283,11 +283,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
             //mode 0
             mode = 0;
-            cameraSpeed = 0.25;
-            camera_position   = glm::vec3(0.0f, 0.8f,  0.f);
-            //camera_position   = glm::vec3(0.0f, 0.0f,  -2.f);
-            camera_target = glm::vec3(1.f, 0.8f, 0.f);
-            //camera_target = glm::vec3(0.f, 0.0f, 0.f);
+            cameraSpeed = 0.1;
+            camera_position   = NodeCar.getCarCenter(1.) + glm::vec3(5., 3., 0.);
+            camera_target = NodeCar.getCarCenter(1.);
 
 
             

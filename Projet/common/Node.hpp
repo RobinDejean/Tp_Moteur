@@ -48,6 +48,9 @@ class Node{
         double getRebond() const;
         std::vector<Node*> getEnfants() const { return enfants; }
         Transformation getTransformation() const { return transformation; }
+        glm::vec3 getCarCenter(float taille) {
+            return transformation.getTranslation() + glm::vec3(taille, 0., 0.5 * taille);
+        }
 
 
 
