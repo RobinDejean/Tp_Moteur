@@ -1,0 +1,16 @@
+build/external/glfw-3.1.2/src
+external/glew-1.13.0/auto/src
+external/glew-1.13.0/include/GL
+external/glfw-3.1.2/deps
+external/glfw-3.1.2/deps/EGL
+external/glfw-3.1.2/deps/GL
+external/glfw-3.1.2/deps/glad
+external/glfw-3.1.2/deps/KHR
+external/glfw-3.1.2/include/GLFW
+external/glfw-3.1.2/src
+external/rpavlik-cmake-modules-fe2273
+external/rpavlik-cmake-modules-fe2273/ghost-fake-stl
+external/rpavlik-cmake-modules-fe2273/workarounds/mac-alut-framework/AL
+external/rpavlik-cmake-modules-fe2273/workarounds/mac-gl/GL
+external/rpavlik-cmake-modules-fe2273/workarounds/mac-openal/AL
+external/rpavlik-cmake-modules-fe2273/workarounds/tchar
