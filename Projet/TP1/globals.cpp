@@ -28,31 +28,10 @@ int hauteur = 512;
 ImageBase heightMap;
 
 // meshes
-Mesh terrain;
-Mesh eau;
-Mesh boat;
-Mesh soleil;
-Mesh lune;
-Mesh terre;
-Mesh mars;
-Mesh macaque;
-Mesh macaqueLow;
-Mesh cube;
 
 // scene
-SceneGraph Planete;
-SceneGraph Cube;
-SceneGraph Soleil;
-Node NodeSoleil;
-Node NodeLune;
-Node NodeTerrain;
-Node NodeEau;
-Node NodeTerre;
-Node NodeMars;
-Node NodeMacaque;
-Node NodeCube;
 
-Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
+//Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
 
 // autres

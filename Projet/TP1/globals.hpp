@@ -102,29 +102,8 @@ extern int hauteur;
 extern ImageBase heightMap;
 
 // meshes
-extern Mesh terrain;
-extern Mesh eau;
-extern Mesh boat;
-extern Mesh soleil;
-extern Mesh lune;
-extern Mesh terre;
-extern Mesh mars;
-extern Mesh macaque;
-extern Mesh macaqueLow;
-extern Mesh cube;
 
 // scene graph
-extern SceneGraph Planete;
-extern SceneGraph Cube;
-extern SceneGraph Soleil;
-extern Node NodeSoleil;
-extern Node NodeLune;
-extern Node NodeTerrain;
-extern Node NodeEau;
-extern Node NodeTerre;
-extern Node NodeMars;
-extern Node NodeMacaque;
-extern Node NodeCube;
 
 extern Ressort ressortSoleil;
 

@@ -104,47 +104,21 @@ int main() {
     GLuint programID = LoadShaders("vertex_shader.glsl", "fragment_shader.glsl");
 
 
-    heightMap.load("Assets/Heightmap_Mountain.pgm");
-    Planete.racine = &NodeTerrain;
-    Cube.racine = &NodeCube;
-    Soleil.racine = &NodeSoleil;
+    //heightMap.load("Assets/Heightmap_Mountain.pgm");
+    //Planete.racine = &NodeTerrain;
 
 
     //associer mesh au noeud
-    NodeSoleil.setMesh(&soleil);
-    NodeLune.setMesh(&lune);
-    NodeTerrain.setMesh(&terrain);
-    NodeEau.setMesh(&eau);
-    NodeTerre.setMesh(&terre);
-    NodeMars.setMesh(&mars);
-    NodeMacaque.setMesh(&macaque);
-    NodeCube.setMesh(&cube);
+    //NodeSoleil.setMesh(&soleil);
 
     //ajouter les enfants
     //NodeTerrain.enfants.push_back(&NodeMacaque);
-    //NodeTerrain.enfants.push_back(&NodeSoleil);
-    NodeTerrain.addEnfant(&NodeEau);
-    NodeSoleil.addEnfant(&NodeTerre);
-    NodeTerre.addEnfant(&NodeLune);
-    NodeSoleil.addEnfant(&NodeMars);
-    //NodeTerrain.enfants.push_back(&NodeCube);
-
-    
-    float angleSoleil = 0.0f;
-    float angleTerre  = 0.0f;
-    float angleLune   = 0.0f;
 
     //creer les mesh
-    mars.sphere(0.075,20);
-    soleil.sphere(0.2,20);
-    lune.sphere(0.05,20);
-    terre.sphere(0.1,20);
-    terrain.world(longueur, hauteur, heightMap);
-    eau.worldPenche(longueur, hauteur, 0.f);
+    //mars.sphere(0.075,20);
     /* openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
 
-    cube.cube(1.);
 
     //setup des mesh
     /* setupMesh(soleil);
@@ -192,30 +166,15 @@ int main() {
 
     glUniform1i(glGetUniformLocation(programID, "myPlaneteSampler"), 0);
 
-    NodeTerrain.setMode(1);
-    NodeEau.setMode(2);
-    NodeCube.setMode(1);
-    NodeSoleil.setMode(0);
-    NodeTerre.setMode(0);
-    NodeLune.setMode(0);
-    NodeMars.setMode(0);
-    NodeMacaque.setMode(0);
-    NodeSoleil.setTextureID(TextureIDSoleil);
-    NodeTerre.setTextureID(TextureIDTerre);
-    NodeLune.setTextureID(TextureIDLune);
-    NodeMars.setTextureID(TextureIDMars);
-    NodeMacaque.setTextureID(TextureIDMacaque);
-    NodeCube.setTextureID(TextureIDLune);
+    //NodeTerrain.setMode(1);
+    //NodeSoleil.setTextureID(TextureIDSoleil);
 
-
-    NodeTerrain.transformation.setScale(glm::vec3(10.,1.,10.));
-    NodeCube.transformation.setScale(glm::vec3(0.05,0.05,0.05));
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
-    NodeCube.setVitesse(glm::vec3(1.f,0.f,0.f));
-    NodeSoleil.transformation.setScale(glm::vec3(10.,10.,10.));
-    NodeSoleil.transformation.setTranslation(glm::vec3(0.f, 50.f, 0.0f));
-    NodeSoleil.setMasse(10000000000.f);
+    // NodeCube.setVitesse(glm::vec3(1.f,0.f,0.f));
+    // NodeSoleil.transformation.setScale(glm::vec3(10.,10.,10.));
+    // NodeSoleil.transformation.setTranslation(glm::vec3(0.f, 50.f, 0.0f));
+    // NodeSoleil.setMasse(10000000000.f);
 
 
     FILE * f = fopen("pos.csv", "w");
@@ -258,42 +217,8 @@ int main() {
 
         //mettre a jour angle pour vitesse de roatation
 
-        angleSoleil += 1.0f * deltaTime;
-        angleTerre  += 0.5f * deltaTime;
-        angleLune   += 3.0f * deltaTime;
-
         //updateHeight(macaqueTranslate);
         //updateMeshResolution(NodeMacaque);
-
-        if (mouvement){
-            NodeCube.updatePosition();
-            //NodeCube.collisionTerrain();
-            //fprintf(f,"%f %f %f %f %f %f \n", NodeCube.transformation.getTranslation().x, NodeCube.transformation.getTranslation().y, NodeCube.transformation.getTranslation().z, NodeCube.vitesse.x, NodeCube.vitesse.y, NodeCube.vitesse.z);
-            camera_target = NodeCube.transformation.getTranslation();
-            camera_position = NodeCube.transformation.getTranslation() + glm::vec3(0.,100.,100.)  * NodeCube.transformation.getScale().x;
-        }
-
-        
-
-        // NodeMacaque.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate)
-        //                                 * glm::scale(glm::mat4(1.0), glm::vec3(0.03,0.03, -0.03));
-
-        //NodeCube.transformation = glm::translate(glm::mat4(1.0f), macaqueTranslate);
-
-        // NodeSoleil.transformation = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.5f, 0.0f))
-        //                         * glm::rotate(glm::mat4(1.0f), angleSoleil, glm::vec3(0, 1, 0));
-
-        // NodeLune.transformation = glm::rotate(glm::mat4(1.0f), angleLune, glm::vec3(0, 1, 0)) 
-        //                      * glm::translate(glm::mat4(1.0f), glm::vec3(0.3f, 0.0f, 0.0f));
-
-        // NodeTerre.transformation = glm::rotate(glm::mat4(1.0f), angleTerre, glm::vec3(0, 1, 0)) // vitesse de rotation autour du soleil
-        //                         * glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)) // translation
-        //                         * glm::rotate(glm::mat4(1.0f), angleTerre, glm::vec3(0, 1, 0)); // rotation autour d'elle meme
-
-
-        // NodeMars.transformation = glm::rotate(glm::mat4(1.0f), angleTerre*0.8f, glm::vec3(0, 1, 0)) // vitesse de rotation autour du soleil
-        //                         * glm::translate(glm::mat4(1.0f), glm::vec3(1.3f, 0.0f, 0.0f)) // translation
-        //                         * glm::rotate(glm::mat4(1.0f), angleTerre*0.8f, glm::vec3(0, 1, 0)); // rotation autour d'elle meme
 
 
         // choix des shaders a utiliser
@@ -304,9 +229,7 @@ int main() {
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
 
-        SceneRender(Planete.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
-        SceneRender(Cube.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
-        SceneRender(Soleil.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        //SceneRender(Planete.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
 
         /* render(soleil);
         render(lune);
@@ -364,17 +287,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
         }
     }
-    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
-            mouvement ? mouvement = false : mouvement = true;
-            NodeCube.setVitesse(glm::vec3(0,0,0));
-            if (NodeCube.transformation.getTranslation().y < - 0.5f){
-                NodeCube.transformation.setTranslation(glm::vec3(0.f, 1.f, 0.f));
-            }
-        }
-        if (key == GLFW_KEY_R && action == GLFW_PRESS){
-            NodeCube.setVitesse(glm::vec3(0,0,0));
-            NodeCube.transformation.setTranslation(glm::vec3(NodeTerrain.transformation.getTranslation().x - 0.01, 1.f, 0.f));
-            }
         
 }
 
