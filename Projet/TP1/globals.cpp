@@ -22,6 +22,11 @@ glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// variables
+float tailleCar = 1.0;
+float rayonRoue = 0.2;
+float widthRoue = 0.1;
+
 // terrain
 int longueur = 512;
 int hauteur = 512;
@@ -42,6 +47,8 @@ Node NodeBackRightWheel;
 
 SceneGraph SceneTerrain;
 Node NodeTerrain;
+
+Car car = Car(&NodeCar, 1.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 

@@ -8,6 +8,7 @@
 #include "common/Transformation.hpp"
 #include "common/Mesh.hpp"
 #include "common/Node.hpp"
+#include "common/Car.hpp"
 
 // =====================
 // STRUCTS
@@ -96,6 +97,11 @@ extern glm::mat4 rotationY;
 extern float deltaTime;
 extern float lastFrame;
 
+//variables
+extern float tailleCar;
+extern float rayonRoue;
+extern float widthRoue;
+
 // terrain
 extern int longueur;
 extern int hauteur;
@@ -118,6 +124,8 @@ extern SceneGraph SceneTerrain;
 extern Node NodeTerrain;
 
 extern Ressort ressortSoleil;
+
+extern Car car;
 
 // autres
 extern int mode;

@@ -132,8 +132,8 @@ int main() {
     //mars.sphere(0.075,20);
     /* openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
-    MeshCar.car(1.);
-    MeshWheel.createWheel(0.2,0.1, 32);
+    MeshCar.car(tailleCar);
+    MeshWheel.createWheel(rayonRoue,widthRoue, 32);
     MeshTerrain.worldPenche(500,500,0);
 
 
@@ -243,6 +243,9 @@ int main() {
         // On trouve où est la variable "MVP" dans le Vertex Shader, et on lui envoie notre calcul
         GLuint MatrixID = glGetUniformLocation(programID, "MVP");
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
+
+        car.collision();
+        car.calculVitesse(deltaTime);
 
 
         SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
@@ -377,7 +380,7 @@ void processInput(GLFWwindow *window)
             camera_target = camera_front + camera_position;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS){ // down
-            camera_position -= camera_up * deltaTime * cameraSpeed*2;
+            camera_position -= camera_up * deltaTime * cameraSpeed*20;
             camera_target = camera_front + camera_position;
         }
     }

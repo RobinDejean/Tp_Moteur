@@ -24,6 +24,8 @@ using namespace glm;
 #include <common/texture.hpp>
 #include "common/ImageBase.h"
 #include "Node.hpp"
+#include "../TP1/globals.hpp"
+#include <utility>
 
 
 #ifndef CAR_HPP
@@ -47,6 +49,11 @@ class Car{
 
         //DESTRUCTORS
         ~Car();
+
+        //COLLISION
+        static std::pair<glm::vec3,glm::vec3> cylinderPlan(glm::vec3 C, glm::vec3 u, double h, double r, glm::vec3 P, glm::vec3 n);
+        void collision();
+        void calculVitesse(float dt);
 };
 
 #endif
