@@ -38,7 +38,6 @@ using namespace glm;
 
 class Car{
     Node* node;
-    glm::vec3 vitesse;
     float puissance;
     float adherence;
 
@@ -54,6 +53,8 @@ class Car{
         static std::pair<glm::vec3,glm::vec3> cylinderPlan(glm::vec3 C, glm::vec3 u, double h, double r, glm::vec3 P, glm::vec3 n);
         void collision();
         void calculVitesse(float dt);
+        void calculPosition(float dt, float accelerationInput);
+        float getPuissance() { return puissance; }
 };
 
 #endif

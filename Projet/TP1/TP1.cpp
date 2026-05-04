@@ -187,10 +187,11 @@ int main() {
     // NodeSoleil.transformation.setScale(glm::vec3(10.,10.,10.));
     // NodeSoleil.transformation.setTranslation(glm::vec3(0.f, 50.f, 0.0f));
     // NodeSoleil.setMasse(10000000000.f);
-    NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(0.2, 0., 1.));
-    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(0.2, 0., 0.));
-    NodeBackLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
-    NodeBackRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
+    NodeBackLeftWheel.transformation.setTranslation(glm::vec3(0.2, 0., 1.));
+    NodeBackRightWheel.transformation.setTranslation(glm::vec3(0.2, 0., 0.));
+    NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
+    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
+
 
 
     FILE * f = fopen("pos.csv", "w");
@@ -245,7 +246,11 @@ int main() {
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
         car.collision();
-        car.calculVitesse(deltaTime);
+        car.calculPosition(deltaTime, accelerationInput);
+
+        //CAMERA
+        camera_target = NodeCar.getCarCenter(1.);
+        camera_position = camera_target + glm::vec3(NodeCar.getTransformation().getRotationMatrix() * glm::vec4(-6, 2., 0., 0.));
 
 
         SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
@@ -270,41 +275,7 @@ int main() {
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (key == GLFW_KEY_C && action == GLFW_PRESS)
-    {
-        if (mode == 0){
-
-            // mode 1
-            cameraSpeed = 2.5 * deltaTime;
-            mode = 1;
-            camera_target = glm::vec3(0.f, 0.f, 0.f);
-            camera_position   = glm::vec3(0.0f, 3.f,  3.f);
-            camera_up    = normalize(glm::vec3(0.f,-1.0f,  1.f));
-        }
-        else if (mode == 1){
-            mode = 2;
-            camera_target = glm::vec3(0.f, 0.5f, 0.f);
-            camera_position   = glm::vec3(0.0f, 2.f,  1.5f);
-            camera_up    = normalize(glm::vec3(0.f,1.0f,  -1.f));
-        }
-
-
-
-        else if (mode == 2){
-
-            //mode 0
-            mode = 0;
-            cameraSpeed = 0.1;
-            camera_position   = NodeCar.getCarCenter(1.) + glm::vec3(5., 3., 0.);
-            camera_target = NodeCar.getCarCenter(1.);
-
-
-            
-            camera_up    = glm::vec3(0.f,1.0f,  0.f);
-            camera_front = glm::normalize(camera_target - camera_position);
-            rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
-        }
-    }
+    
         
 }
 
@@ -315,35 +286,40 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
     
     glm::vec3 camera_right = glm::cross(camera_front, camera_up);
-    
+    //CNTROLES
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ){
+        currentSteeringAngle -= steeringSpeed * deltaTime;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ){
+        currentSteeringAngle += steeringSpeed * deltaTime;
+    }
+    else{
+        if (currentSteeringAngle > 0.05f) currentSteeringAngle -= steeringSpeed * deltaTime;
+        else if (currentSteeringAngle < -0.05f) currentSteeringAngle += steeringSpeed * deltaTime;
+        else currentSteeringAngle = 0.0f;
+    }
+    std::cout << "Puissance: " << car.getPuissance() << " Vitesse: " << glm::length(NodeCar.getVitesse()) << std::endl;
+    maxSteering = 0.3f * ((car.getPuissance() - glm::length(NodeCar.getVitesse())) / car.getPuissance());
+    currentSteeringAngle = glm::clamp(currentSteeringAngle, -maxSteering, maxSteering);
+    std::cout << "Max Steering: " << maxSteering << " Current Steering Angle: " << currentSteeringAngle << std::endl;
+    NodeFrontLeftWheel.transformation.setEulerAngles(glm::vec3(0.f, currentSteeringAngle, 0.f));
+    NodeFrontRightWheel.transformation.setEulerAngles(glm::vec3(0.f, currentSteeringAngle, 0.f));
 
-    // ancien tp 1
-    /* if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        camera_position += cameraSpeed * camera_right;
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        camera_position -= cameraSpeed * camera_right;
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        camera_position += cameraSpeed * camera_up;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        camera_position -= cameraSpeed * camera_up; */
-    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS ||
-        glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS){
-        if (longueur < 506 && hauteur < 506){
-            longueur += 5;
-            hauteur += 5;
-            //updateTerrain();
-        }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
+        accelerationInput = 1.0f;
     }
-    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || 
-        glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS){
-        if (longueur > 6 && hauteur > 6){
-            longueur -= 5   ;
-            hauteur -= 5;
-            //updateTerrain();
-            
-        }
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        accelerationInput = -1.0f;
     }
-    if (mode == 0  ) {
+    else{
+        accelerationInput = 0.0f;
+    }
+    //CAMERA
+
+
+
+    /* if (mode == 0  ) {
         cameraSpeed = 2.5 * deltaTime;
         if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
             
@@ -384,8 +360,8 @@ void processInput(GLFWwindow *window)
             camera_target = camera_front + camera_position;
         }
     }
-
-    if (mode == 1 ) {
+ */
+    /* if (mode == 1 ) {
         rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(10*cameraSpeed), glm::vec3(0, 1, 0));
         camera_front = glm::normalize(camera_target - camera_position);
         camera_right = glm::normalize(glm::cross(camera_front, glm::vec3(0.f, 1.f, 0.f)));
@@ -415,7 +391,7 @@ void processInput(GLFWwindow *window)
         if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
             macaqueTranslate.x -= 0.1f * deltaTime;
         }
-    }
+    } */
 
 }
 

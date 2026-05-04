@@ -5,7 +5,6 @@
 Car::Car(Node* node, float puissance) {
     this->node = node;
     this->puissance = puissance;
-    vitesse = glm::vec3(0.);
     adherence = 1;
 }
 
@@ -96,25 +95,65 @@ void Car::collision(){
     }
 }
 
-void Car::calculVitesse(float dt) {
-    glm::vec3 v = node->getVitesse();
-    float speed = glm::length(v);
+void Car::calculPosition(float dt, float accelerationInput) {
+    // 1. On récupère la vitesse actuelle (norme)
+    glm::vec3 v_vec = node->getVitesse();
+    float speed = glm::length(v_vec);
     float masse = node->getMasse();
-
-    if (speed < 0.1f) speed = 0.1f;
-
-    float force_moteur = puissance / speed;
-
+    // 2. Calcul de la force (Scalaire)
+    float force;
     float force_max = adherence * masse * 9.81f;
+    if (speed == 0.0f ){
+        force = force_max;
+    }else{
+        float force_moteur = puissance * accelerationInput / speed;
+        force = glm::min(force_moteur, force_max);
 
-    float force = glm::min(force_moteur, force_max);
+    }
+    std::cout << "force: " << force << std::endl;
 
-    glm::vec3 direction = glm::normalize(v);
+    // 3. Mise à jour de la vitesse scalaire
+    // On ajoute l'accélération à la norme de la vitesse
+    if (force >= 1 && accelerationInput > 0.0f) {
+        speed += (force / masse) * dt;
+    }
+    if (accelerationInput == 0.0f){
+        // Si on n'accélère pas, on applique une petite décélération naturelle (friction)
+        speed -= 0.1f * speed * dt;// Ajustez ce facteur pour plus ou moins de friction
+    }
+    if (accelerationInput < 0.0f){
+        // Si on freine, on applique une décélération plus forte
+        speed -= 0.4f * speed * dt + 5*dt; // Ajustez ce facteur pour plus ou moins de freinage
+    }
+    if (speed < 0.01f && accelerationInput == 0.0f){
+        speed = 0.0f; // Arrêter complètement si la vitesse est très faible
+    }
 
-    // accélération
-    glm::vec3 acceleration = (force / masse) * direction;
+    
+    // Ajoute une petite friction pour que la voiture s'arrête si on n'accélère plus
+    //speed *= 0.99f; 
+    std::cout << "speed: " << speed << std::endl;
 
-    v += acceleration * dt;
+    // 4. Calcul de la rotation du châssis (Lacet)
+    // On utilise l'angle des roues (attention : vérifie si c'est .y ou .z selon ton axe vertical)
+    float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
+    float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
+                                      node->getEnfants()[2]->transformation.getTranslation());
+    
+    float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
+    node->transformation.addEulerAngles(glm::vec3(0, rotationChassis, 0));
 
-    node->setVitesse(v);
+    // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
+    // Maintenant que le châssis a tourné, la vitesse pointe vers l'avant du châssis !
+    glm::mat4 rotationMatrix = node->transformation.getRotationMatrix();
+    // On considère que l'avant de ta voiture est l'axe X (1,0,0) d'après ton code précédent
+    glm::vec3 directionChassis = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(1, 0, 0, 0)));
+    
+    glm::vec3 nouveauV = directionChassis * speed;
+    node->setVitesse(nouveauV);
+
+    // 6. Mise à jour de la position
+    glm::vec3 translation = node->transformation.getTranslation();
+    translation += nouveauV * dt;
+    node->transformation.setTranslation(translation);
 }

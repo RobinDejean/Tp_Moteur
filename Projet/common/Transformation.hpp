@@ -95,6 +95,14 @@ public:
         glm::mat4 scale_matrix = glm::scale(glm::mat4(1.), scale);
         return translation_matrix * rotation_matrix * scale_matrix;
     }
+
+    inline glm::mat4 getRotationMatrix() const {
+        glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.), euler_angles.y, VEC_UP);
+        rotation_matrix = glm::rotate(rotation_matrix, euler_angles.x, VEC_RIGHT);
+        rotation_matrix = glm::rotate(rotation_matrix, euler_angles.z, VEC_FRONT);
+        return rotation_matrix;
+    }
+
 };
 
 inline glm::vec3 applyTransformation(const glm::vec3 &vec, float w, const glm::mat4 &transfo) {

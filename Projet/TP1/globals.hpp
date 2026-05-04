@@ -93,6 +93,14 @@ extern float zoom;
 extern float theta;
 extern glm::mat4 rotationY;
 
+//volant
+extern float currentSteeringAngle;
+extern float maxSteering;
+extern const float steeringSpeed;
+
+//
+extern float accelerationInput;
+
 // temps
 extern float deltaTime;
 extern float lastFrame;

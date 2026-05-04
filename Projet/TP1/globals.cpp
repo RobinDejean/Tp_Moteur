@@ -18,6 +18,14 @@ float zoom = 1.0f;
 float theta = 1.0f;
 glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), glm::radians(theta), glm::vec3(0, 1, 0));
 
+//volant
+float currentSteeringAngle = 0.0f;
+float maxSteering = 0.3f;
+const float steeringSpeed = 2.0f;
+
+//
+float accelerationInput = 0.0f;
+
 // temps
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -25,7 +33,7 @@ float lastFrame = 0.0f;
 // variables
 float tailleCar = 1.0;
 float rayonRoue = 0.2;
-float widthRoue = 0.1;
+float widthRoue = 0.5;
 
 // terrain
 int longueur = 512;
@@ -48,7 +56,7 @@ Node NodeBackRightWheel;
 SceneGraph SceneTerrain;
 Node NodeTerrain;
 
-Car car = Car(&NodeCar, 1.);
+Car car = Car(&NodeCar, 100.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
