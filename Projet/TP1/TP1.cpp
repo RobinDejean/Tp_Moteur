@@ -139,6 +139,8 @@ int main() {
 
     NodeTerrain.transformation.setScale(100.);
 
+    map.addNode(1,1, &NodeBackLeftWheel);
+
     // TEXTURES
     //charge la texture
     GLuint TextureIDRock = loadDDS("Assets/rock.dds");
@@ -255,6 +257,7 @@ int main() {
 
         SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
         SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        map.render(MatrixID, viewProj, programID);
 
         /* render(soleil);
         render(lune);

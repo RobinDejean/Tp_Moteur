@@ -77,6 +77,8 @@ add_executable(TP1
 	common/ImageBase.cpp
 	common/Car.cpp
 	common/Car.hpp
+	common/Map.cpp
+	common/Map.hpp
         TP1/vertex_shader.glsl
         TP1/fragment_shader.glsl
 )

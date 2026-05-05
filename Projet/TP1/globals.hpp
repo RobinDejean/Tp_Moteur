@@ -9,6 +9,7 @@
 #include "common/Mesh.hpp"
 #include "common/Node.hpp"
 #include "common/Car.hpp"
+#include "common/Map.hpp"
 
 // =====================
 // STRUCTS
@@ -134,6 +135,9 @@ extern Node NodeTerrain;
 extern Ressort ressortSoleil;
 
 extern Car car;
+
+// MAP
+extern Map map;
 
 // autres
 extern int mode;

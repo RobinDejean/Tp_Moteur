@@ -60,6 +60,8 @@ Car car = Car(&NodeCar, 100.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
+// MAP
+Map map(10, 10);
 
 // autres
 int mode = 0;
