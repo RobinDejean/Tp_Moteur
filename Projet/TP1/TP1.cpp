@@ -210,7 +210,6 @@ int main() {
     NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
     NodeFrontRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
 
-<<<<<<< Updated upstream
     // --------------------- MAP ---------------------
     map.addNode(4, 4, &NodeRoadLine);
     map.addNode(4, 5, &NodeRoadLine);
@@ -219,13 +218,11 @@ int main() {
     map.addNode(3, 7, &NodeRoadLine90);
     map.addNode(2, 7, &NodeRoadLine90);
     map.addNode(1, 7, &NodeRoadLine90);
-=======
     camera.init();
     camera.setTarget(&NodeCar);
 
 
 
->>>>>>> Stashed changes
     FILE * f = fopen("pos.csv", "w");
     // 5. LA BOUCLE DE RENDU
     do{
