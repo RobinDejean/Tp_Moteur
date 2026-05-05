@@ -4,6 +4,9 @@ project (Tutorials)
 
 find_package(OpenGL REQUIRED)
 
+add_compile_definitions(GLFW_EXPOSE_NATIVE_X11)
+add_compile_definitions(GLFW_EXPOSE_NATIVE_GLX)
+
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
     message( FATAL_ERROR "Please select another Build Directory ! (and give it a clever name, like bin_Visual2012_64bits/)" )
@@ -40,9 +43,10 @@ include_directories(
 )
 
 set(ALL_LIBS
-	${OPENGL_LIBRARY}
+	imgui
 	glfw
 	GLEW_1130
+	${OPENGL_LIBRARY}
 )
 
 add_definitions(
@@ -81,9 +85,16 @@ add_executable(TP1
 	common/Map.hpp
         TP1/vertex_shader.glsl
         TP1/fragment_shader.glsl
+	common/camera/Camera.cpp
+	common/camera/Camera.hpp
+	common/camera/Camera_Helper.cpp
+	common/camera/Camera_Helper.hpp
 )
 target_link_libraries(TP1
-	${ALL_LIBS}
+    imgui
+    glfw
+    GLEW_1130
+    ${OPENGL_LIBRARY}
 )
 # Xcode and Visual working directories
 set_target_properties(TP1 PROPERTIES XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/TP1/")

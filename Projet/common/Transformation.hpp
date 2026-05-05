@@ -1,14 +1,14 @@
 #pragma once
 
-// GLEW
-#include <GL/glew.h>
+
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 // GLM
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-// GLFW
-#include <GLFW/glfw3.h>
 
 // USUAL INCLUDES
 #include <math.h>
@@ -89,8 +89,8 @@ public:
 
     inline glm::mat4 computeTransformationMatrix() const {
         glm::mat4 translation_matrix = glm::translate(glm::mat4(1.), translation);
-        glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.), euler_angles.x, VEC_RIGHT);
-        rotation_matrix = glm::rotate(rotation_matrix, euler_angles.y, VEC_UP);
+        glm::mat4 rotation_matrix = glm::rotate(glm::mat4(1.), euler_angles.y, VEC_UP);
+        rotation_matrix = glm::rotate(rotation_matrix, euler_angles.x, VEC_RIGHT);
         rotation_matrix = glm::rotate(rotation_matrix, euler_angles.z, VEC_FRONT);
         glm::mat4 scale_matrix = glm::scale(glm::mat4(1.), scale);
         return translation_matrix * rotation_matrix * scale_matrix;

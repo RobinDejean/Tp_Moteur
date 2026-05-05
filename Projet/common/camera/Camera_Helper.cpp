@@ -1,4 +1,5 @@
-#include <TP/Camera/Camera_Helper.hpp>
+#include "Camera_Helper.hpp"
+#include "../Transformation.hpp"
 
 
 
@@ -44,8 +45,8 @@ void Camera_Helper::computeFinalView(glm::mat4& _outProjectionMatrix, glm::mat4&
 	// Projection matrix : FOV, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	_outProjectionMatrix = glm::perspective(glm::radians(_fovDegree), 4.0f / 3.0f, 0.1f, 200.0f);
 
-	const glm::vec3 front = normalize(_rotation* VEC_FRONT);
-	const glm::vec3 up = normalize(_rotation * VEC_UP);
+	const glm::vec3 front = glm::normalize(_rotation* -VEC_FRONT);
+	const glm::vec3 up = glm::normalize(_rotation * VEC_UP);
 
 	// Camera matrix
 	_outviewMatrix = glm::lookAt(_position, _position + front, up);

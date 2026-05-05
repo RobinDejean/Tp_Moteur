@@ -7,13 +7,13 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtc/constants.hpp>
 
-#define M_PI       3.14159265358979323846f   // pi
 
-static glm::vec3 VEC_ZERO{ 0.f,0.f,0.f };
+/* static glm::vec3 VEC_ZERO{ 0.f,0.f,0.f };
 static glm::vec3 VEC_UP{ 0.f,1.f,0.f };
 static glm::vec3 VEC_FRONT{ 0.f,0.f,1.f };
-static glm::vec3 VEC_RIGHT{ 1.f,0.f,0.f };
+static glm::vec3 VEC_RIGHT{ 1.f,0.f,0.f }; */
 
 class Camera_Helper
 {

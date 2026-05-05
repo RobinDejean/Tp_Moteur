@@ -11,6 +11,8 @@ glm::vec3 camera_up       = glm::vec3(0.f,1.0f,0.f);
 glm::vec3 camera_front    = glm::normalize(camera_target - camera_position);
 glm::vec3 macaqueTranslate = glm::vec3(0.f);
 
+Camera camera;
+
 // paramètres caméra
 float cameraSpeed = 0.0f;
 float angle = 0.0f;

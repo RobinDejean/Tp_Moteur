@@ -1,12 +1,15 @@
-#include <TP/Camera/Camera.hpp>
-#include <TP/Camera/Camera_Helper.hpp>
-#include <TP/Actor/Actor.hpp>
+#include "Camera.hpp"
+#include "Camera_Helper.hpp"
+	
 
 
 // Include GLM
-#include <imgui/imgui.h>
-#include <imgui/imgui_impl_glfw.h>
-#include <imgui/imgui_impl_opengl3.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <GLFW/glfw3.h>
+#include <glm/gtx/norm.hpp>
+
 
 
 
@@ -16,11 +19,11 @@ void Camera::init()
 	m_position = glm::vec3(0.f, 40.f, 0.f);
 	m_eulerAngle = glm::vec3(0.f, 0.f, 0.f); //0:pitch 1:yaw 2:roll
 	m_rotation = glm::quat{};
-	m_showImguiDemo = false;
+	//m_showImguiDemo = false;
 	m_translationSpeed = 0.7f;
 	m_rotationSpeed = 0.2f;
-	m_input = true;
-	m_thirdView = false;
+	m_input = false;
+	m_thirdView = true;
 	m_thirdViewEulerAngle = glm::vec3(20.f, 0.f, 0.f);
 	m_targetDistance = 10.f;
 
@@ -49,7 +52,7 @@ void Camera::updateInterface(float _deltaTime)
 		ImGui::Text("Welcome to this TP about Cameras! Press escape to close the exe");
 		ImGui::Text("Long live to the cameras - With actor included");
 		ImGui::Separator();
-		ImGui::Checkbox("show Imgui Demo", &m_showImguiDemo);
+		//ImGui::Checkbox("show Imgui Demo", &m_showImguiDemo);
 		ImGui::DragFloat3("Position", &m_position[0],1.f, -80.0f, 80.0f);
 		if (ImGui::DragFloat2("Euler Angle", &m_eulerAngle[0], 1.f, -180.0f, 180.0f)){
 			m_rotation = glm::quat(glm::radians(m_eulerAngle));
@@ -161,31 +164,35 @@ void Camera::updateInterface(float _deltaTime)
 	}
 
 	ImGui::End();
-
-	if (m_showImguiDemo)
-	{
-		ImGui::ShowDemoWindow();
-	}
-
 }
 
 void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 {	
 	if (m_thirdView && target)
-	{
-		if (ImGui::IsKeyDown(ImGuiKey_Q)) m_targetDistance -= 0.2f;
-		if (ImGui::IsKeyDown(ImGuiKey_E)) m_targetDistance += 0.2f;
-		m_targetDistance = glm::clamp(m_targetDistance, 2.f, 20.f);
+	{	
+		glm::vec3 carPos = target->getCarCenter(1.);
+		glm::vec3 vitesse = target->getVitesse();
+		float speed = glm::length(vitesse);
 
-		if (ImGui::IsKeyDown(ImGuiKey_RightArrow)) updateAngle(m_thirdViewEulerAngle, 1, 1.f, m_rotation);
-    	if (ImGui::IsKeyDown(ImGuiKey_LeftArrow))  updateAngle(m_thirdViewEulerAngle, 1, -1.f , m_rotation);
-    	if (ImGui::IsKeyDown(ImGuiKey_UpArrow))    updateAngle(m_thirdViewEulerAngle, 0, 1.f, m_rotation);
-    	if (ImGui::IsKeyDown(ImGuiKey_DownArrow))  updateAngle(m_thirdViewEulerAngle, 0, -1.f, m_rotation);
-    	
-		glm::vec3 posTarget = target->getPosition();
-		m_position = m_rotation * VEC_FRONT;
-		m_position = posTarget - m_position * m_targetDistance;
-		
+		glm::vec3 backwardDir;
+
+		if (speed > 0.1f) {
+			backwardDir = glm::normalize(-vitesse);
+		} else {
+			glm::mat4 carRotation = target->getTransformation().getRotationMatrix();
+			backwardDir = glm::normalize(glm::vec3(carRotation * glm::vec4(-1.0f, 0.0f, 0.0f, 0.0f)));
+		}
+
+		float distance = 6.0f;
+		float height = 2.0f;
+
+		glm::vec3 desiredPos = carPos + (backwardDir * distance) + glm::vec3(0.0f, height, 0.0f);
+
+		float smooth = 6.0f;
+		m_position = glm::mix(m_position, desiredPos, _deltaTime * smooth);
+
+		glm::mat4 m = glm::lookAt(m_position, carPos, VEC_UP);
+		m_rotation = glm::quat_cast(glm::inverse(m));	
 	}
 }
 
@@ -194,9 +201,9 @@ void Camera::update(float _deltaTime, GLFWwindow* _window)
 {
 	if (target)
 	{
-		target->getPosition();
+		target->getCarCenter(1.);
 	}
-	updateInterface(_deltaTime);
+	//updateInterface(_deltaTime);
 	updateFreeInput(_deltaTime, _window);
 
 	Camera_Helper::computeFinalView(m_projectionMatrix, m_viewMatrix, m_position, m_rotation, m_fovDegree);

@@ -10,6 +10,7 @@
 #include "common/Node.hpp"
 #include "common/Car.hpp"
 #include "common/Map.hpp"
+#include "common/camera/Camera.hpp"
 
 // =====================
 // STRUCTS
@@ -86,6 +87,9 @@ extern glm::vec3 camera_target;
 extern glm::vec3 camera_up;
 extern glm::vec3 camera_front;
 extern glm::vec3 macaqueTranslate;
+
+class Camera;
+extern Camera camera;
 
 // paramètres caméra
 extern float cameraSpeed;

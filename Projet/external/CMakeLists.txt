@@ -35,6 +35,29 @@ set(OPENGL_LIBRARY
 )
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
+### Imgui ###
+
+add_library(imgui
+    imgui/imgui.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+    imgui/backends/imgui_impl_glfw.cpp
+    imgui/backends/imgui_impl_opengl3.cpp
+	imgui/imgui_demo.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    imgui
+    imgui/backends
+    glfw-3.1.2/include
+)
+
+target_link_libraries(imgui PUBLIC
+    glfw
+    ${OPENGL_LIBRARY}
+)
+
 ### GLEW ###
 
 set(GLEW_SOURCE
@@ -43,6 +66,8 @@ set(GLEW_SOURCE
 
 set(GLEW_HEADERS
 )
+
+
 
 
 add_library( GLEW_1130 STATIC
@@ -54,4 +79,6 @@ target_link_libraries(GLEW_1130
 	${OPENGL_LIBRARY}
 	${EXTRA_LIBS}
 )
+
+
 
