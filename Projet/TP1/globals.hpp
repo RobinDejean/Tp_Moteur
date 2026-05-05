@@ -139,6 +139,13 @@ extern Car car;
 // MAP
 extern Map map;
 
+extern Mesh MeshRoadLine;
+extern Node NodeRoadLine;
+extern Node NodeRoadLine90;
+
+extern Mesh MeshRoadCorner;
+extern Node NodeRoadCorner;
+
 // autres
 extern int mode;
 extern bool mouvement;

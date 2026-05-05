@@ -118,6 +118,16 @@ int main() {
     NodeBackLeftWheel.setMesh(&MeshWheel);
     NodeBackRightWheel.setMesh(&MeshWheel);
 
+    //map nodes
+
+    NodeRoadLine.setMesh(&MeshRoadLine);
+
+    NodeRoadLine90.setMesh(&MeshRoadLine);
+    NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+
+    NodeRoadCorner.setMesh(&MeshRoadCorner);
+
+
     NodeTerrain.setMesh(&MeshTerrain);
     
 
@@ -135,11 +145,11 @@ int main() {
     MeshCar.car(tailleCar);
     MeshWheel.createWheel(rayonRoue,widthRoue, 32);
     MeshTerrain.worldPenche(500,500,0);
+    MeshRoadLine.road_line();
+    MeshRoadCorner.road_corner();
 
 
     NodeTerrain.transformation.setScale(100.);
-
-    map.addNode(1,1, &NodeBackLeftWheel);
 
     // TEXTURES
     //charge la texture
@@ -151,6 +161,8 @@ int main() {
     GLuint TextureUniformGrass = glGetUniformLocation(programID,"myGrassSampler");
     GLuint TextureIDSnowRocks = loadDDS("Assets/snowrocks.dds");
     GLuint TextureUniformSnowRocks = glGetUniformLocation(programID,"mySnowRocksSampler");
+
+    GLuint TextureIDRoad = loadDDS("Assets/Road.dds");
 
     GLuint TextureIDTerre = loadDDS("Assets/terre.dds");
     GLuint TextureIDSoleil = loadDDS("Assets/soleil.dds");
@@ -183,6 +195,10 @@ int main() {
     NodeBackLeftWheel.setTextureID(TextureIDRock);
     NodeBackRightWheel.setTextureID(TextureIDRock);
 
+    NodeRoadLine.setTextureID(TextureIDRoad);
+    NodeRoadLine90.setTextureID(TextureIDRoad);
+    NodeRoadCorner.setTextureID(TextureIDRoad);
+
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
     // NodeCube.setVitesse(glm::vec3(1.f,0.f,0.f));
@@ -194,8 +210,14 @@ int main() {
     NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
     NodeFrontRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
 
-
-
+    // --------------------- MAP ---------------------
+    map.addNode(4, 4, &NodeRoadLine);
+    map.addNode(4, 5, &NodeRoadLine);
+    map.addNode(4, 6, &NodeRoadLine);
+    map.addNode(4, 7, &NodeRoadCorner);
+    map.addNode(3, 7, &NodeRoadLine90);
+    map.addNode(2, 7, &NodeRoadLine90);
+    map.addNode(1, 7, &NodeRoadLine90);
     FILE * f = fopen("pos.csv", "w");
     // 5. LA BOUCLE DE RENDU
     do{
@@ -256,7 +278,7 @@ int main() {
 
 
         SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
-        SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
+        //SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
         map.render(MatrixID, viewProj, programID);
 
         /* render(soleil);

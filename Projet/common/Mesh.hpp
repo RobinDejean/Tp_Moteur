@@ -84,6 +84,10 @@ class Mesh{
         void car(float taille);
         void createWheel(float radius, float width, int segments);
 
+        //CREATE MESH MAP
+        void road_line();
+        void road_corner();
+
 };
 
 

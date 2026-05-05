@@ -464,4 +464,112 @@ void Mesh::worldPenche(int longueur, int hauteur, double pourcentage){
     setupMesh();
 }
 
+void Mesh::road_line() {
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
 
+    indexed_vertices.push_back(vec3(-5.0f, 0.0f, -5.0f));
+    indexed_vertices.push_back(vec3(5.0f, 0.0f, -5.0f));
+    indexed_vertices.push_back(vec3(5.0f, 0.0f, 5.0f));
+    indexed_vertices.push_back(vec3(-5.0f, 0.0f, 5.0f));
+
+    uvs.push_back(vec2(0.0f, 0.0f));
+    uvs.push_back(vec2(1.0f, 0.0f));
+    uvs.push_back(vec2(1.0f, 1.0f));
+    uvs.push_back(vec2(0.0f, 1.0f));
+
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+
+    indices.push_back(2);
+    indices.push_back(3);
+    indices.push_back(0);
+
+    indexed_vertices.push_back(vec3(-5.0f, 0.5f, -5.0f));
+    indexed_vertices.push_back(vec3(5.0f, 0.5f, -5.0f));
+    indexed_vertices.push_back(vec3(5.0f, 0.5f, 5.0f));
+    indexed_vertices.push_back(vec3(-5.0f, 0.5f, 5.0f));
+
+    uvs.push_back(vec2(0.05f, 0.0f));
+    uvs.push_back(vec2(0.95f, 0.0f));
+    uvs.push_back(vec2(0.95f, 1.0f));
+    uvs.push_back(vec2(0.05f, 1.0f));
+
+    indices.push_back(0);
+    indices.push_back(3);
+    indices.push_back(7);
+
+    indices.push_back(7);
+    indices.push_back(4);
+    indices.push_back(0);
+
+    indices.push_back(1);
+    indices.push_back(2);
+    indices.push_back(6);
+
+    indices.push_back(6);
+    indices.push_back(5);
+    indices.push_back(1);
+
+    setupMesh();
+}
+
+void Mesh::road_corner() {
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
+
+    const int segments = 16;       // qualité du virage
+    const float radiusOuter = 10.0f;
+    const float radiusInner = 6.0f;
+    const float height = 0.5f;
+
+    // interieur
+    indexed_vertices.push_back(vec3(-5.0f, 0.0f, -5.0f));
+    uvs.push_back(vec2(0.0f, 0.0f));
+
+    // ===== BASE (y = 0) =====
+    for (int i = 0; i <= segments; i++) {
+        float angle = (glm::half_pi<float>() * i) / segments;
+
+        float cosA = cos(angle);
+        float sinA = sin(angle);
+
+        // extérieur
+        indexed_vertices.push_back(vec3(radiusOuter * cosA - 5.0f, 0.0f, radiusOuter * sinA - 5.0f));
+        uvs.push_back(vec2(radiusOuter * cosA / 10., radiusOuter * sinA / 10.));
+
+        indexed_vertices.push_back(vec3(radiusOuter * cosA - 5.0f, 0.5f, radiusOuter * sinA - 5.0f));
+        uvs.push_back(vec2(radiusOuter * cosA / 10. - 0.05f, radiusOuter * sinA / 10.));
+    }
+
+    // triangles base
+    for (int i = 0; i < segments; i++) {
+        int i1 = i * 2 + 1;
+        int i2 = i * 2 + 2;
+        int i3 = i * 2 + 3;
+        int i4 = i * 2 + 4;
+
+        indices.push_back(0);
+        indices.push_back(i3);
+        indices.push_back(i1);
+
+        indices.push_back(i1);
+        indices.push_back(i3);
+        indices.push_back(i4);
+
+        indices.push_back(i4);
+        indices.push_back(i2);
+        indices.push_back(i1);
+    }
+
+    setupMesh();
+}

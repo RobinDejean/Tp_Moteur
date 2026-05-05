@@ -63,6 +63,13 @@ Car car = Car(&NodeCar, 100.);
 // MAP
 Map map(10, 10);
 
+Mesh MeshRoadLine;
+Node NodeRoadLine;
+Node NodeRoadLine90;
+
+Mesh MeshRoadCorner;
+Node NodeRoadCorner;
+
 // autres
 int mode = 0;
 bool mouvement = false;
