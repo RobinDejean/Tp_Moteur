@@ -58,7 +58,7 @@ Node NodeBackRightWheel;
 SceneGraph SceneTerrain;
 Node NodeTerrain;
 
-Car car = Car(&NodeCar, 100.);
+Car car = Car(&NodeCar, 1000.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 

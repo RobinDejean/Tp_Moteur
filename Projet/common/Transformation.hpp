@@ -67,6 +67,7 @@ public:
 
     // SETTERS
     inline void setTranslation(const glm::vec3 &t) { translation = t; }
+    inline void addTranslation(const glm::vec3 &t) { translation += t; }
     inline void setEulerAngles(const glm::vec3 &r) { euler_angles = r; }
     inline void addEulerAngles(const glm::vec3 &r) { euler_angles += r; }
     inline void setEulerAnglesFromFront(const glm::vec3 &_front) { euler_angles = glm::vec3(Transformation::EuclidianToEuler(_front), 0.f); }
@@ -101,6 +102,16 @@ public:
         rotation_matrix = glm::rotate(rotation_matrix, euler_angles.x, VEC_RIGHT);
         rotation_matrix = glm::rotate(rotation_matrix, euler_angles.z, VEC_FRONT);
         return rotation_matrix;
+    }
+    inline void setRotationFromMatrix(const glm::mat4& m) {
+        // Yaw (rotation autour de Y)
+        euler_angles.y = atan2f(m[0][2], m[0][0]); // atan2(forward.z, forward.x)
+        // Pitch (rotation autour de X)
+        euler_angles.x = asinf(glm::clamp(-m[0][1], -1.f, 1.f));
+        // Roll (rotation autour de Z) — optionnel, souvent 0
+        euler_angles.z = atan2f(m[1][0], m[1][1]);
+
+        updateRotation(); // applique les clamps/clips existants
     }
 
 };

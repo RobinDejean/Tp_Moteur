@@ -16,7 +16,7 @@ Mesh::~Mesh() {}
 const std::vector<std::vector<unsigned int>>& Mesh::getTriangles() const {
     return triangles;
 }
-const std::vector<glm::vec3>& Mesh::getIndexedVertices() const {
+std::vector<glm::vec3>& Mesh::getIndexedVertices() {
     return indexed_vertices;
 }
 const std::vector<glm::vec2>& Mesh::getUvs() const {
@@ -24,6 +24,9 @@ const std::vector<glm::vec2>& Mesh::getUvs() const {
 }
 const std::vector<float>& Mesh::getNoise() const {
     return noise;
+}
+std::vector<unsigned int>& Mesh::getIndices() {
+    return indices;
 }
 
 //SETTERS

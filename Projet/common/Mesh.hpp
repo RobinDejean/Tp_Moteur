@@ -53,10 +53,10 @@ class Mesh{
 
         //GETTERS
         const std::vector<std::vector<unsigned int>>& getTriangles() const;
-        const std::vector<glm::vec3>& getIndexedVertices() const;
+        std::vector<glm::vec3>& getIndexedVertices();
         const std::vector<glm::vec2>& getUvs() const;
         const std::vector<float>& getNoise() const;
-        const std::vector<unsigned int>& getIndices() const;
+        std::vector<unsigned int>& getIndices();
 
 
         //SETTERS

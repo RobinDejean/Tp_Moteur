@@ -26,6 +26,8 @@ using namespace glm;
 #include "Node.hpp"
 #include "../TP1/globals.hpp"
 #include <utility>
+#include "Map.hpp"
+#include "Mesh.hpp"
 
 
 #ifndef CAR_HPP
@@ -55,6 +57,7 @@ class Car{
         void calculVitesse(float dt);
         void calculPosition(float dt, float accelerationInput);
         float getPuissance() { return puissance; }
+        void solver(double _delta_time, Map &map);
 };
 
 #endif

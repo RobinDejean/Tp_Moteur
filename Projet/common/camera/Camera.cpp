@@ -173,6 +173,7 @@ void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 		glm::vec3 carPos = target->getCarCenter(1.);
 		glm::vec3 vitesse = target->getVitesse();
 		float speed = glm::length(vitesse);
+		vitesse = glm::normalize(vitesse);
 
 		glm::vec3 backwardDir;
 

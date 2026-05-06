@@ -220,6 +220,7 @@ int main() {
     map.addNode(1, 7, &NodeRoadLine90);
     camera.init();
     camera.setTarget(&NodeCar);
+    NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
 
 
 
@@ -241,9 +242,9 @@ int main() {
         glfwGetWindowSize(window, &width, &height);
         float ratio = (float)width / (float)height;
         
-        car.collision();
         car.calculPosition(deltaTime, accelerationInput);
-        
+        car.solver(deltaTime, map);
+        std::cout << "Car position: " << NodeCar.transformation.getTranslation().x << ", " << NodeCar.transformation.getTranslation().y << ", " << NodeCar.transformation.getTranslation().z << std::endl;
         camera.update(deltaTime, window);
         // matrice projection (perspective)
         glm::mat4 projectionMatrix = camera.getProjectionMatrix(); 
