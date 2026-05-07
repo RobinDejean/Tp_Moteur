@@ -343,6 +343,8 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
         NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
+        NodeCar.setVitesse(glm::vec3(0.f));
+        currentSteeringAngle = 0.f;
     }
     //CAMERA
 
