@@ -6,6 +6,7 @@ Car::Car(Node* node, float puissance) {
     this->node = node;
     this->puissance = puissance;
     adherence = 1;
+    collisionEnCours = {false, false, false, false}; // 4 roues
 }
 
 //DESTRUCTORS
@@ -13,95 +14,19 @@ Car::~Car() {}
 
 //COLLISION
 
-std::pair<glm::vec3,glm::vec3> Car::cylinderPlan(glm::vec3 C, glm::vec3 u, double h, double r, glm::vec3 P, glm::vec3 n){
-    // Distance signée du centre au plan
-    double d = glm::dot(n, C - P);
-
-    // Projection de la demi-hauteur sur la normale
-    double h_n = (h * 0.5) * std::abs(glm::dot(n, u));
-
-    // Contribution du rayon
-    double dotNU = glm::dot(n, u);
-    double r_n = r * std::sqrt(std::max(0.0, 1.0 - dotNU * dotNU));
-
-    // Test de collision
-    if (std::abs(d) > h_n + r_n) {
-        return {glm::vec3(0.0f), glm::vec3(0.0f)}; // pas de collision
-    }
-
-    // --- Point de contact approximé ---
-
-    // Projection du centre sur le plan
-    glm::vec3 contact = C - (float)d * n;
-
-    // Optionnel : déplacer vers la surface du cylindre
-    // direction tangentielle
-    glm::vec3 radial = glm::normalize(glm::cross(u, glm::cross(n, u)));
-
-    if (glm::length(radial) > 1e-6f) {
-        contact -= (float)r * radial;
-    }
-
-    return {contact, n};
-}
-
-void Car::collision(){
-    glm::vec3 P = glm::vec3(0.0f);
-    glm::vec3 n = VEC_UP;
-
-    // matrice monde du chassis
-    glm::mat4 M_car = node->transformation.computeTransformationMatrix();
-
-    for (auto& enfant : node->getEnfants()) {
-
-        // matrice locale roue
-        glm::mat4 M_wheel = enfant->transformation.computeTransformationMatrix();
-
-        // matrice monde roue
-        glm::mat4 M = M_car * M_wheel;
-
-        // --- POSITION DU CENTRE ---
-        glm::vec3 C = applyTransformation(glm::vec3(0.f), 1.f, M);
-
-        // --- AXE DU CYLINDRE ---
-        // axe local Z (roue classique)
-        glm::vec3 u = applyTransformation(VEC_FRONT, 0.f, M);
-        u = glm::normalize(u);
-
-        // Collision
-        auto result = cylinderPlan(C, u, widthRoue, rayonRoue, P, n);
-
-        if (result.second == VEC_ZERO)
-            continue;
-
-        // --- calcul pénétration ---
-        float d = glm::dot(n, C - P);
-
-        float dotNU = glm::dot(n, u);
-        float h_n = (widthRoue * 0.5f) * std::abs(dotNU);
-        float r_n = rayonRoue * std::sqrt(std::max(0.0f, 1.0f - dotNU * dotNU));
-
-        float penetration = (h_n + r_n) - std::abs(d);
-
-        if (penetration > 0.0f) {
-
-            glm::vec3 correction = n * penetration;
-
-            // appliquer UNIQUEMENT au chassis
-            node->transformation.setTranslation(
-                node->transformation.getTranslation() + correction
-            );
-        }
-    }
-}
-
 void Car::calculPosition(float dt, float accelerationInput) {
     // 1. On récupère la vitesse actuelle (norme)
+    for (int i = 0; i < collisionEnCours.size(); i++) {
+        if (!collisionEnCours[i]) {
+            return;
+        }
+    }
     glm::vec3 v_vec = node->getVitesse();
     glm::mat4 rotationMatrix = node->transformation.getRotationMatrix();
     // On considère que l'avant de ta voiture est l'axe X (1,0,0) d'après ton code précédent
     glm::vec3 directionChassis = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(1, 0, 0, 0)));
-    float speed = glm::dot(v_vec, directionChassis); 
+    float speed = glm::dot(v_vec, directionChassis);
+    float ancienSpeed = speed;
     float abs_speed = std::abs(speed);
     float masse = node->getMasse();
     // 2. Calcul de la force (Scalaire)
@@ -158,23 +83,24 @@ void Car::calculPosition(float dt, float accelerationInput) {
 
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
     // Maintenant que le châssis a tourné, la vitesse pointe vers l'avant du châssis !
-    
-    glm::vec3 nouveauV = directionChassis * speed;
+    glm::vec3 nouveauV = node->getVitesse();
+    //nouveauV += directionChassis * (speed-ancienSpeed);
+    nouveauV = directionChassis * speed;
     node->setVitesse(nouveauV);
     for (auto& w : node->getEnfants()) {
         //w->setVitesse(nouveauV); // Les roues suivent la même vitesse que le châssis
     }
 
     // 6. Mise à jour de la position
-    glm::vec3 translation = node->transformation.getTranslation();
+    /* glm::vec3 translation = node->transformation.getTranslation();
     translation += nouveauV * dt;
 
-    node->transformation.setTranslation(translation);
+    node->transformation.setTranslation(translation); */
 }
 
 void Car::solver(double dt, Map& map)
 {
-    const float restitution = 0.1f;
+    const float restitution = 0.0f;
     const glm::vec3 gravity(0.f, -9.81f, 0.f);
 
     std::vector<Node*> roues = node->getEnfants();
@@ -197,7 +123,8 @@ void Car::solver(double dt, Map& map)
             + glm::vec3(rotMat * glm::vec4(wheel->transformation.getTranslation(), 0.f));
 
         // 1. Gravité sur la vitesse de la roue
-        glm::vec3 wheelVel = wheel->getVitesse();
+        
+        glm::vec3 wheelVel = node->getVitesse();
         wheelVel += gravity * (float)dt;
 
         // 2. Position prédite
@@ -226,6 +153,7 @@ void Car::solver(double dt, Map& map)
                 glm::vec3 v1 = applyTransformation(verts[indices[t+1]], 1.f, T);
                 glm::vec3 v2 = applyTransformation(verts[indices[t+2]], 1.f, T);
 
+
                 glm::vec3 normal = glm::normalize(glm::cross(v1-v0, v2-v0));
                 if (normal.y < 0.f) normal = -normal;
 
@@ -234,18 +162,33 @@ void Car::solver(double dt, Map& map)
                
 
                 // Projection sur le plan
+                
                 glm::vec3 projected = predicted - normal * dist;
-
                 // Test barycentrique
-                glm::vec3 c0 = glm::cross(v1-v0, projected-v0);
-                glm::vec3 c1 = glm::cross(v2-v1, projected-v1);
-                glm::vec3 c2 = glm::cross(v0-v2, projected-v2);
-                if (glm::dot(c0,normal) < 0.f ||
-                    glm::dot(c1,normal) < 0.f ||
-                    glm::dot(c2,normal) < 0.f) continue;
+                glm::vec3 v0v1 = v1 - v0;
+                glm::vec3 v0v2 = v2 - v0;
+                glm::vec3 v0p  = projected - v0;
+
+                float d00 = glm::dot(v0v1, v0v1);
+                float d01 = glm::dot(v0v1, v0v2);
+                float d11 = glm::dot(v0v2, v0v2);
+                float d20 = glm::dot(v0p , v0v1);
+                float d21 = glm::dot(v0p , v0v2);
+
+                float denom = d00 * d11 - d01 * d01;
+
+                if (std::abs(denom) < 1e-8f)
+                    continue;
+
+                float v = (d11 * d20 - d01 * d21) / denom;
+                float w = (d00 * d21 - d01 * d20) / denom;
+                float u = 1.0f - v - w;
+
+                if (u < 0.f || v < 0.f || w < 0.f)
+                    continue;
 
                 float penetration = rayonRoue - dist;
-                if (penetration > bestPenetration)
+                if (penetration > bestPenetration && std::abs(dist) < rayonRoue) // debug
                 {
                     bestPenetration = penetration;
                     bestNormal      = normal;
@@ -257,16 +200,20 @@ void Car::solver(double dt, Map& map)
         //std::cout << "Roues " << i << " : penetration = " << bestPenetration << std::endl;
         if (bestPenetration > 0.f)
         {
-            std::cout << "Collision roue " << i << " : penetration = " << bestPenetration << std::endl;
             predicted += bestNormal * bestPenetration;
-
+            normalCollision = bestNormal;
+            collisionEnCours[i] = true;
             float vn = glm::dot(wheelVel, bestNormal);
-            if (vn < 0.f) // on s'enfonce
+            if (vn < 0.f){ // on s'enfonce
                 wheelVel -= (1.f + restitution) * vn * bestNormal;
+            }
+        }else{
+            collisionEnCours[i] = false;
         }
 
         wheel->setVitesse(wheelVel);
         wheelWorldPositions[i] = predicted;
+        
     }
 
     // ═══════════════════════════════════════════════
@@ -300,10 +247,10 @@ void Car::solver(double dt, Map& map)
     newRot[1] = glm::vec4(terrainNormal, 0.f); // axe Y = haut
     newRot[2] = glm::vec4(right,         0.f); // axe Z = droite
     newRot[3] = glm::vec4(0.f, 0.f, 0.f, 1.f);
-    newCenter += glm::vec3(-1,0,-0.5);
+    newCenter += glm::vec3(newRot * glm::vec4(-1,0, -0.5,0.f)); // reculer un peu le centre pour que ce soit plus réaliste
 
     node->transformation.setTranslation(newCenter);
-    node->transformation.setRotationFromMatrix(newRot);
+    //node->transformation.setRotationFromMatrix(newRot);
 
     // ═══════════════════════════════════════════════
     // ÉTAPE 3 : Remettre les roues en local

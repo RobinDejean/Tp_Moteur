@@ -127,7 +127,7 @@ int main() {
 
     NodeRoadCorner.setMesh(&MeshRoadCorner);
 
-
+    NodeRoadLinePenche.setMesh(&MeshRoadLinePenche);
     NodeTerrain.setMesh(&MeshTerrain);
     
 
@@ -147,7 +147,7 @@ int main() {
     MeshTerrain.worldPenche(500,500,0);
     MeshRoadLine.road_line();
     MeshRoadCorner.road_corner();
-
+    MeshRoadLinePenche.road_line_penche();
 
     NodeTerrain.transformation.setScale(100.);
 
@@ -198,6 +198,7 @@ int main() {
     NodeRoadLine.setTextureID(TextureIDRoad);
     NodeRoadLine90.setTextureID(TextureIDRoad);
     NodeRoadCorner.setTextureID(TextureIDRoad);
+    NodeRoadLinePenche.setTextureID(TextureIDRoad);
 
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
@@ -213,7 +214,7 @@ int main() {
     // --------------------- MAP ---------------------
     map.addNode(4, 4, &NodeRoadLine);
     map.addNode(4, 5, &NodeRoadLine);
-    map.addNode(4, 6, &NodeRoadLine);
+    map.addNode(4, 6, &NodeRoadLinePenche);
     map.addNode(4, 7, &NodeRoadCorner);
     map.addNode(3, 7, &NodeRoadLine90);
     map.addNode(2, 7, &NodeRoadLine90);
@@ -339,6 +340,9 @@ void processInput(GLFWwindow *window)
     }
     else{
         accelerationInput = 0.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
+        NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
     }
     //CAMERA
 

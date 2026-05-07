@@ -42,6 +42,8 @@ class Car{
     Node* node;
     float puissance;
     float adherence;
+    glm::vec3 normalCollision;
+    std::vector<bool> collisionEnCours;
 
     public:
         //CONSTRUCTORS

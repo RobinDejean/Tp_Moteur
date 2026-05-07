@@ -149,6 +149,8 @@ extern Node NodeRoadLine90;
 
 extern Mesh MeshRoadCorner;
 extern Node NodeRoadCorner;
+extern Mesh MeshRoadLinePenche;
+extern Node NodeRoadLinePenche;
 
 // autres
 extern int mode;

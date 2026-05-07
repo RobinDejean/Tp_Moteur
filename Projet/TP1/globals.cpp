@@ -72,6 +72,9 @@ Node NodeRoadLine90;
 Mesh MeshRoadCorner;
 Node NodeRoadCorner;
 
+Mesh MeshRoadLinePenche;
+Node NodeRoadLinePenche;
+
 // autres
 int mode = 0;
 bool mouvement = false;
