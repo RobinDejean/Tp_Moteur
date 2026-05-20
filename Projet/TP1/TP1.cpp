@@ -124,10 +124,13 @@ int main() {
 
     NodeRoadLine90.setMesh(&MeshRoadLine);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    
 
     NodeRoadCorner.setMesh(&MeshRoadCorner);
 
     NodeRoadLinePenche.setMesh(&MeshRoadLinePenche);
+    NodeRoadLinePenche90.setMesh(&MeshRoadLinePenche);
+    NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(-90.f), 0.));
     NodeTerrain.setMesh(&MeshTerrain);
     
 
@@ -199,7 +202,7 @@ int main() {
     NodeRoadLine90.setTextureID(TextureIDRoad);
     NodeRoadCorner.setTextureID(TextureIDRoad);
     NodeRoadLinePenche.setTextureID(TextureIDRoad);
-
+    NodeRoadLinePenche90.setTextureID(TextureIDRoad);
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
     // NodeCube.setVitesse(glm::vec3(1.f,0.f,0.f));
@@ -219,6 +222,8 @@ int main() {
     map.addNode(3, 7, &NodeRoadLine90);
     map.addNode(2, 7, &NodeRoadLine90);
     map.addNode(1, 7, &NodeRoadLine90);
+    map.addNode(0, 7, &NodeRoadLinePenche90);
+    
     camera.init();
     camera.setTarget(&NodeCar);
     NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
@@ -342,7 +347,7 @@ void processInput(GLFWwindow *window)
         accelerationInput = 0.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
+        NodeCar.transformation.setTranslation(glm::vec3(-5.f, 2.f, 0.f));
         NodeCar.setVitesse(glm::vec3(0.f));
         currentSteeringAngle = 0.f;
     }

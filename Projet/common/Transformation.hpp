@@ -104,14 +104,19 @@ public:
         return rotation_matrix;
     }
     inline void setRotationFromMatrix(const glm::mat4& m) {
-        // Yaw (rotation autour de Y)
-        euler_angles.y = atan2f(m[0][2], m[0][0]); // atan2(forward.z, forward.x)
-        // Pitch (rotation autour de X)
-        euler_angles.x = asinf(glm::clamp(-m[0][1], -1.f, 1.f));
-        // Roll (rotation autour de Z) — optionnel, souvent 0
-        euler_angles.z = atan2f(m[1][0], m[1][1]);
+        // 1. euler_angles.x (Rotation autour de X = Roulis / Tonneau)
+        // Extrait à partir de la composante Y de l'axe Z (droite)
+        euler_angles.x = asinf(glm::clamp(-m[2][1], -1.f, 1.f));
 
-        updateRotation(); // applique les clamps/clips existants
+        // 2. euler_angles.y (Rotation autour de Y = Lacet / Direction)
+        // Extrait à partir des composantes X et Z de l'axe Z
+        euler_angles.y = atan2f(m[2][0], m[2][2]);
+
+        // 3. euler_angles.z (Rotation autour de Z = Tangage / Pente)
+        // Extrait à partir des composantes Y de l'axe X (avant) et Y (haut)
+        euler_angles.z = atan2f(m[0][1], m[1][1]);
+
+        updateRotation(); // Applique tes sécurités existantes
     }
 
 };

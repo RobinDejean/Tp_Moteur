@@ -1,6 +1,7 @@
 #include "Car.hpp"
 
 
+
 //CONSTRUCTORS
 Car::Car(Node* node, float puissance) {
     this->node = node;
@@ -16,10 +17,14 @@ Car::~Car() {}
 
 void Car::calculPosition(float dt, float accelerationInput) {
     // 1. On récupère la vitesse actuelle (norme)
+    int numCollisions = 0;
     for (int i = 0; i < collisionEnCours.size(); i++) {
-        if (!collisionEnCours[i]) {
-            return;
+        if (collisionEnCours[i]) {
+            numCollisions++;
         }
+    }
+    if (numCollisions == 0) {
+        return;
     }
     glm::vec3 v_vec = node->getVitesse();
     glm::mat4 rotationMatrix = node->transformation.getRotationMatrix();
@@ -72,23 +77,48 @@ void Car::calculPosition(float dt, float accelerationInput) {
 
     // 4. Calcul de la rotation du châssis (Lacet)
     // On utilise l'angle des roues (attention : vérifie si c'est .y ou .z selon ton axe vertical)
+/*     glm::mat4 rotMat  = node->transformation.getRotationMatrix();
+    glm::vec3 chassisPos = node->transformation.getTranslation();
+    glm::vec3 wheelWorld = chassisPos
+            + glm::vec3(rotMat * glm::vec4(wheel->transformation.getTranslation(), 0.f));
+    glm::vec3 diag1 = wheelWorldPositions[3] - wheelWorldPositions[0];
+    glm::vec3 diag2 = wheelWorldPositions[2] - wheelWorldPositions[1];
+    glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2)); */
+
+
     float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
     float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
                                       node->getEnfants()[2]->transformation.getTranslation());
     
     float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
     rotationMatrix = node->transformation.getRotationMatrix();
-    directionChassis = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(1, 0, 0, 0)));
-    node->transformation.addEulerAngles(glm::vec3(0, rotationChassis, 0));
+    glm::vec3 axeHautLocal = glm::vec3(rotationMatrix[1]);
+    glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHautLocal);
+    
+    // On applique ce virage à la matrice actuelle du châssis
+    glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
+    
+    // On utilise ta fonction modifiée pour remettre à jour les Euler proprement
+    node->transformation.setRotationFromMatrix(nouvelleRotation);
+    
+    // La nouvelle direction Avant (Axe X) est la première colonne fraîchement tournée
+    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+    //node->transformation.addEulerAngles(glm::vec3(0, rotationChassis, 0));
 
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
     // Maintenant que le châssis a tourné, la vitesse pointe vers l'avant du châssis !
     glm::vec3 nouveauV = node->getVitesse();
     //nouveauV += directionChassis * (speed-ancienSpeed);
     nouveauV = directionChassis * speed;
-    node->setVitesse(nouveauV);
+    //node->setVitesse(nouveauV);
     for (auto& w : node->getEnfants()) {
         //w->setVitesse(nouveauV); // Les roues suivent la même vitesse que le châssis
+    }
+    auto roues = node->getEnfants();
+    for (int i =0; i < (int)roues.size(); i++) {
+        if (collisionEnCours[i] == true){
+            roues[i]->setVitesse(nouveauV);
+        }
     }
 
     // 6. Mise à jour de la position
@@ -124,7 +154,7 @@ void Car::solver(double dt, Map& map)
 
         // 1. Gravité sur la vitesse de la roue
         
-        glm::vec3 wheelVel = node->getVitesse();
+        glm::vec3 wheelVel = wheel->getVitesse();
         wheelVel += gravity * (float)dt;
 
         // 2. Position prédite
@@ -206,6 +236,14 @@ void Car::solver(double dt, Map& map)
             float vn = glm::dot(wheelVel, bestNormal);
             if (vn < 0.f){ // on s'enfonce
                 wheelVel -= (1.f + restitution) * vn * bestNormal;
+                /* glm::vec3 axeDroite = glm::vec3(rotMat[2]); 
+                
+                // On calcule à quelle vitesse la roue dérape sur le côté
+                float vitesseLaterale = glm::dot(wheelVel, axeDroite);
+                
+                // On annule presque tout ce dérapage (98% d'adhérence)
+                // Cela force la roue à ne rouler que vers l'avant/l'arrière
+                wheelVel -= axeDroite * (vitesseLaterale * 0.5f);*/
             }
         }else{
             collisionEnCours[i] = false;
@@ -224,7 +262,6 @@ void Car::solver(double dt, Map& map)
     glm::vec3 newCenter(0.f);
     for (auto& wp : wheelWorldPositions) newCenter += wp;
     newCenter /= (float)wheelWorldPositions.size();
-    newCenter.y += 0.;
 
     // Nouvelle orientation = plan formé par les 4 roues
     // Convention attendue : [0]=AvantGauche [1]=AvantDroit [2]=ArriereGauche [3]=ArriereDroit
@@ -233,31 +270,46 @@ void Car::solver(double dt, Map& map)
     glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2));
     if (terrainNormal.y < 0.f) terrainNormal = -terrainNormal;
 
-    // Conserver la direction avant du châssis (lacet de calculPosition)
-    glm::vec3 forward = glm::normalize(glm::vec3(rotMat * glm::vec4(1,0,0,0)));
+    glm::mat4 currentRot = node->transformation.getRotationMatrix(); 
 
-    // Re-orthogonalisation de Gram-Schmidt
-    glm::vec3 right   = glm::normalize(glm::cross(forward, terrainNormal));
+    // 2. Extraire l'axe X (qui correspond à ton "Avant" dans ton moteur)
+    glm::vec3 forward = glm::vec3(currentRot[0]);
+    glm::vec3 right   = glm::vec3(currentRot[2]);
+
+    /* // 3. Annuler l'inclinaison pour ne conserver que la direction (Yaw)
+    forward.y = 0.f; 
+    if (glm::length(forward) < 0.001f) forward = glm::vec3(1.f, 0.f, 0.f); 
+    forward = glm::normalize(forward); */
+
+    forward = glm::normalize(glm::cross(terrainNormal, right));
+    right   = glm::normalize(glm::cross(forward, terrainNormal));
+
+    // 4. Re-orthogonalisation par rapport à la pente du terrain
+    /* glm::vec3 right   = glm::normalize(glm::cross(forward, terrainNormal));
     forward           = glm::normalize(glm::cross(terrainNormal, right));
-
-    // Nouvelle matrice de rotation
-    // ⚠️ Colonnes GLM : [col][row]
-    glm::mat4 newRot(0.f);
+ */
+    // 5. Construire la nouvelle matrice parfaitement alignée
+    glm::mat4 newRot(1.f); // Initialiser à l'identité
     newRot[0] = glm::vec4(forward,       0.f); // axe X = avant
     newRot[1] = glm::vec4(terrainNormal, 0.f); // axe Y = haut
     newRot[2] = glm::vec4(right,         0.f); // axe Z = droite
-    newRot[3] = glm::vec4(0.f, 0.f, 0.f, 1.f);
-    newCenter += glm::vec3(newRot * glm::vec4(-1,0, -0.5,0.f)); // reculer un peu le centre pour que ce soit plus réaliste
 
+    // 6. Appliquer la nouvelle position et rotation
+    newCenter += glm::vec3(newRot * glm::vec4(-1.f, 0.f, -0.5f, 0.f)); 
     node->transformation.setTranslation(newCenter);
-    //node->transformation.setRotationFromMatrix(newRot);
+    std::cout << " New rotation : " << std::endl;
+    std::cout << newRot[0][0] << " " << newRot[0][1] << " " << newRot[0][2] << std::endl;
+    std::cout << newRot[1][0] << " " << newRot[1][1] << " " << newRot[1][2] << std::endl;
+    std::cout << newRot[2][0] << " " << newRot[2][1] << " " << newRot[2][2] << std::endl;
 
+    node->transformation.setRotationFromMatrix(newRot);
     // ═══════════════════════════════════════════════
     // ÉTAPE 3 : Remettre les roues en local
     // ═══════════════════════════════════════════════
     glm::mat4 newRotInv = glm::transpose(newRot); // matrice orthogonale → transpose = inverse
+    
 
-    for (int i = 0; i < (int)roues.size(); i++)
+    /* for (int i = 0; i < (int)roues.size(); i++)
     {
         // Position locale = rotation inverse * (mondiale - centre châssis)
         glm::vec3 localPos = glm::vec3(newRotInv * glm::vec4(wheelWorldPositions[i] - newCenter, 0.f));
@@ -266,7 +318,11 @@ void Car::solver(double dt, Map& map)
         glm::vec3 origLocal = roues[i]->transformation.getTranslation();
         origLocal.y = localPos.y;
         roues[i]->transformation.setTranslation(origLocal);
-    }
+    } */
+    roues[2]->transformation.setTranslation(glm::vec3(0.2, 0., 1.));
+    roues[3]->transformation.setTranslation(glm::vec3(0.2, 0., 0.));
+    roues[0]->transformation.setTranslation(glm::vec3(1.8, 0., 1.));
+    roues[1]->transformation.setTranslation(glm::vec3(1.8, 0., 0.));
 
     // Vitesse du châssis = moyenne des vitesses des roues
     glm::vec3 chassisVel(0.f);

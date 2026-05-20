@@ -74,6 +74,7 @@ Node NodeRoadCorner;
 
 Mesh MeshRoadLinePenche;
 Node NodeRoadLinePenche;
+Node NodeRoadLinePenche90;
 
 // autres
 int mode = 0;
