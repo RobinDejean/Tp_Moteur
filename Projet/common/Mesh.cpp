@@ -467,6 +467,8 @@ void Mesh::worldPenche(int longueur, int hauteur, double pourcentage){
     setupMesh();
 }
 
+// ---------------------------------------- ROUTES ----------------------------------------
+
 void Mesh::road_line() {
     indexed_vertices.clear();
     indices.clear();
@@ -518,6 +520,112 @@ void Mesh::road_line() {
     indices.push_back(6);
     indices.push_back(5);
     indices.push_back(1);
+
+    setupMesh();
+}
+
+void Mesh::road_quarterpipe() {
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
+
+    int segments = 20;       // Fluidité de la courbe
+    float radius = 10.0f;     // Rayon de la rampe
+    float lengthZ = 10.0f;   // Longueur sur l'axe Z
+    float thickness = 0.5f;  // Épaisseur de la bordure (comme ton 0.5f d'origine)
+
+    // On calcule les coordonnées Z pour le côté gauche et droit
+    float z1 = -lengthZ / 2.0f;
+    float z2 = lengthZ / 2.0f;
+
+    // ==========================================
+    // 1. GÉNÉRATION DES VERTICES ET DES UVS
+    // ==========================================
+    for (int i = 0; i <= segments; ++i) {
+        float t = (float)i / (float)segments;
+        float angle = t * (3.14159265f / 2.0f);
+
+        // --- Surface de la route (Piste intérieure) ---
+        float x = -5.0f + radius * (1.0f - cos(angle)); 
+        float y = -5.0f + radius * (1.0f - sin(angle));
+
+        // --- Surface externe (Le "dos" ou l'épaisseur de la structure) ---
+        // On pousse les sommets vers l'extérieur en suivant le vecteur de la courbe
+        float ext_x = x + thickness * cos(angle);
+        float ext_y = y + thickness * sin(angle);
+
+        // AJOUT DES VERTICES (L'ordre ici est CRUCIAL pour calculer les indices facilement)
+        // [0] Piste - Côté Z-
+        indexed_vertices.push_back(vec3(x, y, z1));
+        uvs.push_back(vec2(t, 0.0f));
+
+        // [1] Piste - Côté Z+
+        indexed_vertices.push_back(vec3(x, y, z2));
+        uvs.push_back(vec2(t, 1.0f));
+
+        // [2] Extérieur - Côté Z-
+        indexed_vertices.push_back(vec3(ext_x, ext_y, z1));
+        uvs.push_back(vec2(t, 0.05f)); // Léger décalage UV comme ton code initial
+
+        // [3] Extérieur - Côté Z+
+        indexed_vertices.push_back(vec3(ext_x, ext_y, z2));
+        uvs.push_back(vec2(t, 0.95f));
+    }
+
+    // ==========================================
+    // 2. GÉNÉRATION DES TRIANGLES (INDICES)
+    // ==========================================
+    for (int i = 0; i < segments; ++i) {
+        // Pour chaque étape 'i', on a généré 4 sommets.
+        // On calcule l'index de départ pour l'étape actuelle (i) et la suivante (next)
+        int curr = i * 4;
+        int next = (i + 1) * 4;
+
+        // Repérage des points de la tranche actuelle (i)
+        int p_zMin = curr + 0; // Piste Z-
+        int p_zMax = curr + 1; // Piste Z+
+        int e_zMin = curr + 2; // Extérieur Z-
+        int e_zMax = curr + 3; // Extérieur Z+
+
+        // Repérage des points de la tranche suivante (i+1)
+        int np_zMin = next + 0; // Next Piste Z-
+        int np_zMax = next + 1; // Next Piste Z+
+        int ne_zMin = next + 2; // Next Extérieur Z-
+        int ne_zMax = next + 3; // Next Extérieur Z+
+
+        // --- FACE 1 : La Piste Intérieure (Où roulent les véhicules) ---
+        indices.push_back(p_zMin);
+        indices.push_back(np_zMin);
+        indices.push_back(p_zMax);
+
+        indices.push_back(p_zMax);
+        indices.push_back(np_zMin);
+        indices.push_back(np_zMax);
+
+        // --- FACE 2 : La Bordure Latérale Droite (Flanc Z-) ---
+        indices.push_back(e_zMin);
+        indices.push_back(p_zMin);
+        indices.push_back(ne_zMin);
+
+        indices.push_back(ne_zMin);
+        indices.push_back(p_zMin);
+        indices.push_back(np_zMin);
+
+        // --- FACE 3 : La Bordure Latérale Gauche (Flanc Z+) ---
+        indices.push_back(p_zMax);
+        indices.push_back(e_zMax);
+        indices.push_back(np_zMax);
+
+        indices.push_back(np_zMax);
+        indices.push_back(e_zMax);
+        indices.push_back(ne_zMax);
+        
+        // Note : Si tu as besoin de fermer le "dos" de la rampe (la face extérieure cachée),
+        // dis-le moi, on peut aussi générer les triangles entre e_zMin/e_zMax et ne_zMin/ne_zMax.
+    }
 
     setupMesh();
 }
@@ -627,6 +735,105 @@ void Mesh::road_corner() {
         indices.push_back(i4);
         indices.push_back(i2);
         indices.push_back(i1);
+    }
+
+    setupMesh();
+}
+
+// ---------------------------------------- OBSTACLES ----------------------------------------
+
+void Mesh::pillar() {
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
+
+    int segments = 32;       // Plus ce chiffre est haut, plus le cylindre est rond
+    float radius = 1.0f;     // Rayon du cylindre
+    float height = 3.0f;     // Hauteur du cylindre
+
+
+    // ==========================================
+    // 1. GÉNÉRATION DU CORPS (LES PAROIS)
+    // ==========================================
+    // On fait une boucle jusqu'à "segments" inclus pour fermer proprement la texture UV
+    for (int i = 0; i <= segments; ++i) {
+        float t = (float)i / (float)segments;
+        float angle = t * 2.0f * 3.14159265f; // Tour complet (0 à 360°)
+
+        float x = radius * cos(angle);
+        float z = radius * sin(angle);
+
+        // Sommet du bas
+        indexed_vertices.push_back(vec3(x, 0., z));
+        uvs.push_back(vec2(t, 0.0f));
+
+        // Sommet du haut
+        indexed_vertices.push_back(vec3(x, height, z));
+        uvs.push_back(vec2(t, 1.0f));
+    }
+
+    // Indices pour les parois
+    for (int i = 0; i < segments; ++i) {
+        int bottomLeft  = 2 * i;
+        int topLeft     = 2 * i + 1;
+        int bottomRight = 2 * (i + 1);
+        int topRight    = 2 * (i + 1) + 1;
+
+        // Triangle 1
+        indices.push_back(bottomRight);
+        indices.push_back(bottomLeft);
+        indices.push_back(topLeft);
+
+        // Triangle 2
+        indices.push_back(bottomRight);
+        indices.push_back(topLeft);
+        indices.push_back(topRight);
+    }
+
+    // ==========================================
+    // 2. GÉNÉRATION DES COUVERCLES (BAS ET HAUT)
+    // ==========================================
+    // Pour éviter des problèmes de textures et de normales, on recrée des sommets 
+    // dédiés aux couvercles. On utilise une structure en "disque de triangles" (Triangle Fan).
+
+    // Index de départ pour les couvercles
+    int baseIndex = indexed_vertices.size();
+
+    // --- Couvercle du Bas ---
+    int centerBottomIndex = baseIndex;
+    indexed_vertices.push_back(vec3(0.0f, 0., 0.0f)); // Centre bas
+    uvs.push_back(vec2(0.5f, 0.5f));
+
+    for (int i = 0; i <= segments; ++i) {
+        float angle = ((float)i / (float)segments) * 2.0f * 3.14159265f;
+        indexed_vertices.push_back(vec3(radius * cos(angle), 0., radius * sin(angle)));
+        uvs.push_back(vec2(0.5f + 0.5f * cos(angle), 0.5f + 0.5f * sin(angle)));
+        
+        if (i < segments) {
+            indices.push_back(centerBottomIndex);
+            indices.push_back(centerBottomIndex + 1 + i + 1); // Sens inverse des aiguilles pour faire face vers le bas
+            indices.push_back(centerBottomIndex + 1 + i);
+        }
+    }
+
+    // --- Couvercle du Haut ---
+    int centerTopIndex = indexed_vertices.size();
+    indexed_vertices.push_back(vec3(0.0f, height, 0.0f)); // Centre haut
+    uvs.push_back(vec2(0.5f, 0.5f));
+
+    for (int i = 0; i <= segments; ++i) {
+        float angle = ((float)i / (float)segments) * 2.0f * 3.14159265f;
+        indexed_vertices.push_back(vec3(radius * cos(angle), height, radius * sin(angle)));
+        uvs.push_back(vec2(0.5f + 0.5f * cos(angle), 0.5f + 0.5f * sin(angle)));
+        
+        if (i < segments) {
+            indices.push_back(centerTopIndex);
+            indices.push_back(centerTopIndex + 1 + i);
+            indices.push_back(centerTopIndex + 1 + i + 1); // Face vers le haut
+        }
     }
 
     setupMesh();

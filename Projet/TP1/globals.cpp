@@ -76,6 +76,16 @@ Mesh MeshRoadLinePenche;
 Node NodeRoadLinePenche;
 Node NodeRoadLinePenche90;
 
+Mesh MeshRoadQuarterPipe;
+Node NodeRoadQuarterPipe90;
+Node NodeRoadQuarterPipe;
+Node NodeRoadQuarterPipeUp90;
+
+// OBSTACLES
+
+Mesh MeshPillar;
+Node NodePillar;
+
 // autres
 int mode = 0;
 bool mouvement = false;

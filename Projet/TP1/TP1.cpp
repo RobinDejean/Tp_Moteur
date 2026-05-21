@@ -124,14 +124,27 @@ int main() {
 
     NodeRoadLine90.setMesh(&MeshRoadLine);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
-    
+
+    //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + 5 en y
+
+    NodeRoadQuarterPipe90.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., 5., 0.));
+    NodeRoadQuarterPipe.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipe.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., 5., 0.));
+    NodeRoadQuarterPipeUp90.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(0., 0., glm::radians(-90.f)));
+    NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., 15., 0.));
 
     NodeRoadCorner.setMesh(&MeshRoadCorner);
 
     NodeRoadLinePenche.setMesh(&MeshRoadLinePenche);
     NodeRoadLinePenche90.setMesh(&MeshRoadLinePenche);
     NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(-90.f), 0.));
-    NodeTerrain.setMesh(&MeshTerrain);
+
+    NodePillar.setMesh(&MeshPillar);
+
+    //NodeTerrain.setMesh(&MeshTerrain);
     
 
     //ajouter les enfants
@@ -147,12 +160,14 @@ int main() {
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
     MeshCar.car(tailleCar);
     MeshWheel.createWheel(rayonRoue,widthRoue, 32);
-    MeshTerrain.worldPenche(500,500,0);
+    //MeshTerrain.worldPenche(500,500,0);
     MeshRoadLine.road_line();
     MeshRoadCorner.road_corner();
     MeshRoadLinePenche.road_line_penche();
+    MeshRoadQuarterPipe.road_quarterpipe();
 
-    NodeTerrain.transformation.setScale(100.);
+    MeshPillar.pillar();
+    //NodeTerrain.transformation.setScale(100.);
 
     // TEXTURES
     //charge la texture
@@ -203,6 +218,12 @@ int main() {
     NodeRoadCorner.setTextureID(TextureIDRoad);
     NodeRoadLinePenche.setTextureID(TextureIDRoad);
     NodeRoadLinePenche90.setTextureID(TextureIDRoad);
+    NodeRoadQuarterPipe90.setTextureID(TextureIDRoad);
+    NodeRoadQuarterPipe.setTextureID(TextureIDRoad);
+    NodeRoadQuarterPipeUp90.setTextureID(TextureIDRoad);
+
+    NodePillar.setTextureID(TextureIDRock);
+
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
     // NodeCube.setVitesse(glm::vec3(1.f,0.f,0.f));
@@ -222,12 +243,16 @@ int main() {
     map.addNode(3, 7, &NodeRoadLine90);
     map.addNode(2, 7, &NodeRoadLine90);
     map.addNode(1, 7, &NodeRoadLine90);
-    map.addNode(0, 7, &NodeRoadLinePenche90);
+    map.addNode(0, 7, &NodeRoadQuarterPipe90);
+    map.addNode(0, 7, &NodeRoadQuarterPipeUp90);
+
+    // obstacles
+    map.addNode(2, 7, &NodePillar);
     
     camera.init();
     camera.setTarget(&NodeCar);
     NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
-
+    NodeCar.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
 
 
     FILE * f = fopen("pos.csv", "w");

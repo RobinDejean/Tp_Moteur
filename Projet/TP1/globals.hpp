@@ -153,6 +153,15 @@ extern Mesh MeshRoadLinePenche;
 extern Node NodeRoadLinePenche;
 extern Node NodeRoadLinePenche90;
 
+extern Mesh MeshRoadQuarterPipe;
+extern Node NodeRoadQuarterPipe90;
+extern Node NodeRoadQuarterPipe;
+extern Node NodeRoadQuarterPipeUp90;
+
+//OBSTACLES
+extern Mesh MeshPillar;
+extern Node NodePillar;
+
 // autres
 extern int mode;
 extern bool mouvement;

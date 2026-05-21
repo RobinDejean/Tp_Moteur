@@ -86,8 +86,11 @@ class Mesh{
 
         //CREATE MESH MAP
         void road_line();
+        void road_quarterpipe();
         void road_corner();
         void road_line_penche();
+
+        void pillar();
 
 };
 
