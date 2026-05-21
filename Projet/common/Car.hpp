@@ -58,7 +58,7 @@ class Car{
         static std::pair<glm::vec3,glm::vec3> cylinderPlan(glm::vec3 C, glm::vec3 u, double h, double r, glm::vec3 P, glm::vec3 n);
         void collision();
         void calculVitesse(float dt);
-        void calculPosition(float dt, float accelerationInput);
+        void calculPosition(float dt, float acceleration, float freinage);
         float getPuissance() { return puissance; }
         void solver(double _delta_time, Map &map);
         glm::vec3 closestPointOnSegment(const glm::vec3& A, const glm::vec3& B, const glm::vec3& P);

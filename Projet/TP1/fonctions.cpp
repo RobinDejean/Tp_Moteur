@@ -323,7 +323,8 @@ void SceneRender(Node* node, glm::mat4 transformationParent, GLuint MatrixID, gl
         glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, node->getTextureID()); 
+        
+        glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
         
         (*(node->getMesh())).render();
     }

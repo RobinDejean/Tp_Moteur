@@ -35,7 +35,7 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
                     glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 
                     glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, node->getTextureID()); 
+                    glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
 
                     (*(node->getMesh())).render();
                 }

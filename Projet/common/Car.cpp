@@ -6,7 +6,7 @@
 Car::Car(Node* node, float puissance) {
     this->node = node;
     this->puissance = puissance;
-    adherence = 1;
+    adherence = 1.f;
     collisionEnCours = {false, false, false, false}; // 4 roues
 }
 
@@ -15,7 +15,7 @@ Car::~Car() {}
 
 //COLLISION
 
-void Car::calculPosition(float dt, float accelerationInput) {
+void Car::calculPosition(float dt, float acceleration, float freinage) {
     // 1. On récupère la vitesse actuelle (norme)
     int numCollisions = 0;
     for (int i = 0; i < collisionEnCours.size(); i++) {
@@ -32,9 +32,13 @@ void Car::calculPosition(float dt, float accelerationInput) {
     float airResistance = 0.005f * abs_speed * speed;
     float masse = node->getMasse();
 
+
     glm::vec3 axeAvant  = directionChassis;            // Axe X local
     glm::vec3 axeHaut   = glm::normalize(glm::vec3(rotationMatrix[1])); // Axe Y local
     glm::vec3 axeDroite = glm::normalize(glm::vec3(rotationMatrix[2]));
+    float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
+    float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
+                                      node->getEnfants()[2]->transformation.getTranslation());
 
     if (numCollisions != 0) {
         
@@ -45,23 +49,26 @@ void Car::calculPosition(float dt, float accelerationInput) {
         float force_max = adherence * masse * 9.81f;
         if (abs_speed == 0.0f ){
             force = force_max;
-        }else{
-            float force_moteur = puissance * std::abs(accelerationInput) / abs_speed;
+        }else if (acceleration > 0.0f) {
+            float force_moteur = puissance * std::abs(acceleration) / abs_speed;
             force = glm::min(force_moteur, force_max);
-
+        }else   if (freinage > 0.0f) {
+            float force_frein = puissance * std::abs(freinage) / abs_speed;
+            force = glm::min(force_frein, force_max);
+        }else {
+            force = 0.0f;
         }
-        std::cout << "force: " << force << std::endl;
 
         // 4. Application des forces sur la Vitesse Signée
-        if (accelerationInput > 0.0f) {
+        if (acceleration > 0.0f) {
             // ACCÉLÉRATION (Marche avant)
             speed += ((force - airResistance) / masse)* 5 * dt;
             
-        } else if (accelerationInput < 0.0f) {
+        } else if (freinage > 0.0f) {
             // TOUCHE RECULER/FREINER ENFONCÉE
             if (speed > 0.1f) {
                 // Cas A : On avance, donc c'est un FREINAGE
-                speed -= 0.4f * speed * dt + 15.0f * dt; // Freine fort
+                speed -= 0.6f * speed * dt + 15.0f * dt; // Freine fort
                 if (speed < 0.0f) speed = 0.0f; // On s'arrête net sans repartir en arrière
             } else {
                 // Cas B : On est à l'arrêt ou on recule déjà, c'est la MARCHE ARRIÈRE
@@ -70,13 +77,10 @@ void Car::calculPosition(float dt, float accelerationInput) {
             
         } else {
             // AUCUNE TOUCHE : Friction naturelle
-            speed -= (0.2f * speed + (airResistance/masse)) * dt;
+            speed -= (0.4f * speed + (airResistance/masse)) * dt;
             // Arrêt complet si la vitesse est très faible pour éviter de glisser infiniment
             if (abs_speed < 0.05f) speed = 0.0f;
         }
-        float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
-        float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
-                                          node->getEnfants()[2]->transformation.getTranslation());
         
         float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
         rotationMatrix = node->transformation.getRotationMatrix();
@@ -95,18 +99,20 @@ void Car::calculPosition(float dt, float accelerationInput) {
         
         // Ajoute une petite friction pour que la voiture s'arrête si on n'accélère plus
         //speed *= 0.99f; 
-        std::cout << "speed: " << speed << std::endl;
+        //std::cout << "speed: " << speed << std::endl;
     }else{
         speed -= (0.2f * speed + (airResistance/masse)) * dt;
 
         float airTurnSpeed = 1.f * dt;
         glm::mat4 matriceAir = glm::mat4(1.0f);
 
-        if (std::abs(accelerationInput) > 0.0f) {
-            float pitchForce = -accelerationInput * airTurnSpeed;
+        if (acceleration > 0.0f) {
+            float pitchForce = -acceleration * airTurnSpeed;
+            matriceAir = glm::rotate(matriceAir, pitchForce, axeDroite);
+        }else if (freinage > 0.0f) {
+            float pitchForce = freinage * airTurnSpeed;
             matriceAir = glm::rotate(matriceAir, pitchForce, axeDroite);
         }
-        float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
         if (std::abs(anglesRoues) > 0.05f) {
             float directionRotation = (anglesRoues > 0.0f) ? 1.0f : -1.0f;
             matriceAir = glm::rotate(matriceAir, directionRotation * airTurnSpeed, axeHaut);
@@ -135,16 +141,74 @@ void Car::calculPosition(float dt, float accelerationInput) {
 
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
     // Maintenant que le châssis a tourné, la vitesse pointe vers l'avant du châssis !
-    glm::vec3 nouveauV = node->getVitesse();
-    //nouveauV += directionChassis * (speed-ancienSpeed);
-    nouveauV = directionChassis * speed;
-    //node->setVitesse(nouveauV);
-    for (auto& w : node->getEnfants()) {
-        //w->setVitesse(nouveauV); // Les roues suivent la même vitesse que le châssis
+    // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE (Façon Trackmania)
+    
+    // a. On sépare les deux vitesses
+   // 1. Calcul de base
+    float angleAbsolu = std::abs(anglesRoues);
+    float forceGrip = 15.0f; // Grip normal (rails)
+    float multiplicateurSurvirage = 1.0f;
+
+    // --- APPLICATION ROTATION CHÂSSIS ---
+    float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
+    rotationChassis *= multiplicateurSurvirage; 
+    glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHaut);
+    glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
+    
+    node->transformation.setRotationFromMatrix(nouvelleRotation);
+    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+
+    // 4. Calcul des vitesses avec le glissement
+    // --- 4. ANALYSE DU DRIFT ---
+    
+    // On regarde à quelle vitesse la voiture glisse DÉJÀ
+    glm::vec3 vitesseAvantBrute = directionChassis * speed;
+    glm::vec3 vitesseLateraleBrute = v_vec - vitesseAvantBrute;
+    float vitesseGlissement = glm::length(vitesseLateraleBrute);
+
+    // NOUVELLE CONDITION : 
+    // On drift SI (on tourne fort à haute vitesse) OU SI (on glisse déjà pas mal !)
+    std::cout << "adherence: " << adherence << std::endl;
+    bool isDrifting = (abs_speed > 15.0f && std::abs(anglesRoues) > (0.2f* adherence)) || (vitesseGlissement > 3.0f) || (freinage == 1.0f && acceleration == 1.0f);
+
+    if (isDrifting) {
+        forceGrip = 1.5f; // Grip faible = la glissade continue en douceur
+        multiplicateurSurvirage = 2.0f; // On amplifie la rotation du capot (survirage)
     }
+
+
+    
+    node->transformation.setRotationFromMatrix(nouvelleRotation);
+    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+
+    // --- 5. NOUVELLES VITESSES ---
+    // On recalcule avec la NOUVELLE direction
+    glm::vec3 vitesseAvant = directionChassis * speed;
+    glm::vec3 vitesseLaterale = v_vec - vitesseAvant;
+
+    float frictionLaterale = std::max(0.0f, 1.0f - (forceGrip * dt));
+    vitesseLaterale *= frictionLaterale;
+    
+    if (glm::length(vitesseLaterale) < 0.1f) vitesseLaterale = glm::vec3(0.0f);
+
+    glm::vec3 nouveauV = vitesseAvant + vitesseLaterale;
+
+    // --- L'ASTUCE ARCADE : NE PAS PERDRE DE VITESSE ---
+    float energieInitiale = glm::length(v_vec);
+    float energieNouvelle = glm::length(nouveauV);
+    
+    if (energieNouvelle > 0.1f && energieInitiale > energieNouvelle) {
+        // Au lieu de perdre la vitesse, on la redirige vers l'avant !
+        // 0.95f = on garde 95% de l'élan de la voiture pendant les virages/drifts. 
+        float energieRedirigee = energieNouvelle + (energieInitiale - energieNouvelle) * 0.5f;
+        nouveauV = glm::normalize(nouveauV) * energieRedirigee;
+    }
+
+    // -------------------------------------------------------------------
+    // On applique aux roues
     auto roues = node->getEnfants();
-    for (int i =0; i < (int)roues.size(); i++) {
-        if (collisionEnCours[i] == true){
+    for (int i = 0; i < (int)roues.size(); i++) {
+        if (collisionEnCours[i] == true) {
             roues[i]->setVitesse(nouveauV);
         }
     }
@@ -276,6 +340,7 @@ void Car::solver(double dt, Map& map)
                     predicted += normal * penetration;
                     accumulatedNormal += normal;
                     hasCollision = true;
+                    adherence = nodeMap->getAdherence();
                             
                 }
             }
@@ -290,6 +355,7 @@ void Car::solver(double dt, Map& map)
             glm::vec3 finalNormal = glm::normalize(accumulatedNormal);
             normalCollision = finalNormal;
             collisionEnCours[i] = true;
+
             float vn = glm::dot(wheelVel, finalNormal);
             if (vn < 0.f){ // on s'enfonce
                 wheelVel -= (1.f + restitution) * vn * finalNormal;
@@ -354,10 +420,10 @@ void Car::solver(double dt, Map& map)
     // 6. Appliquer la nouvelle position et rotation
     newCenter += glm::vec3(newRot * glm::vec4(-1.f, 0.f, -0.5f, 0.f)); 
     node->transformation.setTranslation(newCenter);
-    std::cout << " New rotation : " << std::endl;
-    std::cout << newRot[0][0] << " " << newRot[0][1] << " " << newRot[0][2] << std::endl;
-    std::cout << newRot[1][0] << " " << newRot[1][1] << " " << newRot[1][2] << std::endl;
-    std::cout << newRot[2][0] << " " << newRot[2][1] << " " << newRot[2][2] << std::endl;
+    //std::cout << " New rotation : " << std::endl;
+    //std::cout << newRot[0][0] << " " << newRot[0][1] << " " << newRot[0][2] << std::endl;
+    //std::cout << newRot[1][0] << " " << newRot[1][1] << " " << newRot[1][2] << std::endl;
+    //std::cout << newRot[2][0] << " " << newRot[2][1] << " " << newRot[2][2] << std::endl;
 
     node->transformation.setRotationFromMatrix(newRot);
     // ═══════════════════════════════════════════════

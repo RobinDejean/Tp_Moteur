@@ -26,7 +26,8 @@ float maxSteering = 0.3f;
 const float steeringSpeed = 2.0f;
 
 //
-float accelerationInput = 0.0f;
+float acceleration = 0.0f;
+float freinage = 0.0f;
 
 // temps
 float deltaTime = 0.0f;
@@ -47,6 +48,13 @@ Mesh MeshCar;
 Mesh MeshWheel;
 Mesh MeshTerrain;
 
+//textures
+GLuint TextureIDRoad;
+GLuint TextureIDTerre;
+GLuint TextureIDGlace;
+GLuint TextureIDGrass;
+
+
 // scene
 SceneGraph SceneCar;
 Node NodeCar;
@@ -58,7 +66,7 @@ Node NodeBackRightWheel;
 SceneGraph SceneTerrain;
 Node NodeTerrain;
 
-Car car = Car(&NodeCar, 1000.);
+Car car = Car(&NodeCar, 100.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 

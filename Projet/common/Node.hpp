@@ -5,6 +5,7 @@
 
 #ifndef NODE_HPP
 #define NODE_HPP
+enum class TypeSurface;
 
 struct Ressort;
 
@@ -17,13 +18,14 @@ class Node{
     
     
     
-    GLuint textureID;
+    GLuint *textureID;
     int mode;
     glm::vec3 vitesse;
     double masse;
     double friction_statique;
     double friction_cinetique;
     double rebond;
+    double adherence;
     
     
     public:
@@ -31,6 +33,7 @@ class Node{
         Transformation transformation;
         //CONSTRUCTORS
         Node();
+        Node(Mesh* mesh, TypeSurface surface);
         
 
         //DESTRUCTORS
@@ -39,7 +42,7 @@ class Node{
         //GETTERS
         Mesh* getMesh() const;
         double getVolume() const;
-        GLuint getTextureID() const;
+        GLuint* getTextureID() const;
         int getMode() const;
         glm::vec3 getVitesse() const;
         double getMasse() const;
@@ -51,6 +54,7 @@ class Node{
         glm::vec3 getCarCenter(float taille) {
             return transformation.getTranslation() + glm::vec3(transformation.getRotationMatrix() * glm::vec4(taille, 0., 0.5 * taille,0.f));
         }
+        double getAdherence() const { return adherence; }
 
 
 
@@ -58,10 +62,11 @@ class Node{
         //SETTERS
         void setMesh(Mesh* mesh);
         void setVolume(double volume);
-        void setTextureID(GLuint textureID);
+        void setTextureID(GLuint *textureID);
         void setMode(int mode);
         void setVitesse(glm::vec3 vitesse);
         void setMasse(double masse);
+        void setAdherence(double adherence) { this->adherence = adherence; };
         void setCoefficients(double fs, double fc, double r);
 
 

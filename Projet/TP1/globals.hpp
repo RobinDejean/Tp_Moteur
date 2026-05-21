@@ -12,6 +12,14 @@
 #include "common/Map.hpp"
 #include "common/camera/Camera.hpp"
 
+
+enum class TypeSurface {
+    ROUTE,
+    TERRE,
+    GAZON,
+    GLACE
+};
+
 // =====================
 // STRUCTS
 // =====================
@@ -22,89 +30,90 @@
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indices;
     std::vector<float> noise;
-
+    
     GLuint VAO = 0;
     GLuint indexed_vertices_vbo = 0;
     GLuint uvs_vbo = 0;
     GLuint noise_vbo = 0;
     GLuint indices_vbo = 0;
-};
-
-struct Coeff{
-    double friction_statique;
-    double friction_cinetique;
-    double rebond;
-
-    Coeff();
-    Coeff(double fs, double fc, double r);
-}; */
-
-struct Ressort;
-
-/* struct Node{
-    Mesh* mesh;
-    double volume;
-    std::vector<Node*> enfants;
-    std::vector<Node*> gravite;
-    std::vector<Ressort*> ressort;
+    };
     
-    Transformation transformation;
-    
-    GLuint textureID;
-    int mode;
-    glm::vec3 vitesse;
-    double masse;
-    
-    Coeff coeff;
-    
-    Node();
-    glm::mat4 computeMatTransformation();
-}; */
-
-struct Ressort {
-    Node* autre;
-    double raideur;
-    double amortissement;
-    double longueurRepos;
-    Ressort(Node *autre, double raideur, double longueurRepos);
-};
-
-
-struct SceneGraph{
-    Node* racine;
-};
-
-// =====================
-// GLOBALS
-// =====================
-
-// fenêtre
-extern GLFWwindow* window;
-
-// caméra
-extern glm::vec3 camera_position;
-extern glm::vec3 camera_target;
-extern glm::vec3 camera_up;
-extern glm::vec3 camera_front;
-extern glm::vec3 macaqueTranslate;
-
-class Camera;
-extern Camera camera;
-
-// paramètres caméra
-extern float cameraSpeed;
-extern float angle;
-extern float zoom;
-extern float theta;
-extern glm::mat4 rotationY;
-
-//volant
-extern float currentSteeringAngle;
-extern float maxSteering;
-extern const float steeringSpeed;
-
+    struct Coeff{
+        double friction_statique;
+        double friction_cinetique;
+        double rebond;
+        
+        Coeff();
+        Coeff(double fs, double fc, double r);
+        }; */
+        
+        struct Ressort;
+        
+        /* struct Node{
+            Mesh* mesh;
+            double volume;
+            std::vector<Node*> enfants;
+            std::vector<Node*> gravite;
+            std::vector<Ressort*> ressort;
+            
+            Transformation transformation;
+            
+            GLuint textureID;
+            int mode;
+            glm::vec3 vitesse;
+            double masse;
+            
+            Coeff coeff;
+            
+            Node();
+            glm::mat4 computeMatTransformation();
+            }; */
+            
+            struct Ressort {
+                Node* autre;
+                double raideur;
+                double amortissement;
+                double longueurRepos;
+                Ressort(Node *autre, double raideur, double longueurRepos);
+            };
+            
+            
+            struct SceneGraph{
+                Node* racine;
+            };
+            
+            // =====================
+            // GLOBALS
+            // =====================
+            
+            // fenêtre
+            extern GLFWwindow* window;
+            
+            // caméra
+            extern glm::vec3 camera_position;
+            extern glm::vec3 camera_target;
+            extern glm::vec3 camera_up;
+            extern glm::vec3 camera_front;
+            extern glm::vec3 macaqueTranslate;
+            
+            class Camera;
+            extern Camera camera;
+            
+            // paramètres caméra
+            extern float cameraSpeed;
+            extern float angle;
+            extern float zoom;
+            extern float theta;
+            extern glm::mat4 rotationY;
+            
+            //volant
+            extern float currentSteeringAngle;
+            extern float maxSteering;
+            extern const float steeringSpeed;
+            
 //
-extern float accelerationInput;
+extern float acceleration;
+extern float freinage;
 
 // temps
 extern float deltaTime;
@@ -124,6 +133,12 @@ extern ImageBase heightMap;
 extern Mesh MeshCar;
 extern Mesh MeshWheel;
 extern Mesh MeshTerrain;
+
+//textures
+extern GLuint TextureIDRoad;
+extern GLuint TextureIDTerre;
+extern GLuint TextureIDGlace;
+extern GLuint TextureIDGrass;
 
 // scene graph
 extern SceneGraph SceneCar;
@@ -172,6 +187,25 @@ extern double d_eau;
 // FONCTIONS
 // =====================
 
+inline GLuint* getTexture(TypeSurface surface) {
+    switch (surface) {
+        case TypeSurface::ROUTE: return &TextureIDRoad;
+        case TypeSurface::TERRE: return &TextureIDTerre;
+        case TypeSurface::GAZON: return &TextureIDGrass;
+        case TypeSurface::GLACE: return &TextureIDGlace;
+        default: return &TextureIDRoad;
+    }
+}
+
+inline float getAdherenceSol(TypeSurface surface) {
+    switch (surface) {
+        case TypeSurface::ROUTE: return 1.0f;
+        case TypeSurface::TERRE: return 0.8f;
+        case TypeSurface::GAZON: return 0.5f;
+        case TypeSurface::GLACE: return 0.2f;
+        default: return 1.0f;
+    }
+}
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);

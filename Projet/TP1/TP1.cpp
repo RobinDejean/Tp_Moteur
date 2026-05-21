@@ -109,6 +109,10 @@ int main() {
     SceneCar.racine = &NodeCar;
     SceneTerrain.racine = &NodeTerrain;
 
+    TextureIDRoad = loadDDS("Assets/Road.dds");
+    TextureIDGrass = loadDDS("Assets/grass.dds");
+    TextureIDGlace = loadDDS("Assets/snowrocks.dds");
+    TextureIDTerre = loadDDS("Assets/mars.dds");
 
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
@@ -120,26 +124,26 @@ int main() {
 
     //map nodes
 
-    NodeRoadLine.setMesh(&MeshRoadLine);
+    NodeRoadLine = Node(&MeshRoadLine, TypeSurface::ROUTE);
 
-    NodeRoadLine90.setMesh(&MeshRoadLine);
+    NodeRoadLine90 = Node(&MeshRoadLine, TypeSurface::ROUTE);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
 
     //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + 5 en y
 
-    NodeRoadQuarterPipe90.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipe90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., 5., 0.));
-    NodeRoadQuarterPipe.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipe = Node(&MeshRoadQuarterPipe, TypeSurface::TERRE);
     NodeRoadQuarterPipe.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
     NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., 5., 0.));
-    NodeRoadQuarterPipeUp90.setMesh(&MeshRoadQuarterPipe);
+    NodeRoadQuarterPipeUp90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(0., 0., glm::radians(-90.f)));
     NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., 15., 0.));
 
-    NodeRoadCorner.setMesh(&MeshRoadCorner);
+    NodeRoadCorner = Node(&MeshRoadCorner, TypeSurface::TERRE);
 
-    NodeRoadLinePenche.setMesh(&MeshRoadLinePenche);
-    NodeRoadLinePenche90.setMesh(&MeshRoadLinePenche);
+    NodeRoadLinePenche = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
+    NodeRoadLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
     NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(-90.f), 0.));
 
     NodePillar.setMesh(&MeshPillar);
@@ -180,9 +184,8 @@ int main() {
     GLuint TextureIDSnowRocks = loadDDS("Assets/snowrocks.dds");
     GLuint TextureUniformSnowRocks = glGetUniformLocation(programID,"mySnowRocksSampler");
 
-    GLuint TextureIDRoad = loadDDS("Assets/Road.dds");
 
-    GLuint TextureIDTerre = loadDDS("Assets/terre.dds");
+    //GLuint TextureIDTerre = loadDDS("Assets/terre.dds");
     GLuint TextureIDSoleil = loadDDS("Assets/soleil.dds");
     GLuint TextureIDLune = loadDDS("Assets/lune.dds");
     GLuint TextureIDMars = loadDDS("Assets/mars.dds");
@@ -207,22 +210,22 @@ int main() {
 
     NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
-    NodeCar.setTextureID(TextureIDSoleil);
-    NodeFrontLeftWheel.setTextureID(TextureIDRock);
-    NodeFrontRightWheel.setTextureID(TextureIDRock);
-    NodeBackLeftWheel.setTextureID(TextureIDRock);
-    NodeBackRightWheel.setTextureID(TextureIDRock);
+    NodeCar.setTextureID(&TextureIDSoleil);
+    NodeFrontLeftWheel.setTextureID(&TextureIDRock);
+    NodeFrontRightWheel.setTextureID(&TextureIDRock);
+    NodeBackLeftWheel.setTextureID(&TextureIDRock);
+    NodeBackRightWheel.setTextureID(&TextureIDRock);
 
-    NodeRoadLine.setTextureID(TextureIDRoad);
+    /* NodeRoadLine.setTextureID(TextureIDRoad);
     NodeRoadLine90.setTextureID(TextureIDRoad);
     NodeRoadCorner.setTextureID(TextureIDRoad);
     NodeRoadLinePenche.setTextureID(TextureIDRoad);
     NodeRoadLinePenche90.setTextureID(TextureIDRoad);
     NodeRoadQuarterPipe90.setTextureID(TextureIDRoad);
     NodeRoadQuarterPipe.setTextureID(TextureIDRoad);
-    NodeRoadQuarterPipeUp90.setTextureID(TextureIDRoad);
+    NodeRoadQuarterPipeUp90.setTextureID(TextureIDRoad); */
 
-    NodePillar.setTextureID(TextureIDRock);
+    NodePillar.setTextureID(&TextureIDRock);
 
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
@@ -245,6 +248,9 @@ int main() {
     map.addNode(1, 7, &NodeRoadLine90);
     map.addNode(0, 7, &NodeRoadQuarterPipe90);
     map.addNode(0, 7, &NodeRoadQuarterPipeUp90);
+
+    //NodeRoadLine.transformation.setScale(300.f);
+    map.addNode(4, 4, &NodeRoadLine);
 
     // obstacles
     map.addNode(2, 7, &NodePillar);
@@ -273,7 +279,7 @@ int main() {
         glfwGetWindowSize(window, &width, &height);
         float ratio = (float)width / (float)height;
         
-        car.calculPosition(deltaTime, accelerationInput);
+        car.calculPosition(deltaTime, acceleration, freinage);
         const int SUB_STEPS = 8;
         double sub_dt = deltaTime / SUB_STEPS;
 
@@ -360,22 +366,24 @@ void processInput(GLFWwindow *window)
         else if (currentSteeringAngle < -0.05f) currentSteeringAngle += steeringSpeed * deltaTime;
         else currentSteeringAngle = 0.0f;
     }
-    std::cout << "Puissance: " << car.getPuissance() << " Vitesse: " << glm::length(NodeCar.getVitesse()) << std::endl;
-    maxSteering = 0.3f * ((car.getPuissance() - glm::length(NodeCar.getVitesse())) / car.getPuissance());
+    //std::cout << "Puissance: " << car.getPuissance() << " Vitesse: " << glm::length(NodeCar.getVitesse()) << std::endl;
+    maxSteering = 0.2f * ((car.getPuissance() - glm::length(NodeCar.getVitesse())) / car.getPuissance());
     currentSteeringAngle = glm::clamp(currentSteeringAngle, -maxSteering, maxSteering);
-    std::cout << "Max Steering: " << maxSteering << " Current Steering Angle: " << currentSteeringAngle << std::endl;
+    //std::cout << "Max Steering: " << maxSteering << " Current Steering Angle: " << currentSteeringAngle << std::endl;
     NodeFrontLeftWheel.transformation.setEulerAngles(glm::vec3(0.f, currentSteeringAngle, 0.f));
     NodeFrontRightWheel.transformation.setEulerAngles(glm::vec3(0.f, currentSteeringAngle, 0.f));
 
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS){
-        accelerationInput = 1.0f;
+        acceleration = 1.0f;
+    }else{
+        acceleration = 0.0f;
     }
-    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
-        accelerationInput = -1.0f;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        freinage = 1.0f;
     }
     else{
-        accelerationInput = 0.0f;
+        freinage = 0.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
         NodeCar.transformation.setTranslation(glm::vec3(-5.f, 2.f, 0.f));

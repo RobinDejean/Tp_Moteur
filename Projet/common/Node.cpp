@@ -15,7 +15,20 @@ Node::Node() {
     friction_statique = 0.5;
     friction_cinetique = 0.3;
     rebond = 0.8;
+    adherence = 1.f;
     transformation = Transformation();
+}
+Node::Node(Mesh* mesh, TypeSurface surface) {
+    this->mesh = mesh;
+    this->volume = 0.f;
+    this->textureID = getTexture(surface);
+    this-> adherence = getAdherenceSol(surface);
+    this->mode = 0;
+    this->vitesse = glm::vec3(0.0f);
+    this->masse = 0.f;
+    this->friction_statique = 0.f;
+    this->friction_cinetique = 0.f;
+    this->rebond = 0.f;
 }
 
 //DESTRUCTORS
@@ -28,7 +41,7 @@ Mesh* Node::getMesh() const {
 double Node::getVolume() const {
     return volume;
 }
-GLuint Node::getTextureID() const {
+GLuint* Node::getTextureID() const {
     return textureID;
 }
 int Node::getMode() const {
@@ -58,7 +71,7 @@ void Node::setMesh(Mesh* mesh) {
 void Node::setVolume(double volume) {
     this->volume = volume;
 }
-void Node::setTextureID(GLuint textureID) {
+void Node::setTextureID(GLuint *textureID) {
     this->textureID = textureID;
 }
 void Node::setMode(int mode) {
