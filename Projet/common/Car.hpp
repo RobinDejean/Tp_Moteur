@@ -61,6 +61,8 @@ class Car{
         void calculPosition(float dt, float accelerationInput);
         float getPuissance() { return puissance; }
         void solver(double _delta_time, Map &map);
+        glm::vec3 closestPointOnSegment(const glm::vec3& A, const glm::vec3& B, const glm::vec3& P);
+        glm::vec3 closestPointOnTriangle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, const glm::vec3& P);
 };
 
 #endif

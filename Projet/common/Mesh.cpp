@@ -488,12 +488,12 @@ void Mesh::road_line() {
     uvs.push_back(vec2(0.0f, 1.0f));
 
     indices.push_back(0);
-    indices.push_back(1);
     indices.push_back(2);
+    indices.push_back(1);
 
     indices.push_back(2);
-    indices.push_back(3);
     indices.push_back(0);
+    indices.push_back(3);
 
     indexed_vertices.push_back(vec3(-5.0f, 0.5f, -5.0f));
     indexed_vertices.push_back(vec3(5.0f, 0.5f, -5.0f));
@@ -514,8 +514,8 @@ void Mesh::road_line() {
     indices.push_back(4);
 
     indices.push_back(1);
-    indices.push_back(2);
     indices.push_back(6);
+    indices.push_back(2);
 
     indices.push_back(6);
     indices.push_back(5);
@@ -598,12 +598,12 @@ void Mesh::road_quarterpipe() {
 
         // --- FACE 1 : La Piste Intérieure (Où roulent les véhicules) ---
         indices.push_back(p_zMin);
-        indices.push_back(np_zMin);
         indices.push_back(p_zMax);
+        indices.push_back(np_zMin);
 
         indices.push_back(p_zMax);
-        indices.push_back(np_zMin);
         indices.push_back(np_zMax);
+        indices.push_back(np_zMin);
 
         // --- FACE 2 : La Bordure Latérale Droite (Flanc Z-) ---
         indices.push_back(e_zMin);
@@ -649,12 +649,12 @@ void Mesh::road_line_penche() {
     uvs.push_back(vec2(0.0f, 1.0f));
 
     indices.push_back(0);
-    indices.push_back(1);
     indices.push_back(2);
+    indices.push_back(1);
 
     indices.push_back(2);
-    indices.push_back(3);
     indices.push_back(0);
+    indices.push_back(3);
 
     indexed_vertices.push_back(vec3(-5.0f, 0.5f, -5.0f));
     indexed_vertices.push_back(vec3(5.0f, 0.5f, -5.0f));
@@ -729,11 +729,11 @@ void Mesh::road_corner() {
         indices.push_back(i1);
 
         indices.push_back(i1);
-        indices.push_back(i3);
+        indices.push_back(i2);
         indices.push_back(i4);
 
         indices.push_back(i4);
-        indices.push_back(i2);
+        indices.push_back(i3);
         indices.push_back(i1);
     }
 

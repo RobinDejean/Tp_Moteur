@@ -144,6 +144,7 @@ void Car::solver(double dt, Map& map)
     // ═══════════════════════════════════════════════
     // ÉTAPE 1 : Traitement individuel de chaque roue
     // ═══════════════════════════════════════════════
+    
     for (int i = 0; i < (int)roues.size(); i++)
     {
         Node* wheel = roues[i];
@@ -163,6 +164,8 @@ void Car::solver(double dt, Map& map)
         // 3. Test de toutes les collisions pour cette roue
         float bestPenetration = 0.f;
         glm::vec3 bestNormal(0.f, 1.f, 0.f);
+        bool hasCollision = false;
+        glm::vec3 accumulatedNormal(0.0f);
 
         for (int bi = 0; bi < (int)blocks.size(); bi++)
         for (int bj = 0; bj < (int)blocks[bi].size(); bj++)
@@ -184,8 +187,9 @@ void Car::solver(double dt, Map& map)
                 glm::vec3 v2 = applyTransformation(verts[indices[t+2]], 1.f, T);
 
 
-                glm::vec3 normal = glm::normalize(glm::cross(v1-v0, v2-v0));
-                if (normal.y < 0.f) normal = -normal;
+                /* glm::vec3 normal = glm::normalize(glm::cross(v1-v0, v2-v0));
+                //std::cout << "Normal triangle " << t/3 << " : " << normal.x << " " << normal.y << " " << normal.z << std::endl;
+                //if (normal.y < 0.f) normal = -normal;
 
                 // Distance signée sphère → plan (on teste predicted, pas wheelWorld)
                 float dist = glm::dot(predicted - v0, normal);
@@ -213,29 +217,54 @@ void Car::solver(double dt, Map& map)
                 float v = (d11 * d20 - d01 * d21) / denom;
                 float w = (d00 * d21 - d01 * d20) / denom;
                 float u = 1.0f - v - w;
-
-                if (u < 0.f || v < 0.f || w < 0.f)
+                const float EPSILON = 0.0005f;
+                if (u < -EPSILON || v < -EPSILON || w < -EPSILON)
                     continue;
 
                 float penetration = rayonRoue - dist;
-                if (penetration > bestPenetration && std::abs(dist) < rayonRoue) // debug
+                if (penetration > 0.f && std::abs(dist) < rayonRoue) // debug
                 {
-                    bestPenetration = penetration;
-                    bestNormal      = normal;
+                    predicted += normal * penetration;
+                    accumulatedNormal += normal;
+                    hasCollision = true;
+                    /* bestPenetration = penetration;
+                    bestNormal      = normal; */
+                
+                glm::vec3 closest = closestPointOnTriangle(v0, v1, v2, predicted);
+
+                // 2. On calcule la distance entre ce point et le centre de la roue
+                glm::vec3 axeCollision = predicted - closest;
+                float distSq = glm::dot(axeCollision, axeCollision); // Distance au carré
+                float rayonSq = rayonRoue * rayonRoue;
+
+                // 3. Si la distance est plus petite que le rayon : COLLISION !
+                if (distSq < rayonSq && distSq > 0.0001f)
+                {
+                    float dist = std::sqrt(distSq);
+                    float penetration = rayonRoue - dist;
+                    glm::vec3 normal = axeCollision / dist; // La vraie direction de repousse
+
+                    // CORRECTION IMMÉDIATE (Pour gérer murs + sol simultanément)
+                    predicted += normal * penetration;
+                    accumulatedNormal += normal;
+                    hasCollision = true;
+                            
                 }
             }
         }
 
         // 4. Correction position et vitesse si collision
         //std::cout << "Roues " << i << " : penetration = " << bestPenetration << std::endl;
-        if (bestPenetration > 0.f)
+        if (hasCollision)
         {
-            predicted += bestNormal * bestPenetration;
-            normalCollision = bestNormal;
+            /* predicted += bestNormal * bestPenetration;
+            normalCollision = bestNormal; */
+            glm::vec3 finalNormal = glm::normalize(accumulatedNormal);
+            normalCollision = finalNormal;
             collisionEnCours[i] = true;
-            float vn = glm::dot(wheelVel, bestNormal);
+            float vn = glm::dot(wheelVel, finalNormal);
             if (vn < 0.f){ // on s'enfonce
-                wheelVel -= (1.f + restitution) * vn * bestNormal;
+                wheelVel -= (1.f + restitution) * vn * finalNormal;
                 /* glm::vec3 axeDroite = glm::vec3(rotMat[2]); 
                 
                 // On calcule à quelle vitesse la roue dérape sur le côté
@@ -268,7 +297,7 @@ void Car::solver(double dt, Map& map)
     glm::vec3 diag1 = wheelWorldPositions[3] - wheelWorldPositions[0];
     glm::vec3 diag2 = wheelWorldPositions[2] - wheelWorldPositions[1];
     glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2));
-    if (terrainNormal.y < 0.f) terrainNormal = -terrainNormal;
+    //if (terrainNormal.y < 0.f) terrainNormal = -terrainNormal;
 
     glm::mat4 currentRot = node->transformation.getRotationMatrix(); 
 
@@ -330,6 +359,47 @@ void Car::solver(double dt, Map& map)
     chassisVel /= (float)roues.size();
     node->setVitesse(chassisVel);
 }
+
+
+glm::vec3 Car::closestPointOnSegment(const glm::vec3& A, const glm::vec3& B, const glm::vec3& P) {
+    glm::vec3 AB = B - A;
+    float t = glm::clamp(glm::dot(P - A, AB) / glm::dot(AB, AB), 0.0f, 1.0f);
+    return A + t * AB;
+}
+
+// 2. Trouve le point le plus proche sur un Triangle (Face, Arête ou Sommet)
+glm::vec3 Car::closestPointOnTriangle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, const glm::vec3& P) {
+    glm::vec3 AB = B - A, AC = C - A, AP = P - A;
+    glm::vec3 n = glm::cross(AB, AC);
+    
+    // Test si la projection est dans le triangle
+    glm::vec3 pProj = P - n * (glm::dot(AP, n) / glm::dot(n, n));
+    glm::vec3 v0p = pProj - A;
+    
+    float d00 = glm::dot(AB, AB), d01 = glm::dot(AB, AC), d11 = glm::dot(AC, AC);
+    float d20 = glm::dot(v0p, AB), d21 = glm::dot(v0p, AC);
+    float denom = d00 * d11 - d01 * d01;
+    
+    if (std::abs(denom) > 1e-8f) {
+        float v = (d11 * d20 - d01 * d21) / denom;
+        float w = (d00 * d21 - d01 * d20) / denom;
+        if (v >= 0.f && w >= 0.f && (v + w) <= 1.f) return pProj; // Sur la face
+    }
+    
+    // Si on est en dehors de la face, on regarde quelle arête est la plus proche !
+    glm::vec3 p1 = closestPointOnSegment(A, B, P);
+    glm::vec3 p2 = closestPointOnSegment(B, C, P);
+    glm::vec3 p3 = closestPointOnSegment(C, A, P);
+    
+    float d1 = glm::dot(P - p1, P - p1);
+    float d2 = glm::dot(P - p2, P - p2);
+    float d3 = glm::dot(P - p3, P - p3);
+    
+    if (d1 <= d2 && d1 <= d3) return p1;
+    if (d2 <= d1 && d2 <= d3) return p2;
+    return p3;
+}
+
 
 /* void Car::solver(double dt, Map& map)
 {

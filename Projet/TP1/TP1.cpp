@@ -274,7 +274,13 @@ int main() {
         float ratio = (float)width / (float)height;
         
         car.calculPosition(deltaTime, accelerationInput);
-        car.solver(deltaTime, map);
+        const int SUB_STEPS = 4;
+        double sub_dt = deltaTime / SUB_STEPS;
+
+        for (int step = 0; step < SUB_STEPS; step++)
+        {
+            car.solver(sub_dt, map);
+        }
         std::cout << "Car position: " << NodeCar.transformation.getTranslation().x << ", " << NodeCar.transformation.getTranslation().y << ", " << NodeCar.transformation.getTranslation().z << std::endl;
         camera.update(deltaTime, window);
         // matrice projection (perspective)
