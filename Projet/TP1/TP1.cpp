@@ -274,7 +274,7 @@ int main() {
         float ratio = (float)width / (float)height;
         
         car.calculPosition(deltaTime, accelerationInput);
-        const int SUB_STEPS = 4;
+        const int SUB_STEPS = 8;
         double sub_dt = deltaTime / SUB_STEPS;
 
         for (int step = 0; step < SUB_STEPS; step++)
@@ -380,6 +380,9 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
         NodeCar.transformation.setTranslation(glm::vec3(-5.f, 2.f, 0.f));
         NodeCar.setVitesse(glm::vec3(0.f));
+        for (auto roues : NodeCar.getEnfants()){
+            roues->setVitesse(glm::vec3(0.f));
+        }
         currentSteeringAngle = 0.f;
     }
     //CAMERA

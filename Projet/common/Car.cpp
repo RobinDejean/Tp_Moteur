@@ -23,57 +23,102 @@ void Car::calculPosition(float dt, float accelerationInput) {
             numCollisions++;
         }
     }
-    if (numCollisions == 0) {
-        return;
-    }
     glm::vec3 v_vec = node->getVitesse();
     glm::mat4 rotationMatrix = node->transformation.getRotationMatrix();
     // On considère que l'avant de ta voiture est l'axe X (1,0,0) d'après ton code précédent
     glm::vec3 directionChassis = glm::normalize(glm::vec3(rotationMatrix * glm::vec4(1, 0, 0, 0)));
     float speed = glm::dot(v_vec, directionChassis);
-    float ancienSpeed = speed;
     float abs_speed = std::abs(speed);
-    float masse = node->getMasse();
-    // 2. Calcul de la force (Scalaire)
-    float force;
-    float force_max = adherence * masse * 9.81f;
-    if (abs_speed == 0.0f ){
-        force = force_max;
-    }else{
-        float force_moteur = puissance * std::abs(accelerationInput) / abs_speed;
-        force = glm::min(force_moteur, force_max);
-
-    }
-    std::cout << "force: " << force << std::endl;
     float airResistance = 0.005f * abs_speed * speed;
+    float masse = node->getMasse();
 
-    // 4. Application des forces sur la Vitesse Signée
-    if (accelerationInput > 0.0f) {
-        // ACCÉLÉRATION (Marche avant)
-        speed += ((force - airResistance) / masse)* 5 * dt;
+    glm::vec3 axeAvant  = directionChassis;            // Axe X local
+    glm::vec3 axeHaut   = glm::normalize(glm::vec3(rotationMatrix[1])); // Axe Y local
+    glm::vec3 axeDroite = glm::normalize(glm::vec3(rotationMatrix[2]));
+
+    if (numCollisions != 0) {
         
-    } else if (accelerationInput < 0.0f) {
-        // TOUCHE RECULER/FREINER ENFONCÉE
-        if (speed > 0.1f) {
-            // Cas A : On avance, donc c'est un FREINAGE
-            speed -= 0.4f * speed * dt + 15.0f * dt; // Freine fort
-            if (speed < 0.0f) speed = 0.0f; // On s'arrête net sans repartir en arrière
-        } else {
-            // Cas B : On est à l'arrêt ou on recule déjà, c'est la MARCHE ARRIÈRE
-            speed -= ((force + airResistance) / masse) * dt; // La vitesse devient de plus en plus négative
+       
+        float ancienSpeed = speed;
+        // 2. Calcul de la force (Scalaire)
+        float force;
+        float force_max = adherence * masse * 9.81f;
+        if (abs_speed == 0.0f ){
+            force = force_max;
+        }else{
+            float force_moteur = puissance * std::abs(accelerationInput) / abs_speed;
+            force = glm::min(force_moteur, force_max);
+
         }
-        
-    } else {
-        // AUCUNE TOUCHE : Friction naturelle
-        speed -= (0.2f * speed + (airResistance/masse)) * dt;
-        // Arrêt complet si la vitesse est très faible pour éviter de glisser infiniment
-        if (abs_speed < 0.05f) speed = 0.0f;
-    }
+        std::cout << "force: " << force << std::endl;
 
-    
-    // Ajoute une petite friction pour que la voiture s'arrête si on n'accélère plus
-    //speed *= 0.99f; 
-    std::cout << "speed: " << speed << std::endl;
+        // 4. Application des forces sur la Vitesse Signée
+        if (accelerationInput > 0.0f) {
+            // ACCÉLÉRATION (Marche avant)
+            speed += ((force - airResistance) / masse)* 5 * dt;
+            
+        } else if (accelerationInput < 0.0f) {
+            // TOUCHE RECULER/FREINER ENFONCÉE
+            if (speed > 0.1f) {
+                // Cas A : On avance, donc c'est un FREINAGE
+                speed -= 0.4f * speed * dt + 15.0f * dt; // Freine fort
+                if (speed < 0.0f) speed = 0.0f; // On s'arrête net sans repartir en arrière
+            } else {
+                // Cas B : On est à l'arrêt ou on recule déjà, c'est la MARCHE ARRIÈRE
+                speed -= ((force + airResistance) / masse) * dt; // La vitesse devient de plus en plus négative
+            }
+            
+        } else {
+            // AUCUNE TOUCHE : Friction naturelle
+            speed -= (0.2f * speed + (airResistance/masse)) * dt;
+            // Arrêt complet si la vitesse est très faible pour éviter de glisser infiniment
+            if (abs_speed < 0.05f) speed = 0.0f;
+        }
+        float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
+        float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
+                                          node->getEnfants()[2]->transformation.getTranslation());
+        
+        float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
+        rotationMatrix = node->transformation.getRotationMatrix();
+        glm::vec3 axeHautLocal = glm::vec3(rotationMatrix[1]);
+        glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHautLocal);
+        
+        // On applique ce virage à la matrice actuelle du châssis
+        glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
+        
+        // On utilise ta fonction modifiée pour remettre à jour les Euler proprement
+        node->transformation.setRotationFromMatrix(nouvelleRotation);
+        
+        // La nouvelle direction Avant (Axe X) est la première colonne fraîchement tournée
+        directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+
+        
+        // Ajoute une petite friction pour que la voiture s'arrête si on n'accélère plus
+        //speed *= 0.99f; 
+        std::cout << "speed: " << speed << std::endl;
+    }else{
+        speed -= (0.2f * speed + (airResistance/masse)) * dt;
+
+        float airTurnSpeed = 1.f * dt;
+        glm::mat4 matriceAir = glm::mat4(1.0f);
+
+        if (std::abs(accelerationInput) > 0.0f) {
+            float pitchForce = -accelerationInput * airTurnSpeed;
+            matriceAir = glm::rotate(matriceAir, pitchForce, axeDroite);
+        }
+        float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
+        if (std::abs(anglesRoues) > 0.05f) {
+            float directionRotation = (anglesRoues > 0.0f) ? 1.0f : -1.0f;
+            matriceAir = glm::rotate(matriceAir, directionRotation * airTurnSpeed, axeHaut);
+        }
+
+        // On applique les rotations aériennes à la matrice actuelle
+        glm::mat4 nouvelleRotation = matriceAir * rotationMatrix;
+        node->transformation.setRotationFromMatrix(nouvelleRotation);
+        
+        // On met à jour la nouvelle direction
+        directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+    }
 
     // 4. Calcul de la rotation du châssis (Lacet)
     // On utilise l'angle des roues (attention : vérifie si c'est .y ou .z selon ton axe vertical)
@@ -86,23 +131,6 @@ void Car::calculPosition(float dt, float accelerationInput) {
     glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2)); */
 
 
-    float anglesRoues = node->getEnfants()[0]->transformation.getEulerAngles().y; 
-    float empattement = glm::distance(node->getEnfants()[0]->transformation.getTranslation(), 
-                                      node->getEnfants()[2]->transformation.getTranslation());
-    
-    float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
-    rotationMatrix = node->transformation.getRotationMatrix();
-    glm::vec3 axeHautLocal = glm::vec3(rotationMatrix[1]);
-    glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHautLocal);
-    
-    // On applique ce virage à la matrice actuelle du châssis
-    glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
-    
-    // On utilise ta fonction modifiée pour remettre à jour les Euler proprement
-    node->transformation.setRotationFromMatrix(nouvelleRotation);
-    
-    // La nouvelle direction Avant (Axe X) est la première colonne fraîchement tournée
-    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
     //node->transformation.addEulerAngles(glm::vec3(0, rotationChassis, 0));
 
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
