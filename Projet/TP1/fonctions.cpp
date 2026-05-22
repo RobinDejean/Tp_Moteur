@@ -37,7 +37,146 @@ using namespace glm;
 #include "common/Mesh.hpp"
 #include "common/Node.hpp"
 
-/* void openOBJ(const std::string& filename, Mesh& mesh)
+
+void openOBJ(const std::string& filename, std::map<std::string, Mesh>& meshes)
+{
+    std::ifstream file(filename);
+    if (!file.is_open())
+    {
+        std::cout << "Cannot open " << filename << std::endl;
+        return;
+    }
+
+    // Ces tableaux restent GLOBAUX à tout le fichier ! C'est le secret.
+    std::vector<glm::vec3> temp_vertices;
+    std::vector<glm::vec2> temp_uvs;
+
+    std::string line;
+    std::string currentObjectName = "Default"; // Nom par défaut au cas où
+    
+    // On crée un pointeur vers le mesh en cours de lecture
+    Mesh* currentMesh = &meshes[currentObjectName]; 
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string prefix;
+        ss >> prefix;
+
+        // --- NOUVEAUTÉ : Détection des objets séparés ---
+        if (prefix == "o" || prefix == "g")
+        {
+            ss >> currentObjectName; // On récupère le nom (ex: "Carrosserie")
+            std::cout << "Loading object: " << currentObjectName << std::endl;
+            // On pointe vers le nouveau mesh dans la map (ça le crée automatiquement s'il n'existe pas)
+            currentMesh = &meshes[currentObjectName]; 
+        }
+        // Vertex position (Stocké globalement)
+        else if (prefix == "v")
+        {
+            glm::vec3 v;
+            ss >> v.x >> v.y >> v.z;
+            temp_vertices.push_back(v);
+        }
+        // Texture coordinates (Stocké globalement)
+        else if (prefix == "vt")
+        {
+            glm::vec2 uv;
+            ss >> uv.x >> uv.y;
+            uv.y = 1.0f - uv.y; // Inversion classique pour OpenGL
+            temp_uvs.push_back(uv);
+        }
+        // Face (Stockée dans le currentMesh !)
+        else if (prefix == "f")
+        {
+            std::vector<unsigned int> faceIndices;
+            std::string vertexData;
+
+            while (ss >> vertexData)
+            {
+                std::stringstream vs(vertexData);
+                std::string vStr, vtStr, vnStr;
+
+                std::getline(vs, vStr, '/');
+                std::getline(vs, vtStr, '/');
+                std::getline(vs, vnStr, '/');
+
+                unsigned int vIndex = std::stoi(vStr);
+                unsigned int uvIndex = 0;
+
+                if (!vtStr.empty())
+                    uvIndex = std::stoi(vtStr);
+
+                // On va chercher dans les tableaux globaux
+                glm::vec3 position = temp_vertices[vIndex - 1];
+                glm::vec2 uv(0.0f);
+
+                if (uvIndex > 0 && uvIndex <= temp_uvs.size())
+                    uv = temp_uvs[uvIndex - 1];
+
+                // ON REMPLIT LE MESH ACTUEL
+                currentMesh->indexed_vertices.push_back(position);
+                currentMesh->uvs.push_back(uv);
+
+                unsigned int newIndex = currentMesh->indexed_vertices.size() - 1;
+                faceIndices.push_back(newIndex);
+            }
+
+            // Triangulation automatique locale au currentMesh
+            for (size_t i = 1; i + 1 < faceIndices.size(); ++i)
+            {
+                currentMesh->indices.push_back(faceIndices[0]);
+                currentMesh->indices.push_back(faceIndices[i]);
+                currentMesh->indices.push_back(faceIndices[i + 1]);
+
+                currentMesh->triangles.push_back({
+                    faceIndices[0],
+                    faceIndices[i],
+                    faceIndices[i + 1]
+                });
+            }
+        }
+    }
+
+    file.close();
+    std::cout << "Fichier charge avec succes ! Nombre d'objets trouves : " << meshes.size() << std::endl;
+}
+
+void recentrerMesh(Mesh& mesh, glm::vec3 centre) {
+    for (auto& v : mesh.indexed_vertices) {
+        v -= centre; // On ramène tous les points autour de (0,0,0)
+    }
+}
+
+glm::vec3 calculerCentreMesh(const Mesh& mesh) {
+    if (mesh.indexed_vertices.empty()) return glm::vec3(0.0f);
+
+    // Initialisation avec des valeurs extrêmes
+    glm::vec3 minBound(std::numeric_limits<float>::max());
+    glm::vec3 maxBound(std::numeric_limits<float>::lowest());
+
+    // Parcours de tous les sommets du maillage
+    for (const auto& v : mesh.indexed_vertices) {
+        minBound.x = std::min(minBound.x, v.x);
+        minBound.y = std::min(minBound.y, v.y);
+        minBound.z = std::min(minBound.z, v.z);
+
+        maxBound.x = std::max(maxBound.x, v.x);
+        maxBound.y = std::max(maxBound.y, v.y);
+        maxBound.z = std::max(maxBound.z, v.z);
+    }
+
+    // Le centre est exactement au milieu de la boîte englobante
+    return (minBound + maxBound) * 0.5f;
+}
+
+
+
+
+
+
+/*
+void openOBJ(const std::string& filename, Mesh& mesh)
 {
     std::ifstream file(filename);
     if (!file.is_open())
@@ -129,6 +268,7 @@ using namespace glm;
 
     file.close();
 }
+
 
 void sphere(Mesh &mesh, float radius, int nblignes)
 {

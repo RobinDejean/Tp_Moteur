@@ -97,6 +97,10 @@ Node NodeRoadQuarterPipeUp90;
 Mesh MeshPillar;
 Node NodePillar;
 
+glm::vec3 centreMoyenRoues;
+glm::vec3 offsetChassis;
+std::vector<glm::vec3> positionsInitialesRoues;
+
 // autres
 int mode = 0;
 bool mouvement = false;

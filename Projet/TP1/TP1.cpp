@@ -106,6 +106,64 @@ int main() {
 
     //heightMap.load("Assets/Heightmap_Mountain.pgm");
     //Planete.racine = &NodeTerrain;
+
+    std::map<std::string, Mesh> maVoiture;
+    openOBJ("assets/carv6.obj", maVoiture);
+
+    // Maintenant tu as accès à tes pièces individuellement !
+    Mesh& carrosserie = maVoiture["Skin_Mesh.004"];
+    Mesh& roueAvantGauche = maVoiture["WheelFron0_Mesh.003"];
+    Mesh& roueAvantDroite = maVoiture["WheelFront_Mesh"];
+    Mesh& roueArriereGauche = maVoiture["WheelBackL_Mesh.002"];
+    Mesh& roueArriereDroite = maVoiture["WheelBackR_Mesh.001"];
+    
+    glm::vec3 centreChassis = calculerCentreMesh(maVoiture["Skin_Mesh.004"]);
+    glm::vec3 centreAV_G = calculerCentreMesh(maVoiture["WheelFron0_Mesh.003"]);
+    glm::vec3 centreAV_D = calculerCentreMesh(maVoiture["WheelFront_Mesh"]);
+    glm::vec3 centreAR_G = calculerCentreMesh(maVoiture["WheelBackL_Mesh.002"]);
+    glm::vec3 centreAR_D = calculerCentreMesh(maVoiture["WheelBackR_Mesh.001"]);
+
+    recentrerMesh(roueAvantGauche, centreAV_G);
+    recentrerMesh(roueAvantDroite, centreAV_D);
+    recentrerMesh(roueArriereGauche, centreAR_G);
+    recentrerMesh(roueArriereDroite, centreAR_D);
+    recentrerMesh(carrosserie, centreChassis);
+    
+    carrosserie.setupMesh();
+    roueAvantGauche.setupMesh();
+    roueAvantDroite.setupMesh();
+    roueArriereGauche.setupMesh();
+    roueArriereDroite.setupMesh();
+
+    positionsInitialesRoues.resize(4);
+// 3. On déduit les positions locales et on les applique aux Transformations
+
+    positionsInitialesRoues[0] = centreAV_G - centreChassis;
+    positionsInitialesRoues[1] = centreAV_D - centreChassis;
+    positionsInitialesRoues[2] = centreAR_G - centreChassis;
+    positionsInitialesRoues[3] = centreAR_D - centreChassis;
+
+    for (int i = 0; i < 4; i++)
+        std::cout << "Position initiale roue " << i << " : " << positionsInitialesRoues[i].x << ", " << positionsInitialesRoues[i].y << ", " << positionsInitialesRoues[i].z << std::endl;
+
+    // 4. On place les noeuds pour la toute première frame du jeu
+    NodeFrontLeftWheel.transformation.setTranslation(positionsInitialesRoues[0]);
+    NodeFrontRightWheel.transformation.setTranslation(positionsInitialesRoues[1]);
+    NodeBackLeftWheel.transformation.setTranslation(positionsInitialesRoues[2]);
+    NodeBackRightWheel.transformation.setTranslation(positionsInitialesRoues[3]);
+
+    /* glm::mat4 rotationCorrection = glm::rotate(
+    glm::mat4(1.0f), 
+    glm::radians(180.0f), 
+    glm::vec3(1.0f, 0.0f, 0.0f) // L'axe de rotation (X ici, essaie Z (0,0,1) si elle vrille)
+    ); */
+
+    // 2. On applique cette matrice à ton châssis
+    //NodeCar.transformation.setRotationFromMatrix(rotationCorrection);
+
+    centreMoyenRoues = (centreAV_G + centreAV_D + centreAR_G + centreAR_D) / 4.0f;
+    offsetChassis = centreChassis - centreMoyenRoues;
+
     SceneCar.racine = &NodeCar;
     SceneTerrain.racine = &NodeTerrain;
 
@@ -113,24 +171,29 @@ int main() {
     TextureIDGrass = loadDDS("Assets/grass.dds");
     TextureIDGlace = loadDDS("Assets/snowrocks.dds");
     TextureIDTerre = loadDDS("Assets/mars.dds");
-
+    
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
-    NodeCar.setMesh(&MeshCar);
-    NodeFrontLeftWheel.setMesh(&MeshWheel);
-    NodeFrontRightWheel.setMesh(&MeshWheel);
-    NodeBackLeftWheel.setMesh(&MeshWheel);
-    NodeBackRightWheel.setMesh(&MeshWheel);
-
+    NodeCar.setMesh(&carrosserie);
+    NodeFrontLeftWheel.setMesh(&roueAvantGauche);
+    NodeFrontRightWheel.setMesh(&roueAvantDroite);
+    NodeBackLeftWheel.setMesh(&roueArriereGauche);
+    NodeBackRightWheel.setMesh(&roueArriereDroite);
+    //NodeCar.transformation.setScale(glm::vec3(30.f));
+    /* NodeFrontLeftWheel.transformation.setScale(glm::vec3(5.f));;
+    NodeFrontRightWheel.transformation.setScale(glm::vec3(5.f));
+    NodeBackLeftWheel.transformation.setScale(glm::vec3(5.f));
+    NodeBackRightWheel.transformation.setScale(glm::vec3(5.f)); */
+    
     //map nodes
-
+    
     NodeRoadLine = Node(&MeshRoadLine, TypeSurface::ROUTE);
-
+    
     NodeRoadLine90 = Node(&MeshRoadLine, TypeSurface::ROUTE);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
-
+    
     //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + Blocksize / 2 + Blocksize * height en y
-
+    
     NodeRoadQuarterPipe90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
     NodeRoadQuarterPipe = Node(&MeshRoadQuarterPipe, TypeSurface::TERRE);
@@ -139,57 +202,59 @@ int main() {
     NodeRoadQuarterPipeUp90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(0., 0., glm::radians(-90.f)));
     NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f + blockSize, 0.));
-
+    
     NodeRoadCorner = Node(&MeshRoadCorner, TypeSurface::TERRE);
-
+    
     NodeRoadLinePenche = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
     NodeRoadLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
     NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(-90.f), 0.));
-
+    
     NodePillar.setMesh(&MeshPillar);
-
+    
     //NodeTerrain.setMesh(&MeshTerrain);
     
-
+    
     //ajouter les enfants
     //NodeTerrain.enfants.push_back(&NodeMacaque);
     NodeCar.addEnfant(&NodeFrontLeftWheel);
     NodeCar.addEnfant(&NodeFrontRightWheel);
     NodeCar.addEnfant(&NodeBackLeftWheel);
     NodeCar.addEnfant(&NodeBackRightWheel);
-
+    
     //creer les mesh
     //mars.sphere(0.075,20);
     /* openOBJ("Assets/Macaque.obj", macaque);
     openOBJ("Assets/MacaqueLow.obj", macaqueLow); */
-    MeshCar.car(tailleCar);
-    MeshWheel.createWheel(rayonRoue,widthRoue, 32);
+    //MeshCar.car(tailleCar);
+    //MeshWheel.createWheel(rayonRoue,widthRoue, 32);
     //MeshTerrain.worldPenche(500,500,0);
     MeshRoadLine.road_line();
     MeshRoadCorner.road_corner();
     MeshRoadLinePenche.road_line_penche();
     MeshRoadQuarterPipe.road_quarterpipe();
-
+    
     MeshPillar.pillar();
     //NodeTerrain.transformation.setScale(100.);
-
+    
     // TEXTURES
     //charge la texture
     GLuint TextureIDRock = loadDDS("Assets/rock.dds");
     // recup l'emplacement du shader
     GLuint TextureUniformRock = glGetUniformLocation(programID,"myRockSampler");
-
+    
     GLuint TextureIDGrass = loadDDS("Assets/grass.dds");
     GLuint TextureUniformGrass = glGetUniformLocation(programID,"myGrassSampler");
     GLuint TextureIDSnowRocks = loadDDS("Assets/snowrocks.dds");
     GLuint TextureUniformSnowRocks = glGetUniformLocation(programID,"mySnowRocksSampler");
-
-
+    
+    
     //GLuint TextureIDTerre = loadDDS("Assets/terre.dds");
     GLuint TextureIDSoleil = loadDDS("Assets/soleil.dds");
     GLuint TextureIDLune = loadDDS("Assets/lune.dds");
     GLuint TextureIDMars = loadDDS("Assets/mars.dds");
     GLuint TextureIDMacaque = loadDDS("Assets/Macaque_texture.dds");
+    GLuint TextureVoiture = loadDDS("Assets/textureVoiture.dds");
+    GLuint TextureRoue = loadDDS("Assets/textureRoue.dds");
     
     glUseProgram(programID);
      // active le slot de texture 1 = GL_TEXTURE1
@@ -210,11 +275,11 @@ int main() {
 
     NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
-    NodeCar.setTextureID(&TextureIDSoleil);
-    NodeFrontLeftWheel.setTextureID(&TextureIDRock);
-    NodeFrontRightWheel.setTextureID(&TextureIDRock);
-    NodeBackLeftWheel.setTextureID(&TextureIDRock);
-    NodeBackRightWheel.setTextureID(&TextureIDRock);
+    NodeCar.setTextureID(&TextureVoiture);
+    NodeFrontLeftWheel.setTextureID(&TextureRoue);
+    NodeFrontRightWheel.setTextureID(&TextureRoue);
+    NodeBackLeftWheel.setTextureID(&TextureRoue);
+    NodeBackRightWheel.setTextureID(&TextureRoue);
 
     /* NodeRoadLine.setTextureID(TextureIDRoad);
     NodeRoadLine90.setTextureID(TextureIDRoad);
@@ -233,10 +298,15 @@ int main() {
     // NodeSoleil.transformation.setScale(glm::vec3(10.,10.,10.));
     // NodeSoleil.transformation.setTranslation(glm::vec3(0.f, 50.f, 0.0f));
     // NodeSoleil.setMasse(10000000000.f);
-    NodeBackLeftWheel.transformation.setTranslation(glm::vec3(0.2, 0., 1.));
+    /* NodeBackLeftWheel.transformation.setTranslation(glm::vec3(0.2, 0., 1.));
     NodeBackRightWheel.transformation.setTranslation(glm::vec3(0.2, 0., 0.));
     NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(1.8, 0., 1.));
-    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.));
+    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(1.8, 0., 0.)); */
+
+    /* NodeBackLeftWheel.transformation.setTranslation(glm::vec3(0.05f,0.05f, 0.05f));
+    NodeBackRightWheel.transformation.setTranslation(glm::vec3(-0.05f,-0.05f, -0.05f));
+    NodeFrontLeftWheel.transformation.setTranslation(glm::vec3(-0.05f,-0.05f, 0.05f));
+    NodeFrontRightWheel.transformation.setTranslation(glm::vec3(-0.05f,0.05f, -0.05f)); */
 
     // --------------------- MAP ---------------------
     map.addNode(4, 4, &NodeRoadLine);

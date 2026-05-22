@@ -68,7 +68,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
             // TOUCHE RECULER/FREINER ENFONCÉE
             if (speed > 0.1f) {
                 // Cas A : On avance, donc c'est un FREINAGE
-                speed -= 0.6f * speed * dt + 15.0f * dt; // Freine fort
+                speed -= 1.f * speed * dt + 50.0f * dt; // Freine fort
                 if (speed < 0.0f) speed = 0.0f; // On s'arrête net sans repartir en arrière
             } else {
                 // Cas B : On est à l'arrêt ou on recule déjà, c'est la MARCHE ARRIÈRE
@@ -392,7 +392,13 @@ void Car::solver(double dt, Map& map)
     glm::vec3 diag2 = wheelWorldPositions[2] - wheelWorldPositions[1];
     glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2));
     //if (terrainNormal.y < 0.f) terrainNormal = -terrainNormal;
+    glm::vec3 hautVoiture = glm::vec3(rotMat[1]);
 
+    // Si le produit scalaire est négatif, ça veut dire que le terrainNormal 
+    // pointe à l'opposé du haut de la voiture -> on le retourne !
+    if (glm::dot(terrainNormal, hautVoiture) < 0.0f) {
+        terrainNormal = -terrainNormal;
+    }
     glm::mat4 currentRot = node->transformation.getRotationMatrix(); 
 
     // 2. Extraire l'axe X (qui correspond à ton "Avant" dans ton moteur)
@@ -418,7 +424,8 @@ void Car::solver(double dt, Map& map)
     newRot[2] = glm::vec4(right,         0.f); // axe Z = droite
 
     // 6. Appliquer la nouvelle position et rotation
-    newCenter += glm::vec3(newRot * glm::vec4(-1.f, 0.f, -0.5f, 0.f)); 
+    // newCenter += glm::vec3(newRot * glm::vec4(-1.f, 0.f, -0.5f, 0.f));
+    newCenter += glm::vec3(newRot * glm::vec4(offsetChassis, 0.f));
     node->transformation.setTranslation(newCenter);
     //std::cout << " New rotation : " << std::endl;
     //std::cout << newRot[0][0] << " " << newRot[0][1] << " " << newRot[0][2] << std::endl;
@@ -432,20 +439,26 @@ void Car::solver(double dt, Map& map)
     glm::mat4 newRotInv = glm::transpose(newRot); // matrice orthogonale → transpose = inverse
     
 
-    /* for (int i = 0; i < (int)roues.size(); i++)
+    for (int i = 0; i < (int)roues.size(); i++)
     {
         // Position locale = rotation inverse * (mondiale - centre châssis)
         glm::vec3 localPos = glm::vec3(newRotInv * glm::vec4(wheelWorldPositions[i] - newCenter, 0.f));
 
         // On ne touche qu'au Y local pour préserver l'empattement/voie
-        glm::vec3 origLocal = roues[i]->transformation.getTranslation();
-        origLocal.y = localPos.y;
-        roues[i]->transformation.setTranslation(origLocal);
-    } */
-    roues[2]->transformation.setTranslation(glm::vec3(0.2, 0., 1.));
+        glm::vec3 stableLocal = positionsInitialesRoues[i];
+        //stableLocal.y = localPos.y;
+        roues[i]->transformation.setTranslation(stableLocal);
+    }
+    /* roues[2]->transformation.setTranslation(glm::vec3(0.2, 0., 1.));
     roues[3]->transformation.setTranslation(glm::vec3(0.2, 0., 0.));
     roues[0]->transformation.setTranslation(glm::vec3(1.8, 0., 1.));
-    roues[1]->transformation.setTranslation(glm::vec3(1.8, 0., 0.));
+    roues[1]->transformation.setTranslation(glm::vec3(1.8, 0., 0.)); */
+
+    // On calcule le centre parfait à partir du maillage de chaque roue
+    /* roues[0]->transformation.setTranslation(calculerCentreMesh(*(roues[0]->getMesh())));
+    roues[1]->transformation.setTranslation(calculerCentreMesh(*(roues[1]->getMesh())));
+    roues[2]->transformation.setTranslation(calculerCentreMesh(*(roues[2]->getMesh())));
+    roues[3]->transformation.setTranslation(calculerCentreMesh(*(roues[3]->getMesh()))); */
 
     // Vitesse du châssis = moyenne des vitesses des roues
     glm::vec3 chassisVel(0.f);

@@ -8,12 +8,22 @@
 #include "common/Mesh.hpp"
 #include "common/Node.hpp"
 #include "common/Transformation.hpp"
+#include <map>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 //#include "common/image_ppm.h"
 
 /* struct Mesh;
-struct Node;
+struct Node;*/
 
-void openOBJ(const std::string& filename, Mesh& mesh);
+void openOBJ(const std::string& filename, std::map<std::string, Mesh>& meshes);
+glm::vec3 calculerCentreMesh(const Mesh& mesh);
+void recentrerMesh(Mesh& mesh, glm::vec3 centre);
+/*
 void sphere(Mesh &mesh, float radius, int nblignes);
 void setupCube(Mesh &mesh, float taille);
 

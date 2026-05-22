@@ -98,6 +98,11 @@ enum class TypeSurface {
             
             class Camera;
             extern Camera camera;
+
+            extern glm::vec3 centreMoyenRoues;
+            extern glm::vec3 offsetChassis;
+
+            extern std::vector<glm::vec3> positionsInitialesRoues;
             
             // paramètres caméra
             extern float cameraSpeed;

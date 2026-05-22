@@ -29,6 +29,7 @@ using namespace glm;
 #include <utility>
 #include "Map.hpp"
 #include "Mesh.hpp"
+#include "../TP1/fonctions.hpp"
 
 
 #ifndef CAR_HPP

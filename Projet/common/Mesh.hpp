@@ -31,22 +31,22 @@ using namespace glm;
 
 
 class Mesh{
-    std::vector<std::vector<unsigned int>> triangles;
-    std::vector<glm::vec3> indexed_vertices;
-    std::vector<unsigned int> indices;
-    std::vector<glm::vec2> uvs;
-    std::vector<float> noise;
-
+    
     GLuint VAO;
     GLuint indexed_vertices_vbo;
     GLuint uvs_vbo;
     GLuint noise_vbo;
     GLuint indices_vbo;
-
-
+    
+    
     public:
-        //CONSTRUCTORS
-        Mesh();
+        std::vector<std::vector<unsigned int>> triangles;
+        std::vector<glm::vec3> indexed_vertices;
+        std::vector<unsigned int> indices;
+        std::vector<glm::vec2> uvs;
+        std::vector<float> noise;
+    //CONSTRUCTORS
+    Mesh();
         
 
         //DESTRUCTORS
