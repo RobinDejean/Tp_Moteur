@@ -319,7 +319,7 @@ int main() {
     GLuint TextureIDLune = loadDDS("Assets/lune.dds");
     GLuint TextureIDMars = loadDDS("Assets/mars.dds");
     GLuint TextureIDMacaque = loadDDS("Assets/Macaque_texture.dds");
-    GLuint TextureVoiture = loadDDS("Assets/textureVoiture.dds");
+    GLuint TextureVoiture = loadDDS("Assets/textureVoiture2.dds");
     GLuint TextureRoue = loadDDS("Assets/textureRoue.dds");
     
     glUseProgram(programID);

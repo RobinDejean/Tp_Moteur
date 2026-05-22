@@ -31,15 +31,15 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     float abs_speed = std::abs(speed);
     float airResistance = 0.005f * abs_speed * speed;
     float masse = node->getMasse();
-    float speedAdditionnel = 1.0f;
-    if (abs_speed < 10.0f) {
-        speedAdditionnel = 1.6f * dt; // Considère que la voiture est à l'arrêt si la vitesse est très faible
-    }else if (abs_speed < 16.0f) {
-        speedAdditionnel = 1.f * dt; // Limite la vitesse maximale à 100 unités
-    }else if (abs_speed < 23.0f) {
-        speedAdditionnel = 0.6f * dt; // Limite la vitesse maximale à 50 unités
+    float speedAdditionnel = 0.0f;
+    if (abs_speed < 100.0f) {
+        speedAdditionnel = 24.f * dt;
+    }else if (abs_speed < 160.0f) {
+        speedAdditionnel = 16.f * dt;
+    }else if (abs_speed < 230.0f) {
+        speedAdditionnel = 9.f * dt;
     }else{
-        speedAdditionnel = 0.3f * dt;
+        speedAdditionnel = 5.f * dt;
     }
 
 
@@ -72,7 +72,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
         // 4. Application des forces sur la Vitesse Signée
         if (acceleration > 0.0f) {
             // ACCÉLÉRATION (Marche avant)
-            speed += ((force - airResistance) / masse)* 5 * dt + speedAdditionnel * adherence; // La vitesse devient de plus en plus positive
+            speed += speedAdditionnel * adherence; // La vitesse devient de plus en plus positive
             
         } else if (freinage > 0.0f) {
             // TOUCHE RECULER/FREINER ENFONCÉE
@@ -180,11 +180,9 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     
     // NOUVELLE CONDITION : 
     // On drift SI (on tourne fort à haute vitesse) OU SI (on glisse déjà pas mal !)
-    std::cout << "adherence: " << adherence << std::endl;
-    bool isDrifting = (abs_speed > 30.0f * adherence && std::abs(anglesRoues) > (0.4f* adherence)) || (vitesseGlissement > 10.0f * adherence) || (freinage == 1.0f && acceleration == 1.0f);
-    //std::cout << "anglesRoues: " << anglesRoues << std::endl;
-    std::cout << "vitesseGlissement: " << vitesseGlissement << std::endl;
-    std::cout << "isDrifting: " << isDrifting << std::endl;
+    bool isDrifting = (abs_speed > 30.0f * adherence && std::abs(anglesRoues) > 0.8f * adherence) || (vitesseGlissement > 5.0f * adherence * abs_speed) || (freinage == 1.0f && acceleration == 1.0f);
+    if(isDrifting) {
+    }
     
     /* if (isDrifting) {
         forceGrip = 1.5f; // Grip faible = la glissade continue en douceur
@@ -248,16 +246,12 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
         nouveauV = glm::normalize(nouveauV) * energieRedirigee;
     } */
 
-    float speedFactor =
-    glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
+    float speedFactor = glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
 
-    float turnSpeed =
-        anglesRoues *
-        2.5f *
-        speedFactor;
+    float turnSpeed = anglesRoues * 2.5f * speedFactor;
 
     if (isDrifting)
-        turnSpeed *= 1.8f;
+        turnSpeed *= 1.5f;
     
     float directionMultiplier = (speed >= 0.0f) ? 1.0f : -1.0f;
     if (speed > -0.1f && speed < 0.1f) {
