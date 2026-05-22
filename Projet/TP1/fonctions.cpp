@@ -170,7 +170,7 @@ glm::vec3 calculerCentreMesh(const Mesh& mesh) {
     return (minBound + maxBound) * 0.5f;
 }
 
-
+// teste
 
 
 
