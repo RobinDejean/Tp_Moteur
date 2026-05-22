@@ -1,9 +1,12 @@
 #include "Map.hpp"
 
-Map::Map(int width, int height) {
-    blocks.resize(height);
-    for (auto& row : blocks) {
-        row.resize(width);
+Map::Map(int width, int height, int depth) {
+    blocks.resize(depth);
+    for (auto& layer : blocks) {
+        layer.resize(height);
+        for (auto& row : layer) {
+            row.resize(width);
+        }
     }
 }
 
@@ -11,35 +14,36 @@ Map::~Map() {
     
 }
 
-void Map::addNode(int x, int y, Node * node) {
-    if (y >= 0 && y < blocks.size() && x >= 0 && x < blocks[y].size()) {
-        blocks[y][x].push_back(node);
+void Map::addNode(int x, int y, int z, Node * node) {
+    if (z >= 0 && z < blocks.size() && x >= 0 && x < blocks[z].size() && y >= 0 && y < blocks[z][x].size()) {
+        blocks[z][x][y].push_back(node);
     } else {
-        std::cerr << "Error: Coordinates out of bounds in addNode(" << x << ", " << y << ")\n";
+        std::cerr << "Error: Coordinates out of bounds in addNode(" << x << ", " << y << ", " << z << ")\n";
     }
 }
 
 void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
-    for (int y = 0; y < blocks.size(); ++y) {
-        for (int x = 0; x < blocks[y].size(); ++x) {
-            Transformation t = Transformation();
-            t.setTranslation(glm::vec3(x * blockSize - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, 0, y * blockSize - (mapHeight * blockSize) / 2.0f + blockSize / 2.0f));
-            glm::mat4 transformationParent = t.computeTransformationMatrix();
-            for (Node *node : blocks[y][x]) {
-                if (node->getMesh() != nullptr){
-                    glm::mat4 modelMatrix = transformationParent * node->getTransformation().computeTransformationMatrix();
-                    glm::mat4 MVP = viewProj * modelMatrix;
-    
-                    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(MVP));
+    for (int z = 0; z < blocks.size(); ++z) {
+        for (int x = 0; x < blocks[z].size(); ++x) {
+            for (int y = 0; y < blocks[z][x].size(); ++y) {
+                Transformation t = Transformation();
+                t.setTranslation(glm::vec3(x * blockSize - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, y * blockSize - (mapHeight * blockSize) / 2.0f, z * blockSize - (mapDepth * blockSize) / 2.0f + blockSize / 2.0f));
+                glm::mat4 transformationParent = t.computeTransformationMatrix();
+                for (Node *node : blocks[z][x][y]) {
+                    if (node->getMesh() != nullptr){
+                        glm::mat4 modelMatrix = transformationParent * node->getTransformation().computeTransformationMatrix();
+                        glm::mat4 MVP = viewProj * modelMatrix;
+        
+                        glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(MVP));
 
-                    glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
+                        glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
 
-                    (*(node->getMesh())).render();
+                        (*(node->getMesh())).render();
+                    }
                 }
-
             }
         }
     }

@@ -164,22 +164,54 @@ extern Car car;
 extern float blockSize;
 extern int mapWidth;
 extern int mapHeight;
+extern int mapDepth;
 extern Map map;
 
 extern Mesh MeshRoadLine;
 extern Node NodeRoadLine;
 extern Node NodeRoadLine90;
+extern Node NodeDirtLine;
+extern Node NodeDirtLine90;
+extern Node NodeGrassLine;
+extern Node NodeGrassLine90;
 
 extern Mesh MeshRoadCorner;
 extern Node NodeRoadCorner;
+extern Node NodeRoadCorner90;
+extern Node NodeRoadCorner180;
+extern Node NodeRoadCorner270;
+extern Node NodeDirtCorner;
+extern Node NodeDirtCorner90;
+extern Node NodeDirtCorner180;
+extern Node NodeDirtCorner270;
+extern Node NodeGrassCorner;
+extern Node NodeGrassCorner90;
+extern Node NodeGrassCorner180;
+extern Node NodeGrassCorner270;
+
 extern Mesh MeshRoadLinePenche;
 extern Node NodeRoadLinePenche;
 extern Node NodeRoadLinePenche90;
+extern Node NodeRoadLinePenche180;
+extern Node NodeRoadLinePenche270;
+extern Node NodeDirtLinePenche;
+extern Node NodeDirtLinePenche90;
+extern Node NodeDirtLinePenche180;
+extern Node NodeDirtLinePenche270;
+extern Node NodeGrassLinePenche;
+extern Node NodeGrassLinePenche90;
+extern Node NodeGrassLinePenche180;
+extern Node NodeGrassLinePenche270;
 
 extern Mesh MeshRoadQuarterPipe;
-extern Node NodeRoadQuarterPipe90;
 extern Node NodeRoadQuarterPipe;
+extern Node NodeRoadQuarterPipeUp;
+extern Node NodeRoadQuarterPipe90;
 extern Node NodeRoadQuarterPipeUp90;
+extern Node NodeRoadQuarterPipe180;
+extern Node NodeRoadQuarterPipeUp180;
+extern Node NodeRoadQuarterPipe270;
+extern Node NodeRoadQuarterPipeUp270;
 
 //OBSTACLES
 extern Mesh MeshPillar;

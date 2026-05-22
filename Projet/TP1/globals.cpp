@@ -66,31 +66,62 @@ Node NodeBackRightWheel;
 SceneGraph SceneTerrain;
 Node NodeTerrain;
 
-Car car = Car(&NodeCar, 100.);
+Car car = Car(&NodeCar, 1000.);
 
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
 // MAP
 float blockSize = 20.f;
-int mapWidth = 10;
-int mapHeight = 10;
-Map map(mapWidth, mapHeight);
+int mapWidth = 20;
+int mapHeight = 20;
+int mapDepth = 20;
+Map map(mapWidth, mapHeight, mapDepth);
 
 Mesh MeshRoadLine;
 Node NodeRoadLine;
 Node NodeRoadLine90;
+Node NodeDirtLine;
+Node NodeDirtLine90;
+Node NodeGrassLine;
+Node NodeGrassLine90;
 
 Mesh MeshRoadCorner;
 Node NodeRoadCorner;
+Node NodeRoadCorner90;
+Node NodeRoadCorner180;
+Node NodeRoadCorner270;
+Node NodeDirtCorner;
+Node NodeDirtCorner90;
+Node NodeDirtCorner180;
+Node NodeDirtCorner270;
+Node NodeGrassCorner;
+Node NodeGrassCorner90;
+Node NodeGrassCorner180;
+Node NodeGrassCorner270;
 
 Mesh MeshRoadLinePenche;
 Node NodeRoadLinePenche;
 Node NodeRoadLinePenche90;
+Node NodeRoadLinePenche180;
+Node NodeRoadLinePenche270;
+Node NodeDirtLinePenche;
+Node NodeDirtLinePenche90;
+Node NodeDirtLinePenche180;
+Node NodeDirtLinePenche270;
+Node NodeGrassLinePenche;
+Node NodeGrassLinePenche90;
+Node NodeGrassLinePenche180;
+Node NodeGrassLinePenche270;
 
 Mesh MeshRoadQuarterPipe;
-Node NodeRoadQuarterPipe90;
 Node NodeRoadQuarterPipe;
+Node NodeRoadQuarterPipeUp;
+Node NodeRoadQuarterPipe90;
 Node NodeRoadQuarterPipeUp90;
+Node NodeRoadQuarterPipe180;
+Node NodeRoadQuarterPipeUp180;
+Node NodeRoadQuarterPipe270;
+Node NodeRoadQuarterPipeUp270;
 
 // OBSTACLES
 

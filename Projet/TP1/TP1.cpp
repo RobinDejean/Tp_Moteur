@@ -108,7 +108,7 @@ int main() {
     //Planete.racine = &NodeTerrain;
 
     std::map<std::string, Mesh> maVoiture;
-    openOBJ("assets/carv6.obj", maVoiture);
+    openOBJ("Assets/carv6.obj", maVoiture);
 
     // Maintenant tu as accès à tes pièces individuellement !
     Mesh& carrosserie = maVoiture["Skin_Mesh.004"];
@@ -185,30 +185,96 @@ int main() {
     NodeBackLeftWheel.transformation.setScale(glm::vec3(5.f));
     NodeBackRightWheel.transformation.setScale(glm::vec3(5.f)); */
     
-    //map nodes
+    // ---------------------------------------------------- MAP NODES ----------------------------------------------------
+    // LINE
     
     NodeRoadLine = Node(&MeshRoadLine, TypeSurface::ROUTE);
-    
     NodeRoadLine90 = Node(&MeshRoadLine, TypeSurface::ROUTE);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
     
-    //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + Blocksize / 2 + Blocksize * height en y
+    NodeDirtLine = Node(&MeshRoadLine, TypeSurface::TERRE);
+    NodeDirtLine90 = Node(&MeshRoadLine, TypeSurface::TERRE);
+    NodeDirtLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+
+    NodeGrassLine = Node(&MeshRoadLine, TypeSurface::GAZON);
+    NodeGrassLine90 = Node(&MeshRoadLine, TypeSurface::GAZON);
+    NodeGrassLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
     
+    //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + Blocksize / 2 en y et il est en 90 de base
+    
+    NodeRoadQuarterPipe = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+    NodeRoadQuarterPipeUp = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipeUp.transformation.setEulerAngles(glm::vec3(glm::radians(-90.f), 0., 0.));
+    NodeRoadQuarterPipeUp.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+
     NodeRoadQuarterPipe90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
-    NodeRoadQuarterPipe = Node(&MeshRoadQuarterPipe, TypeSurface::TERRE);
-    NodeRoadQuarterPipe.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
-    NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
     NodeRoadQuarterPipeUp90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
-    NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(0., 0., glm::radians(-90.f)));
-    NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f + blockSize, 0.));
+    NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(glm::radians(-90.f), glm::radians(90.f), 0.));
+    NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+
+    NodeRoadQuarterPipe180 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipe180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeRoadQuarterPipe180.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+    NodeRoadQuarterPipeUp180 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipeUp180.transformation.setEulerAngles(glm::vec3(glm::radians(-90.f), glm::radians(180.f), 0.));
+    NodeRoadQuarterPipeUp180.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+
+    NodeRoadQuarterPipe270 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipe270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
+    NodeRoadQuarterPipe270.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+    NodeRoadQuarterPipeUp270 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
+    NodeRoadQuarterPipeUp270.transformation.setEulerAngles(glm::vec3(glm::radians(-90.f), glm::radians(270.f), 0.));
+    NodeRoadQuarterPipeUp270.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
+
     
-    NodeRoadCorner = Node(&MeshRoadCorner, TypeSurface::TERRE);
+    //CORNER
+
+    NodeRoadCorner = Node(&MeshRoadCorner, TypeSurface::ROUTE);
+    NodeRoadCorner90 = Node(&MeshRoadCorner, TypeSurface::ROUTE);
+    NodeRoadCorner90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeRoadCorner180 = Node(&MeshRoadCorner, TypeSurface::ROUTE);
+    NodeRoadCorner180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeRoadCorner270 = Node(&MeshRoadCorner, TypeSurface::ROUTE);
+    NodeRoadCorner270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
+
+    NodeDirtCorner = Node(&MeshRoadCorner, TypeSurface::TERRE);
+    NodeDirtCorner90 = Node(&MeshRoadCorner, TypeSurface::TERRE);
+    NodeDirtCorner90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeDirtCorner180 = Node(&MeshRoadCorner, TypeSurface::TERRE);
+    NodeDirtCorner180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeDirtCorner270 = Node(&MeshRoadCorner, TypeSurface::TERRE);
+    NodeDirtCorner270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
     
+    //LINE PENCHÉE
+
     NodeRoadLinePenche = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
-    NodeRoadLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
-    NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(-90.f), 0.));
+    NodeRoadLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
+    NodeRoadLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeRoadLinePenche180 = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
+    NodeRoadLinePenche180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeRoadLinePenche270 = Node(&MeshRoadLinePenche, TypeSurface::ROUTE);
+    NodeRoadLinePenche270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
+
+    NodeDirtLinePenche = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
+    NodeDirtLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
+    NodeDirtLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeDirtLinePenche180 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
+    NodeDirtLinePenche180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeDirtLinePenche270 = Node(&MeshRoadLinePenche, TypeSurface::TERRE);
+    NodeDirtLinePenche270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
+
+    NodeGrassLinePenche = Node(&MeshRoadLinePenche, TypeSurface::GAZON);
+    NodeGrassLinePenche90 = Node(&MeshRoadLinePenche, TypeSurface::GAZON);
+    NodeGrassLinePenche90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeGrassLinePenche180 = Node(&MeshRoadLinePenche, TypeSurface::GAZON);
+    NodeGrassLinePenche180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeGrassLinePenche270 = Node(&MeshRoadLinePenche, TypeSurface::GAZON);
+    NodeGrassLinePenche270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
     
+    //OBSTACLES
+
     NodePillar.setMesh(&MeshPillar);
     
     //NodeTerrain.setMesh(&MeshTerrain);
@@ -309,21 +375,27 @@ int main() {
     NodeFrontRightWheel.transformation.setTranslation(glm::vec3(-0.05f,0.05f, -0.05f)); */
 
     // --------------------- MAP ---------------------
-    map.addNode(4, 4, &NodeRoadLine);
-    map.addNode(4, 5, &NodeRoadLine);
-    map.addNode(4, 6, &NodeRoadLinePenche);
-    map.addNode(4, 7, &NodeRoadCorner);
-    map.addNode(3, 7, &NodeRoadLine90);
-    map.addNode(2, 7, &NodeRoadLine90);
-    map.addNode(1, 7, &NodeRoadLine90);
-    map.addNode(0, 7, &NodeRoadQuarterPipe90);
-    map.addNode(0, 7, &NodeRoadQuarterPipeUp90);
+    map.addNode(9, 10, 9, &NodeRoadLine);
+    map.addNode(9, 10, 10, &NodeRoadLine);
+    map.addNode(9, 10, 11, &NodeRoadLine);
+    map.addNode(9, 10, 12, &NodeRoadLinePenche);
 
-    //NodeRoadLine.transformation.setScale(300.f);
-    map.addNode(4, 4, &NodeRoadLine);
+    map.addNode(9, 10, 15, &NodeRoadQuarterPipe);
+    map.addNode(9, 11, 15, &NodeRoadQuarterPipeUp);
+    map.addNode(9, 11, 14, &NodeRoadQuarterPipeUp180);
+    map.addNode(9, 9, 14, &NodeRoadQuarterPipe180);
+    map.addNode(9, 9, 15, &NodeDirtLine);
+    map.addNode(9, 9, 16, &NodeDirtCorner);
+    map.addNode(8, 9, 16, &NodeDirtLine90);
+    map.addNode(7, 9, 16, &NodeDirtLine90);
+    map.addNode(6, 9, 16, &NodeDirtLinePenche270);
+
+    map.addNode(4, 9, 16, &NodeGrassLine90);
+    map.addNode(3, 9, 16, &NodeGrassLine90);
 
     // obstacles
-    map.addNode(2, 7, &NodePillar);
+
+    map.addNode(9, 10, 11, &NodePillar);
     
     camera.init();
     camera.setTarget(&NodeCar);
@@ -357,7 +429,8 @@ int main() {
         {
             car.solver(sub_dt, map);
         }
-        std::cout << "Car position: " << NodeCar.transformation.getTranslation().x << ", " << NodeCar.transformation.getTranslation().y << ", " << NodeCar.transformation.getTranslation().z << std::endl;
+        //std::cout << "Car position: " << NodeCar.transformation.getTranslation().x << ", " << NodeCar.transformation.getTranslation().y << ", " << NodeCar.transformation.getTranslation().z << std::endl;
+        //std::cout << "Car velocity: " << glm::length(NodeCar.getVitesse()) << std::endl;
         camera.update(deltaTime, window);
         // matrice projection (perspective)
         glm::mat4 projectionMatrix = camera.getProjectionMatrix(); 

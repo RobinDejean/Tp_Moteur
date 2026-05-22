@@ -169,7 +169,10 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     // NOUVELLE CONDITION : 
     // On drift SI (on tourne fort à haute vitesse) OU SI (on glisse déjà pas mal !)
     std::cout << "adherence: " << adherence << std::endl;
-    bool isDrifting = (abs_speed > 15.0f && std::abs(anglesRoues) > (0.2f* adherence)) || (vitesseGlissement > 3.0f) || (freinage == 1.0f && acceleration == 1.0f);
+    bool isDrifting = (abs_speed > 30.0f * adherence && std::abs(anglesRoues) > (0.4f* adherence)) || (vitesseGlissement > 10.0f * adherence) || (freinage == 1.0f && acceleration == 1.0f);
+    //std::cout << "anglesRoues: " << anglesRoues << std::endl;
+    std::cout << "vitesseGlissement: " << vitesseGlissement << std::endl;
+    std::cout << "isDrifting: " << isDrifting << std::endl;
 
     if (isDrifting) {
         forceGrip = 1.5f; // Grip faible = la glissade continue en douceur
@@ -262,14 +265,15 @@ void Car::solver(double dt, Map& map)
         for (int bi = 0; bi < (int)blocks.size(); bi++)
         for (int bj = 0; bj < (int)blocks[bi].size(); bj++)
         for (int bk = 0; bk < (int)blocks[bi][bj].size(); bk++)
+        for (int bl = 0; bl < (int)blocks[bi][bj][bk].size(); bl++)
         {
-            Node* nodeMap = blocks[bi][bj][bk];
+            Node* nodeMap = blocks[bi][bj][bk][bl];
             if (!nodeMap) continue;
 
             const auto& verts   = nodeMap->getMesh()->getIndexedVertices();
             const auto& indices = nodeMap->getMesh()->getIndices();
             Transformation mapTransfo = nodeMap->getTransformation();
-            mapTransfo.addTranslation(glm::vec3(blockSize*bj - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, 0., blockSize*bi - (mapHeight * blockSize) / 2.0f + blockSize / 2.0f));
+            mapTransfo.addTranslation(glm::vec3(blockSize*bj - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, blockSize*bk - (mapHeight * blockSize) / 2.0f, blockSize*bi - (mapDepth * blockSize) / 2.0f + blockSize / 2.0f));
             glm::mat4 T = mapTransfo.computeTransformationMatrix();
 
             for (int t = 0; t < (int)indices.size(); t += 3)

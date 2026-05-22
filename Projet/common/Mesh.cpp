@@ -477,6 +477,8 @@ void Mesh::road_line() {
     noise.clear();
     deleteBuffers();
 
+    //sol
+
     indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
     indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
     indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.0f, blockSize / 2.0f));
@@ -494,6 +496,8 @@ void Mesh::road_line() {
     indices.push_back(2);
     indices.push_back(0);
     indices.push_back(3);
+
+    //bordures extérieures
 
     indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
     indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
@@ -532,99 +536,92 @@ void Mesh::road_quarterpipe() {
     noise.clear();
     deleteBuffers();
 
-    int segments = 20;       // Fluidité de la courbe
-    float radius = blockSize;     // Rayon de la rampe
-    float lengthZ = blockSize;   // Longueur sur l'axe Z
-    float thickness = 0.5f;  // Épaisseur de la bordure (comme ton 0.5f d'origine)
+    // Configuration des dimensions
+    const float flatLength = 5.0f; // Longueur des plats en mètres à chaque extrémité
+    const int segmentsCurve = 12;  // Nombre de segments pour adoucir la courbe du milieu
+    
+    float halfSize = blockSize / 2.0f;
 
-    // On calcule les coordonnées Z pour le côté gauche et droit
-    float z1 = -lengthZ / 2.0f;
-    float z2 = lengthZ / 2.0f;
-
-    // ==========================================
-    // 1. GÉNÉRATION DES VERTICES ET DES UVS
-    // ==========================================
-    for (int i = 0; i <= segments; ++i) {
-        float t = (float)i / (float)segments;
-        float angle = t * (3.14159265f / 2.0f);
-
-        // --- Surface de la route (Piste intérieure) ---
-        float x = -(blockSize / 2.0f) + radius * (1.0f - cos(angle)); 
-        float y = -(blockSize / 2.0f) + radius * (1.0f - sin(angle));
-
-        // --- Surface externe (Le "dos" ou l'épaisseur de la structure) ---
-        // On pousse les sommets vers l'extérieur en suivant le vecteur de la courbe
-        float ext_x = x + thickness * cos(angle);
-        float ext_y = y + thickness * sin(angle);
-
-        // AJOUT DES VERTICES (L'ordre ici est CRUCIAL pour calculer les indices facilement)
-        // [0] Piste - Côté Z-
-        indexed_vertices.push_back(vec3(x, y, z1));
-        uvs.push_back(vec2(t, 0.0f));
-
-        // [1] Piste - Côté Z+
-        indexed_vertices.push_back(vec3(x, y, z2));
-        uvs.push_back(vec2(t, 1.0f));
-
-        // [2] Extérieur - Côté Z-
-        indexed_vertices.push_back(vec3(ext_x, ext_y, z1));
-        uvs.push_back(vec2(t, 0.05f)); // Léger décalage UV comme ton code initial
-
-        // [3] Extérieur - Côté Z+
-        indexed_vertices.push_back(vec3(ext_x, ext_y, z2));
-        uvs.push_back(vec2(t, 0.95f));
+    // La taille disponible pour la courbe est la taille totale moins les deux plats
+    float curveSize = blockSize - flatLength;
+    
+    // Sécurité : si le plat est trop grand pour la taille du bloc, on le limite
+    if (curveSize < 0.0f) {
+        curveSize = 0.0f;
     }
 
-    // ==========================================
-    // 2. GÉNÉRATION DES TRIANGLES (INDICES)
-    // ==========================================
-    for (int i = 0; i < segments; ++i) {
-        // Pour chaque étape 'i', on a généré 4 sommets.
-        // On calcule l'index de départ pour l'étape actuelle (i) et la suivante (next)
-        int curr = i * 4;
-        int next = (i + 1) * 4;
+    // --- 1. PREMIER BOUT : LE PLAT HORIZONTAL (Au sol) ---
+    // Sommet arrière gauche (départ de la route)
+    indexed_vertices.push_back(vec3(-halfSize, -halfSize, -halfSize));
+    uvs.push_back(vec2(0.0f, 0.0f));
+    // Sommet arrière droit
+    indexed_vertices.push_back(vec3(halfSize, -halfSize, -halfSize));
+    uvs.push_back(vec2(1.0f, 0.0f));
 
-        // Repérage des points de la tranche actuelle (i)
-        int p_zMin = curr + 0; // Piste Z-
-        int p_zMax = curr + 1; // Piste Z+
-        int e_zMin = curr + 2; // Extérieur Z-
-        int e_zMax = curr + 3; // Extérieur Z+
+    // Sommet avant gauche du plat (juste avant que la courbe commence)
+    indexed_vertices.push_back(vec3(-halfSize, -halfSize, -halfSize + flatLength));
+    uvs.push_back(vec2(0.0f, 0.15f)); // V arbitraire pour le plat, ajustable
+    // Sommet avant droit du plat
+    indexed_vertices.push_back(vec3(halfSize, -halfSize, -halfSize + flatLength));
+    uvs.push_back(vec2(1.0f, 0.15f));
 
-        // Repérage des points de la tranche suivante (i+1)
-        int np_zMin = next + 0; // Next Piste Z-
-        int np_zMax = next + 1; // Next Piste Z+
-        int ne_zMin = next + 2; // Next Extérieur Z-
-        int ne_zMax = next + 3; // Next Extérieur Z+
 
-        // --- FACE 1 : La Piste Intérieure (Où roulent les véhicules) ---
-        indices.push_back(p_zMin);
-        indices.push_back(p_zMax);
-        indices.push_back(np_zMin);
+    // --- 2. LE MILIEU : LA COURBE (QUARTER PIPE) ---
+    // On génère la courbe. Elle commence là où le premier plat s'arrête
+    for (int i = 1; i < segmentsCurve; ++i) {
+        float t = (float)i / (float)segmentsCurve;
+        float angle = t * (3.14159265f / 2.0f); 
 
-        indices.push_back(p_zMax);
-        indices.push_back(np_zMax);
-        indices.push_back(np_zMin);
+        // La courbe d'adapte à curveSize
+        float z = (-halfSize + flatLength) + (sin(angle) * curveSize);
+        float y = (1.0f - cos(angle)) * curveSize -halfSize;
 
-        // --- FACE 2 : La Bordure Latérale Droite (Flanc Z-) ---
-        indices.push_back(e_zMin);
-        indices.push_back(p_zMin);
-        indices.push_back(ne_zMin);
+        // Sommet Gauche
+        indexed_vertices.push_back(vec3(-halfSize, y, z));
+        uvs.push_back(vec2(0.0f, 0.15f + t * 0.70f));
 
-        indices.push_back(ne_zMin);
-        indices.push_back(p_zMin);
-        indices.push_back(np_zMin);
+        // Sommet Droit
+        indexed_vertices.push_back(vec3(halfSize, y, z));
+        uvs.push_back(vec2(1.0f, 0.15f + t * 0.70f));
+    }
 
-        // --- FACE 3 : La Bordure Latérale Gauche (Flanc Z+) ---
-        indices.push_back(p_zMax);
-        indices.push_back(e_zMax);
-        indices.push_back(np_zMax);
 
-        indices.push_back(np_zMax);
-        indices.push_back(e_zMax);
-        indices.push_back(ne_zMax);
-        
-        // Note : Si tu as besoin de fermer le "dos" de la rampe (la face extérieure cachée),
-        // dis-le moi, on peut aussi générer les triangles entre e_zMin/e_zMax et ne_zMin/ne_zMax.
+    // --- 3. DEUXIÈME BOUT : LE PLAT VERTICAL (Le mur) ---
+    // Sommet bas gauche du mur (fin de la courbe)
+    indexed_vertices.push_back(vec3(-halfSize, curveSize - halfSize, halfSize));
+    uvs.push_back(vec2(0.0f, 0.85f));
+    // Sommet bas droit du mur
+    indexed_vertices.push_back(vec3(halfSize, curveSize - halfSize, halfSize));
+    uvs.push_back(vec2(1.0f, 0.85f));
+
+    // Sommet tout en haut à gauche (fin de la route)
+    indexed_vertices.push_back(vec3(-halfSize, halfSize, halfSize));
+    uvs.push_back(vec2(0.0f, 1.0f));
+    // Sommet tout en haut à droit
+    indexed_vertices.push_back(vec3(halfSize, halfSize, halfSize));
+    uvs.push_back(vec2(1.0f, 1.0f));
+
+
+    // --- 4. GÉNÉRATION DES TRIANGLES ---
+    // Le nombre total de "tranches" de deux sommets est :
+    // 2 (pour le premier plat) + (segmentsCurve - 1) (milieu) + 2 (plat vertical)
+    int totalSteps = 2 + (segmentsCurve - 1) + 2;
+
+    for (int i = 0; i < totalSteps - 1; ++i) {
+        int topLeft     = i * 2;
+        int topRight    = i * 2 + 1;
+        int bottomLeft  = (i + 1) * 2;
+        int bottomRight = (i + 1) * 2 + 1;
+
+        // Triangle 1
+        indices.push_back(topLeft);
+        indices.push_back(bottomRight);
+        indices.push_back(topRight);
+
+        // Triangle 2
+        indices.push_back(topLeft);
+        indices.push_back(bottomLeft);
+        indices.push_back(bottomRight);
     }
 
     setupMesh();

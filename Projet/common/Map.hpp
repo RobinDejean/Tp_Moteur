@@ -32,19 +32,19 @@ using namespace glm;
 #define MAP_HPP
 
 class Map{
-    std::vector<std::vector<std::vector<Node *>>> blocks;
+    std::vector<std::vector<std::vector<std::vector<Node *>>>> blocks;
 
     public:
         //CONSTRUCTORS
-        Map(int width = 10, int height = 10);
+        Map(int width = 10, int height = 10, int depth = 10);
         
 
         //DESTRUCTORS
         ~Map();
 
         //GETTERS & SETTERS
-        std::vector<std::vector<std::vector<Node *>>> getBlocks() const { return blocks; }
-        void addNode(int x, int y, Node * node);
+        std::vector<std::vector<std::vector<std::vector<Node *>>>> getBlocks() const { return blocks; }
+        void addNode(int x, int y, int z, Node * node);
 
         //RENDER
         void render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID);
