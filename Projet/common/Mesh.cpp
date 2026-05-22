@@ -537,7 +537,7 @@ void Mesh::road_quarterpipe() {
     deleteBuffers();
 
     // Configuration des dimensions
-    const float flatLength = 5.0f; // Longueur des plats en mètres à chaque extrémité
+    const float flatLength = 3.0f; // Longueur des plats en mètres à chaque extrémité
     const int segmentsCurve = 12;  // Nombre de segments pour adoucir la courbe du milieu
     
     float halfSize = blockSize / 2.0f;

@@ -31,6 +31,16 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     float abs_speed = std::abs(speed);
     float airResistance = 0.005f * abs_speed * speed;
     float masse = node->getMasse();
+    float speedAdditionnel = 1.0f;
+    if (abs_speed < 10.0f) {
+        speedAdditionnel = 1.6f * dt; // Considère que la voiture est à l'arrêt si la vitesse est très faible
+    }else if (abs_speed < 16.0f) {
+        speedAdditionnel = 1.f * dt; // Limite la vitesse maximale à 100 unités
+    }else if (abs_speed < 23.0f) {
+        speedAdditionnel = 0.6f * dt; // Limite la vitesse maximale à 50 unités
+    }else{
+        speedAdditionnel = 0.3f * dt;
+    }
 
 
     glm::vec3 axeAvant  = directionChassis;            // Axe X local
@@ -62,7 +72,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
         // 4. Application des forces sur la Vitesse Signée
         if (acceleration > 0.0f) {
             // ACCÉLÉRATION (Marche avant)
-            speed += ((force - airResistance) / masse)* 5 * dt;
+            speed += ((force - airResistance) / masse)* 5 * dt + speedAdditionnel * adherence; // La vitesse devient de plus en plus positive
             
         } else if (freinage > 0.0f) {
             // TOUCHE RECULER/FREINER ENFONCÉE
@@ -79,11 +89,13 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
             // AUCUNE TOUCHE : Friction naturelle
             speed -= (0.4f * speed + (airResistance/masse)) * dt;
             // Arrêt complet si la vitesse est très faible pour éviter de glisser infiniment
-            if (abs_speed < 0.05f) speed = 0.0f;
+            if (abs_speed < 0.1f) speed = 0.0f;
         }
         
-        float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
-        rotationMatrix = node->transformation.getRotationMatrix();
+        //float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
+        //new
+        //
+        /* rotationMatrix = node->transformation.getRotationMatrix();
         glm::vec3 axeHautLocal = glm::vec3(rotationMatrix[1]);
         glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHautLocal);
         
@@ -94,18 +106,18 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
         node->transformation.setRotationFromMatrix(nouvelleRotation);
         
         // La nouvelle direction Avant (Axe X) est la première colonne fraîchement tournée
-        directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
-
+        directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0])); */
+        
         
         // Ajoute une petite friction pour que la voiture s'arrête si on n'accélère plus
         //speed *= 0.99f; 
         //std::cout << "speed: " << speed << std::endl;
     }else{
         speed -= (0.2f * speed + (airResistance/masse)) * dt;
-
+        
         float airTurnSpeed = 1.f * dt;
         glm::mat4 matriceAir = glm::mat4(1.0f);
-
+        
         if (acceleration > 0.0f) {
             float pitchForce = -acceleration * airTurnSpeed;
             matriceAir = glm::rotate(matriceAir, pitchForce, axeDroite);
@@ -117,7 +129,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
             float directionRotation = (anglesRoues > 0.0f) ? 1.0f : -1.0f;
             matriceAir = glm::rotate(matriceAir, directionRotation * airTurnSpeed, axeHaut);
         }
-
+        
         // On applique les rotations aériennes à la matrice actuelle
         glm::mat4 nouvelleRotation = matriceAir * rotationMatrix;
         node->transformation.setRotationFromMatrix(nouvelleRotation);
@@ -125,39 +137,39 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
         // On met à jour la nouvelle direction
         directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
     }
-
+    
     // 4. Calcul de la rotation du châssis (Lacet)
     // On utilise l'angle des roues (attention : vérifie si c'est .y ou .z selon ton axe vertical)
-/*     glm::mat4 rotMat  = node->transformation.getRotationMatrix();
+    /*     glm::mat4 rotMat  = node->transformation.getRotationMatrix();
     glm::vec3 chassisPos = node->transformation.getTranslation();
     glm::vec3 wheelWorld = chassisPos
-            + glm::vec3(rotMat * glm::vec4(wheel->transformation.getTranslation(), 0.f));
+    + glm::vec3(rotMat * glm::vec4(wheel->transformation.getTranslation(), 0.f));
     glm::vec3 diag1 = wheelWorldPositions[3] - wheelWorldPositions[0];
     glm::vec3 diag2 = wheelWorldPositions[2] - wheelWorldPositions[1];
     glm::vec3 terrainNormal = glm::normalize(glm::cross(diag1, diag2)); */
-
-
+    
+    
     //node->transformation.addEulerAngles(glm::vec3(0, rotationChassis, 0));
-
+    
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE
     // Maintenant que le châssis a tourné, la vitesse pointe vers l'avant du châssis !
     // 5. DETERMINATION DU NOUVEAU VECTEUR VITESSE (Façon Trackmania)
     
     // a. On sépare les deux vitesses
-   // 1. Calcul de base
+    // 1. Calcul de base
     float angleAbsolu = std::abs(anglesRoues);
     float forceGrip = 15.0f; // Grip normal (rails)
     float multiplicateurSurvirage = 1.0f;
-
-    // --- APPLICATION ROTATION CHÂSSIS ---
-    float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
-    rotationChassis *= multiplicateurSurvirage; 
-    glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHaut);
-    glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
     
-    node->transformation.setRotationFromMatrix(nouvelleRotation);
-    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
-
+    // --- APPLICATION ROTATION CHÂSSIS ---
+    /* float rotationChassis = (speed * tan(anglesRoues) / empattement) * dt;
+    rotationChassis *= multiplicateurSurvirage;  */
+    //glm::mat4 matriceVirage = glm::rotate(glm::mat4(1.0f), rotationChassis, axeHaut);
+    //glm::mat4 nouvelleRotation = matriceVirage * rotationMatrix;
+    
+    //node->transformation.setRotationFromMatrix(nouvelleRotation);
+    //directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+    
     // 4. Calcul des vitesses avec le glissement
     // --- 4. ANALYSE DU DRIFT ---
     
@@ -165,7 +177,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     glm::vec3 vitesseAvantBrute = directionChassis * speed;
     glm::vec3 vitesseLateraleBrute = v_vec - vitesseAvantBrute;
     float vitesseGlissement = glm::length(vitesseLateraleBrute);
-
+    
     // NOUVELLE CONDITION : 
     // On drift SI (on tourne fort à haute vitesse) OU SI (on glisse déjà pas mal !)
     std::cout << "adherence: " << adherence << std::endl;
@@ -173,39 +185,115 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     //std::cout << "anglesRoues: " << anglesRoues << std::endl;
     std::cout << "vitesseGlissement: " << vitesseGlissement << std::endl;
     std::cout << "isDrifting: " << isDrifting << std::endl;
-
-    if (isDrifting) {
+    
+    /* if (isDrifting) {
         forceGrip = 1.5f; // Grip faible = la glissade continue en douceur
         multiplicateurSurvirage = 2.0f; // On amplifie la rotation du capot (survirage)
     }
+    float speedFactor = glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
 
+    float turnSpeed =
+        anglesRoues *
+        2.5f *      // vitesse de rotation max
+        speedFactor;
 
-    
+    if (isDrifting)
+        turnSpeed *= 1.5f;
+
+    float rotationChassis = turnSpeed * dt;
+    float yawMultiplier = isDrifting ? 1.8f : 1.0f;
+    turnSpeed *= yawMultiplier;
+
+    glm::mat4 matriceVirage =
+    glm::rotate(glm::mat4(1.0f),
+                rotationChassis,
+                axeHaut);
+
+    glm::mat4 nouvelleRotation =
+        matriceVirage * rotationMatrix;
+
     node->transformation.setRotationFromMatrix(nouvelleRotation);
-    directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
 
+    // nouvelle direction avant
+    directionChassis =
+        glm::normalize(glm::vec3(nouvelleRotation[0]));
+        
+    
+    //node->transformation.setRotationFromMatrix(nouvelleRotation);
+    //directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
+    
     // --- 5. NOUVELLES VITESSES ---
     // On recalcule avec la NOUVELLE direction
-    glm::vec3 vitesseAvant = directionChassis * speed;
+   /*  glm::vec3 vitesseAvant = directionChassis * speed;
     glm::vec3 vitesseLaterale = v_vec - vitesseAvant;
+    glm::vec3 targetVelocity = directionChassis * speed;
 
     float frictionLaterale = std::max(0.0f, 1.0f - (forceGrip * dt));
-    vitesseLaterale *= frictionLaterale;
+    //vitesseLaterale *= frictionLaterale;
     
-    if (glm::length(vitesseLaterale) < 0.1f) vitesseLaterale = glm::vec3(0.0f);
+    //if (glm::length(vitesseLaterale) < 0.1f) vitesseLaterale = glm::vec3(0.0f);
 
-    glm::vec3 nouveauV = vitesseAvant + vitesseLaterale;
+    //glm::vec3 nouveauV = vitesseAvant + vitesseLaterale;
+
+    glm::vec3 nouveauV = glm::mix(v_vec, targetVelocity, forceGrip * dt);
 
     // --- L'ASTUCE ARCADE : NE PAS PERDRE DE VITESSE ---
     float energieInitiale = glm::length(v_vec);
-    float energieNouvelle = glm::length(nouveauV);
+    float energieNouvelle = glm::length(nouveauV); */
     
-    if (energieNouvelle > 0.1f && energieInitiale > energieNouvelle) {
+    /* if (energieNouvelle > 0.1f && energieInitiale > energieNouvelle) {
         // Au lieu de perdre la vitesse, on la redirige vers l'avant !
         // 0.95f = on garde 95% de l'élan de la voiture pendant les virages/drifts. 
         float energieRedirigee = energieNouvelle + (energieInitiale - energieNouvelle) * 0.5f;
         nouveauV = glm::normalize(nouveauV) * energieRedirigee;
+    } */
+
+    float speedFactor =
+    glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
+
+    float turnSpeed =
+        anglesRoues *
+        2.5f *
+        speedFactor;
+
+    if (isDrifting)
+        turnSpeed *= 1.8f;
+    
+    float directionMultiplier = (speed >= 0.0f) ? 1.0f : -1.0f;
+    if (speed > -0.1f && speed < 0.1f) {
+        // Si la voiture est à l'arrêt, on peut tourner dans les deux sens
+        directionMultiplier = 0.f; // ou -1.0f, c'est égal
     }
+
+    float rotationChassis = turnSpeed * directionMultiplier * dt;
+
+    glm::mat4 matriceVirage =
+        glm::rotate(glm::mat4(1.0f),
+                    rotationChassis,
+                    axeHaut);
+
+    glm::mat4 nouvelleRotation =
+        matriceVirage * rotationMatrix;
+
+    node->transformation.setRotationFromMatrix(nouvelleRotation);
+
+    directionChassis =
+        glm::normalize(glm::vec3(nouvelleRotation[0]));
+
+    glm::vec3 targetVelocity =
+        directionChassis * speed;
+
+    float grip =
+        isDrifting ? 2.0f : 12.0f;
+
+    float gripLerp =
+        glm::clamp(grip * dt, 0.0f, 1.0f);
+
+    glm::vec3 nouveauV =
+        glm::mix(v_vec,
+                targetVelocity,
+                gripLerp);
+    
 
     // -------------------------------------------------------------------
     // On applique aux roues

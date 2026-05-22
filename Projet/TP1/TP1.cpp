@@ -170,7 +170,7 @@ int main() {
     TextureIDRoad = loadDDS("Assets/Road.dds");
     TextureIDGrass = loadDDS("Assets/grass.dds");
     TextureIDGlace = loadDDS("Assets/snowrocks.dds");
-    TextureIDTerre = loadDDS("Assets/mars.dds");
+    TextureIDTerre = loadDDS("Assets/Dirt.dds");
     
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
@@ -510,7 +510,7 @@ void processInput(GLFWwindow *window)
         else currentSteeringAngle = 0.0f;
     }
     //std::cout << "Puissance: " << car.getPuissance() << " Vitesse: " << glm::length(NodeCar.getVitesse()) << std::endl;
-    maxSteering = 0.2f * ((car.getPuissance() - glm::length(NodeCar.getVitesse())) / car.getPuissance());
+    maxSteering = 0.8f * ((car.getPuissance() - glm::length(NodeCar.getVitesse())) / car.getPuissance());
     currentSteeringAngle = glm::clamp(currentSteeringAngle, -maxSteering, maxSteering);
     //std::cout << "Max Steering: " << maxSteering << " Current Steering Angle: " << currentSteeringAngle << std::endl;
     NodeFrontLeftWheel.transformation.setEulerAngles(glm::vec3(0.f, currentSteeringAngle, 0.f));
