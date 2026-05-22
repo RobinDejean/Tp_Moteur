@@ -156,6 +156,9 @@ extern Ressort ressortSoleil;
 extern Car car;
 
 // MAP
+extern float blockSize;
+extern int mapWidth;
+extern int mapHeight;
 extern Map map;
 
 extern Mesh MeshRoadLine;

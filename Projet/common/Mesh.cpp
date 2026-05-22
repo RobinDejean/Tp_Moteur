@@ -477,10 +477,10 @@ void Mesh::road_line() {
     noise.clear();
     deleteBuffers();
 
-    indexed_vertices.push_back(vec3(-5.0f, 0.0f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 0.0f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 0.0f, 5.0f));
-    indexed_vertices.push_back(vec3(-5.0f, 0.0f, 5.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.0f, blockSize / 2.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.0f, blockSize / 2.0f));
 
     uvs.push_back(vec2(0.0f, 0.0f));
     uvs.push_back(vec2(1.0f, 0.0f));
@@ -495,10 +495,10 @@ void Mesh::road_line() {
     indices.push_back(0);
     indices.push_back(3);
 
-    indexed_vertices.push_back(vec3(-5.0f, 0.5f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 0.5f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 0.5f, 5.0f));
-    indexed_vertices.push_back(vec3(-5.0f, 0.5f, 5.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3(blockSize / 2.0f, 0.5f, blockSize / 2.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.5f, blockSize / 2.0f));
 
     uvs.push_back(vec2(0.05f, 0.0f));
     uvs.push_back(vec2(0.95f, 0.0f));
@@ -533,8 +533,8 @@ void Mesh::road_quarterpipe() {
     deleteBuffers();
 
     int segments = 20;       // Fluidité de la courbe
-    float radius = 10.0f;     // Rayon de la rampe
-    float lengthZ = 10.0f;   // Longueur sur l'axe Z
+    float radius = blockSize;     // Rayon de la rampe
+    float lengthZ = blockSize;   // Longueur sur l'axe Z
     float thickness = 0.5f;  // Épaisseur de la bordure (comme ton 0.5f d'origine)
 
     // On calcule les coordonnées Z pour le côté gauche et droit
@@ -549,8 +549,8 @@ void Mesh::road_quarterpipe() {
         float angle = t * (3.14159265f / 2.0f);
 
         // --- Surface de la route (Piste intérieure) ---
-        float x = -5.0f + radius * (1.0f - cos(angle)); 
-        float y = -5.0f + radius * (1.0f - sin(angle));
+        float x = -(blockSize / 2.0f) + radius * (1.0f - cos(angle)); 
+        float y = -(blockSize / 2.0f) + radius * (1.0f - sin(angle));
 
         // --- Surface externe (Le "dos" ou l'épaisseur de la structure) ---
         // On pousse les sommets vers l'extérieur en suivant le vecteur de la courbe
@@ -638,10 +638,10 @@ void Mesh::road_line_penche() {
     noise.clear();
     deleteBuffers();
 
-    indexed_vertices.push_back(vec3(-5.0f, 0.0f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, .0f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 2.0f, 5.0f));
-    indexed_vertices.push_back(vec3(-5.0f, 2.0f, 5.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * 1.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * 1.0f, 2.0f, (blockSize / 2.0f) * 1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 2.0f, (blockSize / 2.0f) * 1.0f));
 
     uvs.push_back(vec2(0.0f, 0.0f));
     uvs.push_back(vec2(1.0f, 0.0f));
@@ -656,10 +656,10 @@ void Mesh::road_line_penche() {
     indices.push_back(0);
     indices.push_back(3);
 
-    indexed_vertices.push_back(vec3(-5.0f, 0.5f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 0.5f, -5.0f));
-    indexed_vertices.push_back(vec3(5.0f, 2.5f, 5.0f));
-    indexed_vertices.push_back(vec3(-5.0f, 2.5f, 5.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * 1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * 1.0f, 2.5f, (blockSize / 2.0f) * 1.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 2.5f, (blockSize / 2.0f) * 1.0f));
 
     uvs.push_back(vec2(0.05f, 0.0f));
     uvs.push_back(vec2(0.95f, 0.0f));
@@ -694,12 +694,11 @@ void Mesh::road_corner() {
     deleteBuffers();
 
     const int segments = 16;       // qualité du virage
-    const float radiusOuter = 10.0f;
-    const float radiusInner = 6.0f;
+    const float radiusOuter = blockSize;     // rayon extérieur du virage
     const float height = 0.5f;
 
     // interieur
-    indexed_vertices.push_back(vec3(-5.0f, 0.0f, -5.0f));
+    indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.0f, (blockSize / 2.0f) * -1.0f));
     uvs.push_back(vec2(0.0f, 0.0f));
 
     // ===== BASE (y = 0) =====
@@ -710,10 +709,10 @@ void Mesh::road_corner() {
         float sinA = sin(angle);
 
         // extérieur
-        indexed_vertices.push_back(vec3(radiusOuter * cosA - 5.0f, 0.0f, radiusOuter * sinA - 5.0f));
+        indexed_vertices.push_back(vec3(radiusOuter * cosA - (blockSize / 2.0f), 0.0f, radiusOuter * sinA - (blockSize / 2.0f)));
         uvs.push_back(vec2(radiusOuter * cosA / 10., radiusOuter * sinA / 10.));
 
-        indexed_vertices.push_back(vec3(radiusOuter * cosA - 5.0f, 0.5f, radiusOuter * sinA - 5.0f));
+        indexed_vertices.push_back(vec3(radiusOuter * cosA - (blockSize / 2.0f), 0.5f, radiusOuter * sinA - (blockSize / 2.0f)));
         uvs.push_back(vec2(radiusOuter * cosA / 10. - 0.05f, radiusOuter * sinA / 10.));
     }
 

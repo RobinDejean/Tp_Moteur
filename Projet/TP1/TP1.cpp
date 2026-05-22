@@ -129,16 +129,16 @@ int main() {
     NodeRoadLine90 = Node(&MeshRoadLine, TypeSurface::ROUTE);
     NodeRoadLine90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
 
-    //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + 5 en y
+    //QUARTERPIPE EST CENTRE SUR (0,0) donc il faut faire + Blocksize / 2 + Blocksize * height en y
 
     NodeRoadQuarterPipe90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
-    NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., 5., 0.));
+    NodeRoadQuarterPipe90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
     NodeRoadQuarterPipe = Node(&MeshRoadQuarterPipe, TypeSurface::TERRE);
     NodeRoadQuarterPipe.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
-    NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., 5., 0.));
+    NodeRoadQuarterPipe.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f, 0.));
     NodeRoadQuarterPipeUp90 = Node(&MeshRoadQuarterPipe, TypeSurface::ROUTE);
     NodeRoadQuarterPipeUp90.transformation.setEulerAngles(glm::vec3(0., 0., glm::radians(-90.f)));
-    NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., 15., 0.));
+    NodeRoadQuarterPipeUp90.transformation.setTranslation(glm::vec3(0., blockSize / 2.0f + blockSize, 0.));
 
     NodeRoadCorner = Node(&MeshRoadCorner, TypeSurface::TERRE);
 
@@ -257,7 +257,7 @@ int main() {
     
     camera.init();
     camera.setTarget(&NodeCar);
-    NodeCar.transformation.setTranslation(glm::vec3(-5.f, 10.f, 0.f));
+    NodeCar.transformation.setTranslation(glm::vec3(-10.f, 10.f, -10.f));
     NodeCar.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
 
 
@@ -386,7 +386,7 @@ void processInput(GLFWwindow *window)
         freinage = 0.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        NodeCar.transformation.setTranslation(glm::vec3(-5.f, 2.f, 0.f));
+        NodeCar.transformation.setTranslation(glm::vec3(-10.f, 2.f, -10.f));
         NodeCar.setVitesse(glm::vec3(0.f));
         for (auto roues : NodeCar.getEnfants()){
             roues->setVitesse(glm::vec3(0.f));

@@ -269,7 +269,7 @@ void Car::solver(double dt, Map& map)
             const auto& verts   = nodeMap->getMesh()->getIndexedVertices();
             const auto& indices = nodeMap->getMesh()->getIndices();
             Transformation mapTransfo = nodeMap->getTransformation();
-            mapTransfo.addTranslation(glm::vec3(10.*bj - 45, 0., 10.*bi - 45));
+            mapTransfo.addTranslation(glm::vec3(blockSize*bj - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, 0., blockSize*bi - (mapHeight * blockSize) / 2.0f + blockSize / 2.0f));
             glm::mat4 T = mapTransfo.computeTransformationMatrix();
 
             for (int t = 0; t < (int)indices.size(); t += 3)

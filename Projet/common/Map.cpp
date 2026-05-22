@@ -23,7 +23,7 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
     for (int y = 0; y < blocks.size(); ++y) {
         for (int x = 0; x < blocks[y].size(); ++x) {
             Transformation t = Transformation();
-            t.setTranslation(glm::vec3(x * 10 - 45, 0, y * 10 - 45));
+            t.setTranslation(glm::vec3(x * blockSize - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, 0, y * blockSize - (mapHeight * blockSize) / 2.0f + blockSize / 2.0f));
             glm::mat4 transformationParent = t.computeTransformationMatrix();
             for (Node *node : blocks[y][x]) {
                 if (node->getMesh() != nullptr){

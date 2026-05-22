@@ -23,6 +23,7 @@ using namespace glm;
 #include <common/vboindexer.hpp>
 #include <common/texture.hpp>
 #include "common/ImageBase.h"
+#include "../TP1/globals.hpp"
 
 
 #ifndef MESH_HPP

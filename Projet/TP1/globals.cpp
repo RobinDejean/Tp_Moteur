@@ -71,7 +71,10 @@ Car car = Car(&NodeCar, 100.);
 //Ressort ressortSoleil(&NodeSoleil, 1., 30.f);
 
 // MAP
-Map map(10, 10);
+float blockSize = 20.f;
+int mapWidth = 10;
+int mapHeight = 10;
+Map map(mapWidth, mapHeight);
 
 Mesh MeshRoadLine;
 Node NodeRoadLine;
