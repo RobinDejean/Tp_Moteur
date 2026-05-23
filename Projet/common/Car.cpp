@@ -427,7 +427,24 @@ void Car::solver(double dt, Map& map)
                     accumulatedNormal += normal;
                     hasCollision = true;
                     adherence = nodeMap->getAdherence();
-                            
+
+                    //std::cout << "Collision roue " << i << " avec bloc (" << bj << "," << bk << "," << bi << "," << bl << ")"<< std::endl;
+                    if(map.getStartTime() == -1.0){
+                        map.setStartTime(glfwGetTime());
+                        std::cout << "Course commencée !" << std::endl;
+                    }
+                    if(map.getCurrentCP() < map.getCheckPoints().size()){
+                        auto cp = map.getCheckPoints()[map.getCurrentCP()];
+                        if (cp.z == bi && cp.x == bj && cp.y == bk && cp.n == bl) {
+                            map.addTime(glfwGetTime() - map.getStartTime());
+                            std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
+                        }
+                    }
+                    else if (map.getFinish().z == bi && map.getFinish().x == bj && map.getFinish().y == bk && map.getFinish().n == bl && map.getFinishTime() == -1.0) {
+                        double finishTime = glfwGetTime() - map.getStartTime();
+                        map.setFinishTime(finishTime);
+                        std::cout << "Finish reached! Total time: " << finishTime << " seconds" << std::endl;
+                    }
                 }
             }
         }

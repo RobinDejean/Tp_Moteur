@@ -376,12 +376,14 @@ int main() {
 
     // --------------------- MAP ---------------------
     map.addNode(9, 10, 9, &NodeRoadLine);
+    map.setStart(9, 10, 9, 0);
     map.addNode(9, 10, 10, &NodeRoadLine);
     map.addNode(9, 10, 11, &NodeRoadLine);
     map.addNode(9, 10, 12, &NodeRoadLinePenche);
 
     map.addNode(9, 10, 15, &NodeRoadQuarterPipe);
     map.addNode(9, 11, 15, &NodeRoadQuarterPipeUp);
+    map.addCheckPoint(9, 11, 15, 0);
     map.addNode(9, 11, 14, &NodeRoadQuarterPipeUp180);
     map.addNode(9, 9, 14, &NodeRoadQuarterPipe180);
     map.addNode(9, 9, 15, &NodeDirtLine);
@@ -392,10 +394,13 @@ int main() {
 
     map.addNode(4, 9, 16, &NodeGrassLine90);
     map.addNode(3, 9, 16, &NodeGrassLine90);
+    map.setFinish(3, 9, 16, 0);
 
     // obstacles
 
     map.addNode(9, 10, 11, &NodePillar);
+
+
     
     camera.init();
     camera.setTarget(&NodeCar);

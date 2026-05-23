@@ -1,5 +1,12 @@
 #include "Map.hpp"
 
+Block::Block(int x, int y, int z, int n){
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    this->n = n;
+}
+
 Map::Map(int width, int height, int depth) {
     blocks.resize(depth);
     for (auto& layer : blocks) {
@@ -29,7 +36,8 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
                 Transformation t = Transformation();
                 t.setTranslation(glm::vec3(x * blockSize - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f, y * blockSize - (mapHeight * blockSize) / 2.0f, z * blockSize - (mapDepth * blockSize) / 2.0f + blockSize / 2.0f));
                 glm::mat4 transformationParent = t.computeTransformationMatrix();
-                for (Node *node : blocks[z][x][y]) {
+                for (int n = 0; n < blocks[z][x][y].size(); ++n) {
+                    Node *node = blocks[z][x][y][n];
                     if (node->getMesh() != nullptr){
                         glm::mat4 modelMatrix = transformationParent * node->getTransformation().computeTransformationMatrix();
                         glm::mat4 MVP = viewProj * modelMatrix;
