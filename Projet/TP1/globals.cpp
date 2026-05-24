@@ -54,6 +54,18 @@ GLuint TextureIDTerre;
 GLuint TextureIDGlace;
 GLuint TextureIDGrass;
 
+GLuint TextureIDRoadNormal;
+GLuint TextureIDTerreNormal;
+GLuint TextureIDGlaceNormal;
+GLuint TextureIDGrassNormal;
+
+GLuint TextureIDRoadRoughness;
+GLuint TextureIDTerreRoughness;
+GLuint TextureIDGlaceRoughness;
+GLuint TextureIDGrassRoughness;
+
+
+
 
 // scene
 SceneGraph SceneCar;

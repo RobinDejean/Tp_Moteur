@@ -465,9 +465,12 @@ void SceneRender(Node* node, glm::mat4 transformationParent, GLuint MatrixID, gl
 
         glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 
-        glActiveTexture(GL_TEXTURE0);
-        
-        glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, *(node->getTextureID()));
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, *(node->getTextureNormalID()));
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, *(node->getTextureRoughnessID()));
         
         (*(node->getMesh())).render();
     }

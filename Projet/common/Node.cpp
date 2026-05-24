@@ -9,6 +9,8 @@ Node::Node() {
     //mesh = nullptr;
     volume = 1;
     textureID = 0;
+    textureNormalID = 0;
+    textureRoughnessID = 0;
     mode = 0;
     vitesse = glm::vec3(0.0f);
     masse = 1.0;
@@ -29,6 +31,8 @@ Node::Node(Mesh* mesh, TypeSurface surface) {
     this->friction_statique = 0.f;
     this->friction_cinetique = 0.f;
     this->rebond = 0.f;
+    this->textureNormalID = getTextureNormal(surface);
+    this->textureRoughnessID = getTextureRoughness(surface);
 }
 
 //DESTRUCTORS

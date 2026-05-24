@@ -19,6 +19,8 @@ class Node{
     
     
     GLuint *textureID;
+    GLuint *textureNormalID;
+    GLuint *textureRoughnessID;
     int mode;
     glm::vec3 vitesse;
     double masse;
@@ -55,6 +57,8 @@ class Node{
             return transformation.getTranslation() + glm::vec3(transformation.getRotationMatrix() * glm::vec4(taille, 0., 0.5 * taille,0.f));
         }
         double getAdherence() const { return adherence; }
+        GLuint* getTextureNormalID() const { return textureNormalID; }
+        GLuint* getTextureRoughnessID() const { return textureRoughnessID; }
 
 
 
@@ -68,6 +72,8 @@ class Node{
         void setMasse(double masse);
         void setAdherence(double adherence) { this->adherence = adherence; };
         void setCoefficients(double fs, double fc, double r);
+        void setTextureNormalID(GLuint *textureNormalID) { this->textureNormalID = textureNormalID; }
+        void setTextureRoughnessID(GLuint *textureRoughnessID) { this->textureRoughnessID = textureRoughnessID; }
 
 
         //METHODS

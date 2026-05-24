@@ -66,7 +66,7 @@ float DistributionGGX(vec3 N, vec3 H, float a)
 
 void main(){
     vec3 radiance = lightColor * intensity;
-    vec3 albedo = pow(texture(myPlaneteSampler, uv).rgb, vec3(2.2)); // Correction Gamma
+    vec3 albedo = pow(texture(myDiffuseSampler, uv).rgb, vec3(2.2)); // Correction Gamma
     //float metallic = texture(myMetallicSampler, uv).r;
     float metallic = 0.0;
     float roughness = texture(myRoughnessSampler, uv).r;

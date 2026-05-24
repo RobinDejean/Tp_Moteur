@@ -145,6 +145,16 @@ extern GLuint TextureIDTerre;
 extern GLuint TextureIDGlace;
 extern GLuint TextureIDGrass;
 
+extern GLuint TextureIDRoadNormal;
+extern GLuint TextureIDTerreNormal;
+extern GLuint TextureIDGlaceNormal;
+extern GLuint TextureIDGrassNormal;
+
+extern GLuint TextureIDRoadRoughness;
+extern GLuint TextureIDTerreRoughness;
+extern GLuint TextureIDGlaceRoughness;
+extern GLuint TextureIDGrassRoughness;
+
 // scene graph
 extern SceneGraph SceneCar;
 extern Node NodeCar;
@@ -240,6 +250,27 @@ inline GLuint* getTexture(TypeSurface surface) {
         default: return &TextureIDRoad;
     }
 }
+
+inline GLuint* getTextureNormal(TypeSurface surface) {
+    switch (surface) {
+        case TypeSurface::ROUTE: return &TextureIDRoadNormal;
+        case TypeSurface::TERRE: return &TextureIDTerreNormal;
+        case TypeSurface::GAZON: return &TextureIDGrassNormal;
+        case TypeSurface::GLACE: return &TextureIDGlaceNormal;
+        default: return &TextureIDRoadNormal;
+    }
+}
+
+inline GLuint* getTextureRoughness(TypeSurface surface) {
+    switch (surface) {
+        case TypeSurface::ROUTE: return &TextureIDRoadRoughness;
+        case TypeSurface::TERRE: return &TextureIDTerreRoughness;
+        case TypeSurface::GAZON: return &TextureIDGrassRoughness;
+        case TypeSurface::GLACE: return &TextureIDGlaceRoughness;
+        default: return &TextureIDRoadRoughness;
+    }
+}
+
 
 inline float getAdherenceSol(TypeSurface surface) {
     switch (surface) {

@@ -77,17 +77,22 @@ public:
     Texture(Texture &&) = default;
     ~Texture(){if (__synchronized) unsynchronize();}
 
-    void loadTexture(const std::string path){
+    void loadTexture(const std::string path)
+    {
+        unsigned char * new_data =
+            stbi_load(path.c_str(), &width, &height, &nbChannels, 3);
 
-        // on force toutes les textures à être en 3 canaux
-        unsigned char * new_data = stbi_load(path.c_str(), &width, &height, &nbChannels, 3);
-        if (!new_data){
-            std::cout << "[Texture] Problème du chargement de la texture à " << path << " (impossible de charger les données)" << std::endl;
+        if (!new_data)
+        {
+            std::cout << "[Texture] FAIL LOAD: " << path << std::endl;
             return;
         }
 
-        data.resize(width * height * nbChannels);
+        nbChannels = 3;
+
+        data.resize(width * height * 3);
         memcpy(data.data(), new_data, width * height * 3);
+
         stbi_image_free(new_data);
 
         synchronize();

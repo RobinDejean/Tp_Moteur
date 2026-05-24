@@ -168,10 +168,30 @@ int main() {
     SceneCar.racine = &NodeCar;
     SceneTerrain.racine = &NodeTerrain;
 
-    TextureIDRoad = loadDDS("Assets/Road.dds");
-    TextureIDGrass = loadDDS("Assets/grass.dds");
+    TextureIDRoad = loadDDS("Assets/roadTexture/asphalt_02_diff_4k.dds");
+    TextureIDGrass = loadDDS("Assets/grassTexture/brown_mud_leaves_01_diff_4k.dds");
     TextureIDGlace = loadDDS("Assets/snowrocks.dds");
-    TextureIDTerre = loadDDS("Assets/Dirt.dds");
+    TextureIDTerre = loadDDS("Assets/dirtTexture/dirt_floor_diff_4k.dds");
+    std::cout << "Textures chargées : " << std::endl;
+
+    Texture textureRoueNormal = Texture("Assets/roadTexture/asphalt_02_nor_gl_4k.png");
+    TextureIDRoadNormal = textureRoueNormal.getTextureId();
+    Texture textureGrassNormal = Texture("Assets/grassTexture/brown_mud_leaves_01_nor_gl_4k.png");
+    TextureIDGrassNormal = textureGrassNormal.getTextureId();
+    Texture textureTerreNormal = Texture("Assets/dirtTexture/dirt_floor_nor_gl_4k.png");
+    TextureIDTerreNormal = textureTerreNormal.getTextureId();
+    std::cout << "Textures normales chargées : " << std::endl;
+
+    TextureIDRoadRoughness = loadDDS("Assets/roadTexture/asphalt_02_rough_4k.dds");
+    std::cout << "Textures rugosité chargées : " << std::endl;
+    static Texture textureGrassRoughness("Assets/grassTexture/brown_mud_leaves_01_rough_4k.png");
+    TextureIDGrassRoughness = textureGrassRoughness.getTextureId();
+    std::cout << "Textures rugosité chargées : " << std::endl;
+    static Texture textureTerreRoughness("Assets/dirtTexture/dirt_floor_rough_4k.png");
+    TextureIDTerreRoughness = textureTerreRoughness.getTextureId();
+    std::cout << "Textures rugosité chargées : " << std::endl;
+
+    std::cout << "Textures chargées : " << std::endl;
     
     //associer mesh au noeud
     //NodeSoleil.setMesh(&soleil);
@@ -341,15 +361,29 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, TextureIDSnowRocks);
     glUniform1i(TextureUniformSnowRocks, 3);
 
-    glUniform1i(glGetUniformLocation(programID, "myPlaneteSampler"), 0);
+    // Match the texture units used when binding in Map::render
+    glUniform1i(glGetUniformLocation(programID, "myDiffuseSampler"), 4);    // GL_TEXTURE4
+    glUniform1i(glGetUniformLocation(programID, "myNormalSampler"), 7);     // GL_TEXTURE7
+    glUniform1i(glGetUniformLocation(programID, "myRoughnessSampler"), 6);  // GL_TEXTURE6
+    glUniform1i(glGetUniformLocation(programID, "myMetallicSampler"), 5);   // GL_TEXTURE5 (if used)
 
     NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
     NodeCar.setTextureID(&TextureVoiture);
+    NodeCar.setTextureNormalID(&TextureIDRoadNormal);
+    NodeCar.setTextureRoughnessID(&TextureIDRoadRoughness);
     NodeFrontLeftWheel.setTextureID(&TextureRoue);
+    NodeFrontLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeFrontLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
     NodeFrontRightWheel.setTextureID(&TextureRoue);
+    NodeFrontRightWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeFrontRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
     NodeBackLeftWheel.setTextureID(&TextureRoue);
+    NodeBackLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeBackLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
     NodeBackRightWheel.setTextureID(&TextureRoue);
+    NodeBackRightWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeBackRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
 
     /* NodeRoadLine.setTextureID(TextureIDRoad);
     NodeRoadLine90.setTextureID(TextureIDRoad);
@@ -361,6 +395,8 @@ int main() {
     NodeRoadQuarterPipeUp90.setTextureID(TextureIDRoad); */
 
     NodePillar.setTextureID(&TextureIDRock);
+    NodePillar.setTextureNormalID(&TextureIDRoadNormal);
+    NodePillar.setTextureRoughnessID(&TextureIDRoadRoughness);
 
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
@@ -413,7 +449,7 @@ int main() {
 
     NodeCheckpoint.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
     NodeFinish.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
-    glUseProgram(programID);
+    /* glUseProgram(programID);
     GLuint TextureRouePBR = loadDDS("Assets/roadTexture/asphalt_02_diff_4k.dds");
     std::cout << "Texture ID : " << TextureRouePBR << std::endl;
     GLuint TextureRoueDisp = loadDDS("Assets/roadTexture/asphalt_02_disp_4k.dds");
@@ -421,13 +457,13 @@ int main() {
     GLuint TextureRoueRough = loadDDS("Assets/roadTexture/asphalt_02_rough_4k.dds");
     std::cout << "Texture ID : " << TextureRoueRough << std::endl;
     /* GLuint TextureRoueNormal = loadDDS("Assets/roadTexture/asphalt_02_nor_gl_4k.dds");
-    std::cout << "Texture ID : " << TextureRoueNormal << std::endl; */
+    std::cout << "Texture ID : " << TextureRoueNormal << std::endl;
     Texture textureRoueNormal = Texture("Assets/roadTexture/asphalt_02_nor_gl_4k.png");
     GLuint TextureRoueNormal = textureRoueNormal.getTextureId();
-    std::cout << "Texture ID : " << TextureRoueNormal << std::endl;
+    std::cout << "Texture ID : " << TextureRoueNormal << std::endl; */
 
 
-    GLuint TextureUniformDiffuse = glGetUniformLocation(programID,"myDiffuseSampler");
+    /* GLuint TextureUniformDiffuse = glGetUniformLocation(programID,"myDiffuseSampler");
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, TextureRouePBR);
     glUniform1i(TextureUniformDiffuse, 4);
@@ -445,9 +481,9 @@ int main() {
     GLuint TextureUniformNormal = glGetUniformLocation(programID,"myNormalSampler");
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_2D, TextureRoueNormal);
-    glUniform1i(TextureUniformNormal, 7);
+    glUniform1i(TextureUniformNormal, 7); */
 
-
+    std::cout << "Initialisation terminée, lancement de la boucle de rendu..." << std::endl;
     FILE * f = fopen("pos.csv", "w");
     // 5. LA BOUCLE DE RENDU
     do{

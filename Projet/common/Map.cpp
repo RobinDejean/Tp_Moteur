@@ -86,8 +86,20 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
 
                         glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, *(node->getTextureID())); 
+                        glActiveTexture(GL_TEXTURE4);
+                        GLuint texID = 0;
+                        if (node->getTextureID()) texID = *(node->getTextureID());
+                        glBindTexture(GL_TEXTURE_2D, texID);
+
+                        glActiveTexture(GL_TEXTURE7);
+                        GLuint normalID = 0;
+                        if (node->getTextureNormalID()) normalID = *(node->getTextureNormalID());
+                        glBindTexture(GL_TEXTURE_2D, normalID);
+
+                        glActiveTexture(GL_TEXTURE6);
+                        GLuint roughID = 0;
+                        if (node->getTextureRoughnessID()) roughID = *(node->getTextureRoughnessID());
+                        glBindTexture(GL_TEXTURE_2D, roughID);
 
                         (*(node->getMesh())).render();
                     }
