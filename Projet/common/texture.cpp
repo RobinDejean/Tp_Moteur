@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 
 #include <GLFW/glfw3.h>
+#include "texture.hpp"
 
 
 GLuint loadBMP_custom(const char * imagepath){
@@ -215,44 +216,4 @@ GLuint loadDDS(const char * imagepath){
 	return textureID;
 
 
-}
-
-GLuint loadEXR(const char* path)
-{
-    float* out;
-    int width, height;
-    const char* err = nullptr;
-
-    int ret = LoadEXR(&out, &width, &height, path, &err);
-
-    if (ret != TINYEXR_SUCCESS)
-    {
-        printf("EXR error: %s\n", err);
-        return 0;
-    }
-
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGB16F,        // important (HDR)
-        width,
-        height,
-        0,
-        GL_RGB,
-        GL_FLOAT,
-        out
-    );
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    free(out);
-
-    return textureID;
 }

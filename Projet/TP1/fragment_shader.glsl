@@ -23,7 +23,7 @@ vec4 waterColor = vec4(0.0f, 0.5f, 1.0f, 0.3f); // bleu semi-transparent
 
 uniform vec3 lightPos = vec3(-10.0f, 10.0f, -10.0f);
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
-float intensity = 10.0f;
+float intensity = 2.0f;
 /* uniform vec3 F0 = vec3(0.04); */
 uniform vec3 camPos;
 const float PI = 3.14159265359;
@@ -66,7 +66,7 @@ float DistributionGGX(vec3 N, vec3 H, float a)
 
 void main(){
     vec3 radiance = lightColor * intensity;
-    vec3 albedo = pow(texture(myDiffuseSampler, uv).rgb, vec3(2.2)); // Correction Gamma
+    vec3 albedo = pow(texture(myPlaneteSampler, uv).rgb, vec3(2.2)); // Correction Gamma
     //float metallic = texture(myMetallicSampler, uv).r;
     float metallic = 0.0;
     float roughness = texture(myRoughnessSampler, uv).r;
@@ -74,7 +74,7 @@ void main(){
     vec3 lightDir = normalize(lightPos - position.xyz);
     vec3 V = normalize(camPos - position.xyz);
     vec3 Normal = texture(myNormalSampler, uv).rgb;
-    Normal = vec3(0.0, 1.0, 0.0);
+    //Normal = vec3(0.0, 1.0, 0.0);
     
     vec3 N = Normal * 2.0 - 1.0;
     N = normalize(TBN * N);
@@ -109,8 +109,9 @@ void main(){
 
     color = vec4(finalColor, 1.0);
     //color = vec4(abs(TBN[0]), 1.0);
-    //vec3 n = texture(myNormalSampler, uv).rgb;
-    //color = vec4(n, 1.0);
+    /* vec3 n = texture(myNormalSampler, uv).rgb;
+    color = vec4(n, 1.0);
+ */    
 
 
 
@@ -126,7 +127,7 @@ void main(){
             color = vec4(texture(mySnowRocksSampler,uv).rgb,1.);
         }
     }else{ // sinon planete
-        //color = vec4(texture(myDiffuseSampler,uv).rgb,1.);
+        //color = vec4(texture(myPlaneteSampler,uv).rgb,1.);
     }
 
 

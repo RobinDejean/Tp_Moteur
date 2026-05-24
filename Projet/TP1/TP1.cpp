@@ -38,6 +38,7 @@ using namespace glm;
 #include <algorithm>
 #include "globals.hpp"
 #include "fonctions.hpp"
+#include "common/texture.h"
 
 int main() {
     // 1. INITIALISATION DE GLFW
@@ -414,9 +415,17 @@ int main() {
     NodeFinish.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
     glUseProgram(programID);
     GLuint TextureRouePBR = loadDDS("Assets/roadTexture/asphalt_02_diff_4k.dds");
+    std::cout << "Texture ID : " << TextureRouePBR << std::endl;
     GLuint TextureRoueDisp = loadDDS("Assets/roadTexture/asphalt_02_disp_4k.dds");
+    std::cout << "Texture ID : " << TextureRoueDisp << std::endl;
     GLuint TextureRoueRough = loadDDS("Assets/roadTexture/asphalt_02_rough_4k.dds");
-    GLuint TextureRoueNormal = loadDDS("Assets/roadTexture/asphalt_02_nor_gl_4k.dds");
+    std::cout << "Texture ID : " << TextureRoueRough << std::endl;
+    /* GLuint TextureRoueNormal = loadDDS("Assets/roadTexture/asphalt_02_nor_gl_4k.dds");
+    std::cout << "Texture ID : " << TextureRoueNormal << std::endl; */
+    Texture textureRoueNormal = Texture("Assets/roadTexture/asphalt_02_nor_gl_4k.png");
+    GLuint TextureRoueNormal = textureRoueNormal.getTextureId();
+    std::cout << "Texture ID : " << TextureRoueNormal << std::endl;
+
 
     GLuint TextureUniformDiffuse = glGetUniformLocation(programID,"myDiffuseSampler");
     glActiveTexture(GL_TEXTURE4);

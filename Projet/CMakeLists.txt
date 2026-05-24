@@ -89,6 +89,11 @@ add_executable(TP1
 	common/camera/Camera.hpp
 	common/camera/Camera_Helper.cpp
 	common/camera/Camera_Helper.hpp
+	common/texture2.cpp
+	common/texture.h
+	common/stb_image.cpp
+	common/stb_image.h
+	common/texture.h
 )
 target_link_libraries(TP1
     imgui
