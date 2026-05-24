@@ -90,6 +90,7 @@ class Mesh{
         void road_quarterpipe();
         void road_corner();
         void road_line_penche();
+        void checkpoint();
 
         void pillar();
 

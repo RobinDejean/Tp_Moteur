@@ -298,6 +298,9 @@ int main() {
     MeshRoadCorner.road_corner();
     MeshRoadLinePenche.road_line_penche();
     MeshRoadQuarterPipe.road_quarterpipe();
+    CheckpointMesh.checkpoint();
+    NodeCheckpoint.setMesh(&CheckpointMesh);
+    NodeFinish.setMesh(&CheckpointMesh);
     
     MeshPillar.pillar();
     //NodeTerrain.transformation.setScale(100.);
@@ -376,14 +379,14 @@ int main() {
 
     // --------------------- MAP ---------------------
     map.addNode(9, 10, 9, &NodeRoadLine);
-    map.setStart(9, 10, 9, 0);
+    map.setStart(9, 10, 9, 0, &NodeCheckpoint);
     map.addNode(9, 10, 10, &NodeRoadLine);
     map.addNode(9, 10, 11, &NodeRoadLine);
     map.addNode(9, 10, 12, &NodeRoadLinePenche);
 
     map.addNode(9, 10, 15, &NodeRoadQuarterPipe);
     map.addNode(9, 11, 15, &NodeRoadQuarterPipeUp);
-    map.addCheckPoint(9, 11, 15, 0);
+    map.addCheckPoint(9, 11, 15, 0, &NodeCheckpoint);
     map.addNode(9, 11, 14, &NodeRoadQuarterPipeUp180);
     map.addNode(9, 9, 14, &NodeRoadQuarterPipe180);
     map.addNode(9, 9, 15, &NodeDirtLine);
@@ -394,7 +397,7 @@ int main() {
 
     map.addNode(4, 9, 16, &NodeGrassLine90);
     map.addNode(3, 9, 16, &NodeGrassLine90);
-    map.setFinish(3, 9, 16, 0);
+    map.setFinish(3, 9, 16, 0, &NodeFinish);
 
     // obstacles
 
@@ -406,6 +409,9 @@ int main() {
     camera.setTarget(&NodeCar);
     NodeCar.transformation.setTranslation(glm::vec3(-10.f, 10.f, -10.f));
     NodeCar.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+
+    NodeCheckpoint.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+    NodeFinish.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
 
 
     FILE * f = fopen("pos.csv", "w");

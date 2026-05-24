@@ -34,8 +34,9 @@ using namespace glm;
 class Block {
     public:
         int x, y, z, n;
-        Block() : x(0), y(0), z(0), n(0) {}
-        Block(int x, int y, int z, int n);
+        Node* node;
+        Block() : x(0), y(0), z(0), n(0), node(nullptr) {}
+        Block(int x, int y, int z, int n, Node* node);
 };
 
 class Map{
@@ -59,9 +60,9 @@ class Map{
         //GETTERS & SETTERS
         std::vector<std::vector<std::vector<std::vector<Node *>>>> getBlocks() const { return blocks; }
         void addNode(int x, int y, int z, Node * node);
-        void addCheckPoint(int x, int y, int z, int n) { checkPoints.push_back(Block(x, y, z, n)); }
-        void setStart(int x, int y, int z, int n) { start = Block(x, y, z, n); }
-        void setFinish(int x, int y, int z, int n) { finish = Block(x, y, z, n); }
+        void addCheckPoint(int x, int y, int z, int n, Node* node) { checkPoints.push_back(Block(x, y, z, n, node)); }
+        void setStart(int x, int y, int z, int n, Node* node) { start = Block(x, y, z, n, node); }
+        void setFinish(int x, int y, int z, int n, Node* node) { finish = Block(x, y, z, n, node); }
         Block getFinish() const { return finish; }
         void setFinishTime(double time) { finishTime = time; }
         double getFinishTime() const { return finishTime; }

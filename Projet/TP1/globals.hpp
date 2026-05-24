@@ -153,6 +153,10 @@ extern Node NodeFrontRightWheel;
 extern Node NodeBackLeftWheel;
 extern Node NodeBackRightWheel;
 
+extern Node NodeCheckpoint;
+extern Node NodeFinish;
+extern Mesh CheckpointMesh;
+
 extern SceneGraph SceneTerrain;
 extern Node NodeTerrain;
 

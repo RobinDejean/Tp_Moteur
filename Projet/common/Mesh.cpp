@@ -834,3 +834,88 @@ void Mesh::pillar() {
 
     setupMesh();
 }
+
+void Mesh::checkpoint()
+{
+    indexed_vertices.clear();
+    indices.clear();
+    triangles.clear();
+    uvs.clear();
+    noise.clear();
+    deleteBuffers();
+
+    float pillarWidth = 0.5f;
+    float height = 6.0f;
+    float width = blockSize;
+    float barHeight = 1.0f;
+    float depth = 0.5f;
+
+    auto addBox = [&](float xMin, float xMax,
+                      float yMin, float yMax,
+                      float zMin, float zMax)
+    {
+        unsigned int start = indexed_vertices.size();
+
+        // Front
+        indexed_vertices.push_back(vec3(xMin, yMin, zMax));
+        indexed_vertices.push_back(vec3(xMax, yMin, zMax));
+        indexed_vertices.push_back(vec3(xMax, yMax, zMax));
+        indexed_vertices.push_back(vec3(xMin, yMax, zMax));
+
+        // Back
+        indexed_vertices.push_back(vec3(xMin, yMin, zMin));
+        indexed_vertices.push_back(vec3(xMax, yMin, zMin));
+        indexed_vertices.push_back(vec3(xMax, yMax, zMin));
+        indexed_vertices.push_back(vec3(xMin, yMax, zMin));
+
+        for(int i = 0; i < 8; i++)
+            uvs.push_back(vec2(0.0f, 0.0f));
+
+        unsigned int boxIndices[] =
+        {
+            0,1,2, 2,3,0, // front
+            5,4,7, 7,6,5, // back
+
+            4,0,3, 3,7,4, // left
+            1,5,6, 6,2,1, // right
+
+            3,2,6, 6,7,3, // top
+            4,5,1, 1,0,4  // bottom
+        };
+
+        for(unsigned int i : boxIndices)
+            indices.push_back(start + i);
+    };
+
+    // Pilier gauche
+    addBox(
+        -width / 2.0f,
+        -width / 2.0f + pillarWidth,
+        0.0f,
+        height,
+        -depth / 2.0f,
+        depth / 2.0f
+    );
+
+    // Pilier droit
+    addBox(
+        width / 2.0f - pillarWidth,
+        width / 2.0f,
+        0.0f,
+        height,
+        -depth / 2.0f,
+        depth / 2.0f
+    );
+
+    // Barre du haut
+    addBox(
+        -width / 2.0f,
+        width / 2.0f,
+        height - barHeight,
+        height,
+        -depth / 2.0f,
+        depth / 2.0f
+    );
+
+    setupMesh();
+}

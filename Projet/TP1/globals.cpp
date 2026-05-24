@@ -62,6 +62,9 @@ Node NodeFrontLeftWheel;
 Node NodeFrontRightWheel;
 Node NodeBackLeftWheel;
 Node NodeBackRightWheel;
+Node NodeCheckpoint;
+Node NodeFinish;
+Mesh CheckpointMesh;
 
 SceneGraph SceneTerrain;
 Node NodeTerrain;
