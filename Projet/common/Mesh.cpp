@@ -60,52 +60,83 @@ void Mesh::addIndice(unsigned int indice) {
     indices.push_back(indice);
 }
 
-void Mesh::setupMesh() {
-    // On crée et on "bind" le VAO
+void Mesh::setupMesh()
+{
+    computeNormals();
+    computeTangents();
+
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    // Création du VBO pour les positions
+    // POSITION
     glGenBuffers(1, &indexed_vertices_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, indexed_vertices_vbo);
-    // on copie les positions
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), indexed_vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,
+        indexed_vertices.size() * sizeof(glm::vec3),
+        indexed_vertices.data(),
+        GL_STATIC_DRAW);
 
-    // lecture VAO
     glEnableVertexAttribArray(0);
-    // 0,3 = canal 0 vertex shader, 3 = nb float a lire
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
-    // creation ebo pour les indices
+    // INDICES
     glGenBuffers(1, &indices_vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_vbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+        indices.size() * sizeof(unsigned int),
+        indices.data(),
+        GL_STATIC_DRAW);
 
-    // creation uvs vbo
+    // UV
     if (!uvs.empty()) {
         glGenBuffers(1, &uvs_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, uvs_vbo);
-        glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), uvs.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER,
+            uvs.size() * sizeof(glm::vec2),
+            uvs.data(),
+            GL_STATIC_DRAW);
+
         glEnableVertexAttribArray(1);
-        // 1,2 = canal 1 vertex shader, 2 = nb float a lire
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     }
 
-    //creation noise vbo
+    // NOISE
     if (!noise.empty()) {
         glGenBuffers(1, &noise_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, noise_vbo);
-        glBufferData(GL_ARRAY_BUFFER, noise.size() * sizeof(float), noise.data(), GL_STATIC_DRAW);
-        
-        glEnableVertexAttribArray(2); // Canal 2 !
-        // 2 = Canal 2, 1 = un seul float a lire
+        glBufferData(GL_ARRAY_BUFFER,
+            noise.size() * sizeof(float),
+            noise.data(),
+            GL_STATIC_DRAW);
+
+        glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, (void*)0);
     }
 
-    // On debind
+    // NORMALS (location 3)
+    glGenBuffers(1, &normals_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, normals_vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+        normals.size() * sizeof(glm::vec3),
+        normals.data(),
+        GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    // TANGENTS (location 4)
+    glGenBuffers(1, &tangents_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, tangents_vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+        tangents.size() * sizeof(glm::vec3),
+        tangents.data(),
+        GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
     glBindVertexArray(0);
 }
-
 void Mesh::render() {
     //bind vao
     glBindVertexArray(VAO);
@@ -117,12 +148,111 @@ void Mesh::deleteBuffers() {
     glDeleteBuffers(1, &indexed_vertices_vbo);
     glDeleteBuffers(1, &indices_vbo);
     glDeleteBuffers(1, &uvs_vbo);
+    glDeleteBuffers(1, &normals_vbo);
+    glDeleteBuffers(1, &tangents_vbo);
     glDeleteBuffers(1,&noise_vbo);
     glDeleteVertexArrays(1, &VAO);
 }
 
+void Mesh::computeNormals()
+{
+    normals.clear();
+    normals.resize(indexed_vertices.size(), glm::vec3(0.0f));
 
+    for (size_t i = 0; i < indices.size(); i += 3)
+    {
+        unsigned int i0 = indices[i];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
 
+        const glm::vec3& v0 = indexed_vertices[i0];
+        const glm::vec3& v1 = indexed_vertices[i1];
+        const glm::vec3& v2 = indexed_vertices[i2];
+
+        glm::vec3 edge1 = v1 - v0;
+        glm::vec3 edge2 = v2 - v0;
+
+        glm::vec3 normal = glm::cross(edge1, edge2);
+
+        // accumulation
+        normals[i0] += normal;
+        normals[i1] += normal;
+        normals[i2] += normal;
+    }
+
+    // normalization finale
+    for (auto& n : normals)
+    {
+        if (glm::length(n) > 0.00001f)
+            n = glm::normalize(n);
+        else
+            n = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+}
+
+void Mesh::computeTangents()
+{
+    tangents.clear();
+    tangents.resize(indexed_vertices.size(), glm::vec3(0.0f));
+
+    for (size_t i = 0; i < indices.size(); i += 3)
+    {
+        unsigned int i0 = indices[i];
+        unsigned int i1 = indices[i + 1];
+        unsigned int i2 = indices[i + 2];
+
+        const glm::vec3& v0 = indexed_vertices[i0];
+        const glm::vec3& v1 = indexed_vertices[i1];
+        const glm::vec3& v2 = indexed_vertices[i2];
+
+        const glm::vec2& uv0 = uvs[i0];
+        const glm::vec2& uv1 = uvs[i1];
+        const glm::vec2& uv2 = uvs[i2];
+
+        glm::vec3 edge1 = v1 - v0;
+        glm::vec3 edge2 = v2 - v0;
+
+        glm::vec2 deltaUV1 = uv1 - uv0;
+        glm::vec2 deltaUV2 = uv2 - uv0;
+
+        float denom = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        if (fabs(denom) < 1e-8f)
+            continue; // OK MAIS NE PAS METTRE DE FALLBACK BIZARRE
+
+        float f = 1.0f / denom;
+
+        glm::vec3 tangent(
+            f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x),
+            f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y),
+            f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z)
+        );
+
+        tangents[i0] += tangent;
+        tangents[i1] += tangent;
+        tangents[i2] += tangent;
+    }
+
+    // orthonormalisation avec normales
+    for (size_t i = 0; i < tangents.size(); i++)
+    {
+        glm::vec3 n = normals[i];
+        glm::vec3 t = tangents[i];
+
+        if (glm::length(t) < 1e-6f)
+        {
+            t = glm::vec3(1,0,0); // fallback simple
+        }
+
+        // IMPORTANT : projection d'abord
+        t = t - glm::dot(t, n) * n;
+
+        // puis normalisation
+        t = glm::normalize(t);
+
+        tangents[i] = t;
+    }
+}
 
 
 

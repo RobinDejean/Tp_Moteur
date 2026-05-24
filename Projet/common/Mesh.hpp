@@ -37,7 +37,8 @@ class Mesh{
     GLuint uvs_vbo;
     GLuint noise_vbo;
     GLuint indices_vbo;
-    
+    GLuint normals_vbo;
+    GLuint tangents_vbo;
     
     public:
         std::vector<std::vector<unsigned int>> triangles;
@@ -45,6 +46,8 @@ class Mesh{
         std::vector<unsigned int> indices;
         std::vector<glm::vec2> uvs;
         std::vector<float> noise;
+        std::vector<glm::vec3> normals;
+        std::vector<glm::vec3> tangents;
     //CONSTRUCTORS
     Mesh();
         
@@ -91,6 +94,9 @@ class Mesh{
         void road_corner();
         void road_line_penche();
         void checkpoint();
+        void computeNormals();
+        void computeTangents();
+
 
         void pillar();
 

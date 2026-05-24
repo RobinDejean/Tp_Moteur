@@ -31,6 +31,7 @@ void Map::addNode(int x, int y, int z, Node * node) {
 }
 
 void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
+    GLuint MatrixIDmodel = glGetUniformLocation(programID, "model");
     auto checkpoints = getCheckPoints();
      for (const auto& checkpoint : checkpoints) {
         Transformation t = Transformation();
@@ -77,9 +78,10 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
                 for (int n = 0; n < blocks[z][x][y].size(); ++n) {
                     Node *node = blocks[z][x][y][n];
                     if (node->getMesh() != nullptr){
+                        Mesh* mesh = node->getMesh();
                         glm::mat4 modelMatrix = transformationParent * node->getTransformation().computeTransformationMatrix();
                         glm::mat4 MVP = viewProj * modelMatrix;
-        
+                        glUniformMatrix4fv(MatrixIDmodel, 1, GL_FALSE, glm::value_ptr(modelMatrix));
                         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(MVP));
 
                         glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());

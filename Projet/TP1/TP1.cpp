@@ -412,6 +412,31 @@ int main() {
 
     NodeCheckpoint.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
     NodeFinish.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+    glUseProgram(programID);
+    GLuint TextureRouePBR = loadDDS("Assets/roadTexture/asphalt_02_diff_4k.dds");
+    GLuint TextureRoueDisp = loadDDS("Assets/roadTexture/asphalt_02_disp_4k.dds");
+    GLuint TextureRoueRough = loadDDS("Assets/roadTexture/asphalt_02_rough_4k.dds");
+    GLuint TextureRoueNormal = loadDDS("Assets/roadTexture/asphalt_02_nor_gl_4k.dds");
+
+    GLuint TextureUniformDiffuse = glGetUniformLocation(programID,"myDiffuseSampler");
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, TextureRouePBR);
+    glUniform1i(TextureUniformDiffuse, 4);
+
+    GLuint TextureUniformDisp = glGetUniformLocation(programID,"myMetallicSampler");
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, TextureRoueDisp);
+    glUniform1i(TextureUniformDisp, 5);
+
+    GLuint TextureUniformRoughness = glGetUniformLocation(programID,"myRoughnessSampler");
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, TextureRoueRough);
+    glUniform1i(TextureUniformRoughness, 6);
+
+    GLuint TextureUniformNormal = glGetUniformLocation(programID,"myNormalSampler");
+    glActiveTexture(GL_TEXTURE7);
+    glBindTexture(GL_TEXTURE_2D, TextureRoueNormal);
+    glUniform1i(TextureUniformNormal, 7);
 
 
     FILE * f = fopen("pos.csv", "w");
@@ -467,6 +492,7 @@ int main() {
 
         // On trouve où est la variable "MVP" dans le Vertex Shader, et on lui envoie notre calcul
         GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+        glUniform3fv(glGetUniformLocation(programID, "camPos"), 1, glm::value_ptr(camera.getPosition()));
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
 
 

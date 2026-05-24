@@ -452,13 +452,16 @@ void render(Mesh& mesh) {
 } */
 
 void SceneRender(Node* node, glm::mat4 transformationParent, GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
+    GLuint MatrixIDmodel = glGetUniformLocation(programID, "model");
     if (node == nullptr) return;
     glm::mat4 modelMatrix = transformationParent * node->getTransformation().computeTransformationMatrix();
 
     if (node->getMesh() != nullptr) {
+        Mesh* mesh = node->getMesh();
         glm::mat4 MVP = viewProj * modelMatrix;
         
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, glm::value_ptr(MVP));
+        glUniformMatrix4fv(MatrixIDmodel, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
         glUniform1i(glGetUniformLocation(programID, "mode"), node->getMode());
 

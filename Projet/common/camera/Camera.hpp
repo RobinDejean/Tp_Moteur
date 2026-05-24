@@ -28,6 +28,8 @@ public:
 	glm::mat4 getViewMatrix() const {return m_viewMatrix;}
 	glm::mat4 getProjectionMatrix() const {return m_projectionMatrix;}
     void setTarget(Node* _target) { target = _target; }
+	glm::vec3 getPosition() const { return m_position; }
+	glm::vec3 getEulerAngle() const { return m_eulerAngle; }
 
 
 private:
