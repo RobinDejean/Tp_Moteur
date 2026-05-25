@@ -32,6 +32,7 @@ using namespace glm;
 #include "../TP1/fonctions.hpp"
 
 
+
 #ifndef CAR_HPP
 #define CAR_HPP
 
@@ -64,6 +65,15 @@ class Car{
         void solver(double _delta_time, Map &map);
         glm::vec3 closestPointOnSegment(const glm::vec3& A, const glm::vec3& B, const glm::vec3& P);
         glm::vec3 closestPointOnTriangle(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C, const glm::vec3& P);
+        void reset(float &steeringAngle) {
+            node->transformation.setTranslation(glm::vec3(-10.f, 2.f, -10.f));
+            node->transformation.setEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+            node->setVitesse(glm::vec3(0.f));
+            for (auto roues : node->getEnfants()){
+                roues->setVitesse(glm::vec3(0.f));
+            }
+            steeringAngle = 0.f;
+        }
 };
 
 #endif

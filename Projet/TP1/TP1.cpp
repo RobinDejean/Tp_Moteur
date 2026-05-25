@@ -505,13 +505,11 @@ int main() {
 
     std::cout << "Initialisation terminée, lancement de la boucle de rendu..." << std::endl;
     FILE * f = fopen("pos.csv", "w");
-    start = true;
-
+    
     // 5. LA BOUCLE DE RENDU
     do{
-        
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         //temps
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -531,7 +529,7 @@ int main() {
         car.calculPosition(deltaTime, acceleration, freinage);
         const int SUB_STEPS = 8;
         double sub_dt = deltaTime / SUB_STEPS;
-
+        
         for (int step = 0; step < SUB_STEPS; step++)
         {
             car.solver(sub_dt, map);
@@ -542,35 +540,40 @@ int main() {
         // matrice projection (perspective)
         glm::mat4 projectionMatrix = camera.getProjectionMatrix(); 
         glm::mat4 viewMatrix = camera.getViewMatrix();
-
+        
         //matrice model
         glm::mat4 modelMatrix = glm::mat4();
-
+        
         //mat viewProj
         glm::mat4 viewProj = projectionMatrix * viewMatrix;
-
+        
         // matrice mvp
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
-
+        
         //mettre a jour angle pour vitesse de roatation
-
+        
         //updateHeight(macaqueTranslate);
         //updateMeshResolution(NodeMacaque);
-
-
+        
+        
         // choix des shaders a utiliser
         //glUseProgram(programID);
-
+        
         // On trouve où est la variable "MVP" dans le Vertex Shader, et on lui envoie notre calcul
         GLuint MatrixID = glGetUniformLocation(programID, "MVP");
         glUniform3fv(glGetUniformLocation(programID, "camPos"), 1, glm::value_ptr(camera.getPosition()));
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
-
-
+        
+        if (start && deltaTime > 0.2f) {
+            car.reset(currentSteeringAngle);
+            map.reset();
+            start = false;
+        }
+        
         //CAMERA
         /* camera_target = NodeCar.getCarCenter(1.);
         camera_position = camera_target + glm::vec3(NodeCar.getTransformation().getRotationMatrix() * glm::vec4(-6, 2., 0., 0.)); */
-
+        
         SceneRender(SceneCar.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
         //SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
         map.render(MatrixID, viewProj, programID);
@@ -629,15 +632,15 @@ int main() {
         /* render(soleil);
         render(lune);
         render(terrain);*/
-
+        
         // b. Échanger les buffers (Double Buffering : on affiche ce qu'on vient de dessiner)
         glfwSwapBuffers(window);
         
         // c. Récupérer les événements (clavier, souris, redimensionnement)
         glfwPollEvents();
     }while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
-           glfwWindowShouldClose(window) == 0 );
-
+    glfwWindowShouldClose(window) == 0 );
+    
     // 6. NETTOYAGE ET FERMETURE
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -694,13 +697,7 @@ void processInput(GLFWwindow *window)
         freinage = 0.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
-        NodeCar.transformation.setTranslation(glm::vec3(-10.f, 2.f, -10.f));
-        NodeCar.transformation.setEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
-        NodeCar.setVitesse(glm::vec3(0.f));
-        for (auto roues : NodeCar.getEnfants()){
-            roues->setVitesse(glm::vec3(0.f));
-        }
-        currentSteeringAngle = 0.f;
+        car.reset(currentSteeringAngle);
         map.reset();
 
     }
