@@ -39,6 +39,9 @@ using namespace glm;
 #include "globals.hpp"
 #include "fonctions.hpp"
 #include "common/texture.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 int main() {
     // 1. INITIALISATION DE GLFW
@@ -488,6 +491,18 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, TextureRoueNormal);
     glUniform1i(TextureUniformNormal, 7); */
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    // Setup ImGui style (Style sombre par défaut, on le customisera après)
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330"); // Ajuste selon la version de ton GLSL
+
     std::cout << "Initialisation terminée, lancement de la boucle de rendu..." << std::endl;
     FILE * f = fopen("pos.csv", "w");
     start = true;
@@ -501,6 +516,10 @@ int main() {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         //clavier
         processInput(window);
@@ -556,6 +575,57 @@ int main() {
         //SceneRender(SceneTerrain.racine, glm::mat4(1.0f), MatrixID, viewProj, programID);
         map.render(MatrixID, viewProj, programID);
 
+        ImGui::SetNextWindowPos(ImVec2(width / 2.0f - 100, height - 120), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_Always);
+
+        ImGuiWindowFlags hudFlags = ImGuiWindowFlags_NoTitleBar | 
+                                   ImGuiWindowFlags_NoResize | 
+                                   ImGuiWindowFlags_NoMove | 
+                                   ImGuiWindowFlags_NoBackground | 
+                                   ImGuiWindowFlags_NoScrollbar;
+
+        ImGui::Begin("Speedometer", nullptr, hudFlags);
+
+        float vitesseKmh = glm::length(NodeCar.getVitesse()) * 3.6f;
+        char texte[32];
+        snprintf(texte, sizeof(texte), "%.0f", vitesseKmh);
+        float windowWidth = ImGui::GetWindowSize().x;
+
+        ImGui::SetWindowFontScale(2.5f);
+        float textWidth = ImGui::CalcTextSize(texte).x;
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "%.0f", vitesseKmh);
+        ImGui::SetWindowFontScale(1.0f);
+        textWidth = ImGui::CalcTextSize("KM/H").x;
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+        ImGui::Text("KM/H");
+
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(ImVec2(width - 200, 10), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(300, 80), ImGuiCond_Always);
+        ImGui::Begin("Chrono", nullptr, hudFlags);
+        ImGui::SetWindowFontScale(2.0f);
+        ImGui::Text("TIME: %.3f", glfwGetTime() - map.getStartTime());
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(ImVec2(width - 250, 50), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(300, map.getCheckPoints().size() * 50), ImGuiCond_Always);
+        ImGui::Begin("Checkpoints", nullptr, hudFlags);
+        ImGui::SetWindowFontScale(1.5f);
+        std::vector<double> times = map.getTimes();
+        for(int i = 0; i < times.size(); i++) {
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Checkpoint %d: %.3f s", i + 1, times[i]);
+        }
+        double finishTime = map.getFinishTime();
+        if(finishTime > 0.0) {
+            ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Finish Time: %.3f s", finishTime);
+        }
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         /* render(soleil);
         render(lune);
         render(terrain);*/
@@ -569,6 +639,10 @@ int main() {
            glfwWindowShouldClose(window) == 0 );
 
     // 6. NETTOYAGE ET FERMETURE
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwTerminate();
     return 0;
 }
