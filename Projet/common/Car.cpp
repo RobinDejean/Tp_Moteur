@@ -280,13 +280,15 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     float grip =
         isDrifting ? 2.0f : 12.0f;
 
-    float gripLerp =
+    /* float gripLerp =
         glm::clamp(grip * dt, 0.0f, 1.0f);
 
     glm::vec3 nouveauV =
         glm::mix(v_vec,
                 targetVelocity,
-                gripLerp);
+                gripLerp); */
+    float gripLerp = 1.0f - glm::exp(-grip * dt);
+    glm::vec3 nouveauV = glm::mix(v_vec, targetVelocity, gripLerp);
     
 
     // -------------------------------------------------------------------
@@ -317,6 +319,7 @@ void Car::solver(double dt, Map& map)
     glm::vec3 chassisPos = node->transformation.getTranslation();
 
     std::vector<glm::vec3> wheelWorldPositions(roues.size());
+    glm::vec3 axeHaut   = glm::normalize(glm::vec3(rotMat[1]));
 
     // ═══════════════════════════════════════════════
     // ÉTAPE 1 : Traitement individuel de chaque roue
@@ -343,10 +346,15 @@ void Car::solver(double dt, Map& map)
         glm::vec3 bestNormal(0.f, 1.f, 0.f);
         bool hasCollision = false;
         glm::vec3 accumulatedNormal(0.0f);
+        float slow = 1.f;
+        glm::vec3 PoisitonCar = node->transformation.getTranslation();
+        int xmap = (int)std::floor((PoisitonCar.x + (mapWidth * blockSize) / 2.0f ) / blockSize);
+        int zmap = (int)std::floor((PoisitonCar.z + (mapDepth * blockSize) / 2.0f) / blockSize);
+        int ymap = (int)std::floor((PoisitonCar.y + (mapHeight * blockSize) / 2.0f ) / blockSize);
 
-        for (int bi = 0; bi < (int)blocks.size(); bi++)
-        for (int bj = 0; bj < (int)blocks[bi].size(); bj++)
-        for (int bk = 0; bk < (int)blocks[bi][bj].size(); bk++)
+        for (int bi = std::max(0, zmap-1); bi < std::min((int)blocks.size(), zmap+2); bi++)
+        for (int bj = std::max(0, xmap-1); bj < std::min((int)blocks[bi].size(), xmap+2); bj++)
+        for (int bk = std::max(0, ymap-1); bk < std::min((int)blocks[bi][bj].size(), ymap+2); bk++)
         for (int bl = 0; bl < (int)blocks[bi][bj][bk].size(); bl++)
         {
             Node* nodeMap = blocks[bi][bj][bk][bl];
@@ -364,50 +372,6 @@ void Car::solver(double dt, Map& map)
                 glm::vec3 v1 = applyTransformation(verts[indices[t+1]], 1.f, T);
                 glm::vec3 v2 = applyTransformation(verts[indices[t+2]], 1.f, T);
 
-
-                /* glm::vec3 normal = glm::normalize(glm::cross(v1-v0, v2-v0));
-                //std::cout << "Normal triangle " << t/3 << " : " << normal.x << " " << normal.y << " " << normal.z << std::endl;
-                //if (normal.y < 0.f) normal = -normal;
-
-                // Distance signée sphère → plan (on teste predicted, pas wheelWorld)
-                float dist = glm::dot(predicted - v0, normal);
-               
-
-                // Projection sur le plan
-                
-                glm::vec3 projected = predicted - normal * dist;
-                // Test barycentrique
-                glm::vec3 v0v1 = v1 - v0;
-                glm::vec3 v0v2 = v2 - v0;
-                glm::vec3 v0p  = projected - v0;
-
-                float d00 = glm::dot(v0v1, v0v1);
-                float d01 = glm::dot(v0v1, v0v2);
-                float d11 = glm::dot(v0v2, v0v2);
-                float d20 = glm::dot(v0p , v0v1);
-                float d21 = glm::dot(v0p , v0v2);
-
-                float denom = d00 * d11 - d01 * d01;
-
-                if (std::abs(denom) < 1e-8f)
-                    continue;
-
-                float v = (d11 * d20 - d01 * d21) / denom;
-                float w = (d00 * d21 - d01 * d20) / denom;
-                float u = 1.0f - v - w;
-                const float EPSILON = 0.0005f;
-                if (u < -EPSILON || v < -EPSILON || w < -EPSILON)
-                    continue;
-
-                float penetration = rayonRoue - dist;
-                if (penetration > 0.f && std::abs(dist) < rayonRoue) // debug
-                {
-                    predicted += normal * penetration;
-                    accumulatedNormal += normal;
-                    hasCollision = true;
-                    /* bestPenetration = penetration;
-                    bestNormal      = normal; */
-                
                 glm::vec3 closest = closestPointOnTriangle(v0, v1, v2, predicted);
 
                 // 2. On calcule la distance entre ce point et le centre de la roue
@@ -421,6 +385,13 @@ void Car::solver(double dt, Map& map)
                     float dist = std::sqrt(distSq);
                     float penetration = rayonRoue - dist;
                     glm::vec3 normal = axeCollision / dist; // La vraie direction de repousse
+                    if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.f) {
+                        slow = 0.f;
+                    }else if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.5f) {
+                        slow = 0.6f;
+                    }else {
+                        slow = 1.0f;
+                    }
 
                     // CORRECTION IMMÉDIATE (Pour gérer murs + sol simultanément)
                     predicted += normal * penetration;
@@ -437,6 +408,8 @@ void Car::solver(double dt, Map& map)
                         auto cp = map.getCheckPoints()[map.getCurrentCP()];
                         if (cp.z == bi && cp.x == bj && cp.y == bk && cp.n == bl) {
                             map.addTime(glfwGetTime() - map.getStartTime());
+                            speedCheckpoints = node->getVitesse();
+                            transformationCheckpoints = node->transformation;
                             std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
                         }
                     }
@@ -475,7 +448,7 @@ void Car::solver(double dt, Map& map)
             collisionEnCours[i] = false;
         }
 
-        wheel->setVitesse(wheelVel);
+        wheel->setVitesse(wheelVel * slow);
         wheelWorldPositions[i] = predicted;
         
     }

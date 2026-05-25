@@ -35,7 +35,7 @@ float lastFrame = 0.0f;
 
 // variables
 float tailleCar = 1.0;
-float rayonRoue = 0.2;
+float rayonRoue = 0.3;
 float widthRoue = 0.5;
 
 // terrain

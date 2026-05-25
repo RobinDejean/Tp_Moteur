@@ -42,6 +42,8 @@ using namespace glm;
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <thread>
+#include <chrono>
 
 int main() {
     // 1. INITIALISATION DE GLFW
@@ -505,7 +507,9 @@ int main() {
 
     std::cout << "Initialisation terminée, lancement de la boucle de rendu..." << std::endl;
     FILE * f = fopen("pos.csv", "w");
-    
+    const double targetFPS = 30.0;
+    const double targetFrameTime = 1.0 / targetFPS;
+
     // 5. LA BOUCLE DE RENDU
     do{
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -513,6 +517,11 @@ int main() {
         //temps
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
+        if (deltaTime < targetFrameTime) {
+            double sleepTime = targetFrameTime - deltaTime;
+            std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
+        }
+        
         lastFrame = currentFrame;
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -526,10 +535,10 @@ int main() {
         glfwGetWindowSize(window, &width, &height);
         float ratio = (float)width / (float)height;
         
-        car.calculPosition(deltaTime, acceleration, freinage);
-        const int SUB_STEPS = 8;
+        const int SUB_STEPS = 16;
         double sub_dt = deltaTime / SUB_STEPS;
         
+        car.calculPosition(deltaTime, acceleration, freinage);
         for (int step = 0; step < SUB_STEPS; step++)
         {
             car.solver(sub_dt, map);
@@ -654,6 +663,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 {
     if (key == GLFW_KEY_C && action == GLFW_PRESS) {
         camera.setThirdView(!camera.isThirdView());
+    }
+    if (key == GLFW_KEY_T && action == GLFW_PRESS) {
+        car.resetToCheckpoint(map.getTimes(), currentSteeringAngle);
     }
         
 }

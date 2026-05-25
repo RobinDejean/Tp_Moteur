@@ -48,6 +48,9 @@ class Car{
     glm::vec3 normalCollision;
     std::vector<bool> collisionEnCours;
 
+    glm::vec3 speedCheckpoints = glm::vec3(0.f);
+    Transformation transformationCheckpoints = Transformation();
+
     public:
         //CONSTRUCTORS
         Car(Node* node, float puissance);
@@ -73,6 +76,20 @@ class Car{
                 roues->setVitesse(glm::vec3(0.f));
             }
             steeringAngle = 0.f;
+        }
+        void resetToCheckpoint(std::vector<double> times, float &steeringAngle) {
+            if (times.size() == 0) {
+                reset(steeringAngle);
+                return;
+            }else{
+                node->transformation = transformationCheckpoints;
+                node->setVitesse(speedCheckpoints);
+                for (auto roues : node->getEnfants()){
+                    roues->setVitesse(speedCheckpoints);
+                }
+                steeringAngle = 0.f;
+            }
+            
         }
 };
 
