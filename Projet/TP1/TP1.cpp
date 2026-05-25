@@ -618,6 +618,12 @@ void processInput(GLFWwindow *window)
         }
         currentSteeringAngle = 0.f;
     }
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS){
+        if (camera.isThirdView())
+            camera.setThirdView(false);
+        else
+            camera.setThirdView(true);
+    }
     //CAMERA
 
 

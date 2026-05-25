@@ -194,6 +194,30 @@ void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 
 		glm::mat4 m = glm::lookAt(m_position, carPos, VEC_UP);
 		m_rotation = glm::quat_cast(glm::inverse(m));	
+	}else{
+		glm::mat4 carTransform = target->transformation.computeTransformationMatrix();
+		glm::mat3 rotationMat = glm::mat3(target->transformation.getRotationMatrix());
+		glm::vec3 carUp = rotationMat[1];
+
+		// 2. Définir la position de la caméra dans l'espace LOCAL de la voiture
+		// Ajustez ces valeurs selon où se trouve le capot (x=avant, y=haut, z=côté)
+		glm::vec3 localOffset = glm::vec3(1.5f, 0.8f, 0.0f); 
+
+		// 3. Convertir en position MONDE
+		// On ajoute le centre de la voiture + l'offset transformé par la rotation
+		glm::vec3 carPos = target->getCarCenter(1.0);
+		glm::vec3 desiredPos = carPos + (rotationMat * localOffset);
+
+		// 4. Lissage (optionnel mais recommandé pour éviter les saccades)
+		float smooth = 10.0f; 
+		m_position = glm::mix(m_position, desiredPos, _deltaTime * smooth);
+
+		// 5. Orientation : regarder devant la voiture
+		// On calcule le point visé un peu plus loin devant la voiture
+		glm::vec3 lookAtPoint = carPos + (rotationMat * glm::vec3(5.0f, 0.5f, 0.0f));
+
+		glm::mat4 m = glm::lookAt(m_position, lookAtPoint, carUp);
+		m_rotation = glm::quat_cast(glm::inverse(m));
 	}
 }
 

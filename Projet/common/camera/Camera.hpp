@@ -30,6 +30,8 @@ public:
     void setTarget(Node* _target) { target = _target; }
 	glm::vec3 getPosition() const { return m_position; }
 	glm::vec3 getEulerAngle() const { return m_eulerAngle; }
+	void setThirdView(const bool thirdView) { m_thirdView = thirdView; }
+	bool isThirdView() const { return m_thirdView; }
 
 
 private:
