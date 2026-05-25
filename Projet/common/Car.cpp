@@ -180,7 +180,7 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     
     // NOUVELLE CONDITION : 
     // On drift SI (on tourne fort à haute vitesse) OU SI (on glisse déjà pas mal !)
-    bool isDrifting = (abs_speed > 30.0f * adherence && std::abs(anglesRoues) > 0.8f * adherence) || (vitesseGlissement > 5.0f * adherence * abs_speed) || (freinage == 1.0f && acceleration == 1.0f);
+    bool isDrifting = (abs_speed > 30.0f * adherence && std::abs(anglesRoues) > 0.8f * adherence) || ((vitesseGlissement > adherence * abs_speed *0.5) && abs_speed > 2.0f) || (freinage == 1.0f && acceleration == 1.0f);
     if(isDrifting) {
     }
     

@@ -64,6 +64,8 @@ GLuint TextureIDTerreRoughness;
 GLuint TextureIDGlaceRoughness;
 GLuint TextureIDGrassRoughness;
 
+GLuint normalMapLoc;
+GLuint roughnessMapLoc;
 
 
 

@@ -155,6 +155,9 @@ extern GLuint TextureIDTerreRoughness;
 extern GLuint TextureIDGlaceRoughness;
 extern GLuint TextureIDGrassRoughness;
 
+extern GLuint normalMapLoc;
+extern GLuint roughnessMapLoc;
+
 // scene graph
 extern SceneGraph SceneCar;
 extern Node NodeCar;

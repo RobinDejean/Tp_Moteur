@@ -46,7 +46,7 @@ int main() {
         std::cerr << "Erreur lors de l'initialisation de GLFW\n";
         return -1;
     }
-
+    bool start = false;
     // initialisation
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -366,24 +366,26 @@ int main() {
     glUniform1i(glGetUniformLocation(programID, "myNormalSampler"), 7);     // GL_TEXTURE7
     glUniform1i(glGetUniformLocation(programID, "myRoughnessSampler"), 6);  // GL_TEXTURE6
     glUniform1i(glGetUniformLocation(programID, "myMetallicSampler"), 5);   // GL_TEXTURE5 (if used)
+    normalMapLoc = glGetUniformLocation(programID, "useNormalMap");
+    roughnessMapLoc = glGetUniformLocation(programID, "useRoughnessMap");
 
     NodeTerrain.setMode(1);
     //NodeSoleil.setTextureID(TextureIDSoleil);
     NodeCar.setTextureID(&TextureVoiture);
-    NodeCar.setTextureNormalID(&TextureIDRoadNormal);
-    NodeCar.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodeCar.setTextureNormalID(&TextureIDRoadNormal);
+    NodeCar.setTextureRoughnessID(&TextureIDRoadRoughness); */
     NodeFrontLeftWheel.setTextureID(&TextureRoue);
-    NodeFrontLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
-    NodeFrontLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodeFrontLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeFrontLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness); */
     NodeFrontRightWheel.setTextureID(&TextureRoue);
-    NodeFrontRightWheel.setTextureNormalID(&TextureIDRoadNormal);
-    NodeFrontRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodeFrontRightWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeFrontRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness); */
     NodeBackLeftWheel.setTextureID(&TextureRoue);
-    NodeBackLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
-    NodeBackLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodeBackLeftWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeBackLeftWheel.setTextureRoughnessID(&TextureIDRoadRoughness); */
     NodeBackRightWheel.setTextureID(&TextureRoue);
-    NodeBackRightWheel.setTextureNormalID(&TextureIDRoadNormal);
-    NodeBackRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodeBackRightWheel.setTextureNormalID(&TextureIDRoadNormal);
+    NodeBackRightWheel.setTextureRoughnessID(&TextureIDRoadRoughness); */
 
     /* NodeRoadLine.setTextureID(TextureIDRoad);
     NodeRoadLine90.setTextureID(TextureIDRoad);
@@ -395,8 +397,8 @@ int main() {
     NodeRoadQuarterPipeUp90.setTextureID(TextureIDRoad); */
 
     NodePillar.setTextureID(&TextureIDRock);
-    NodePillar.setTextureNormalID(&TextureIDRoadNormal);
-    NodePillar.setTextureRoughnessID(&TextureIDRoadRoughness);
+    /* NodePillar.setTextureNormalID(&TextureIDRoadNormal);
+    NodePillar.setTextureRoughnessID(&TextureIDRoadRoughness); */
 
     //NodeCube.gravite.push_back(&NodeSoleil);
     //NodeCube.ressort.push_back(&ressortSoleil);
@@ -432,9 +434,10 @@ int main() {
     map.addNode(7, 9, 16, &NodeDirtLine90);
     map.addNode(6, 9, 16, &NodeDirtLinePenche270);
 
-    map.addNode(4, 9, 16, &NodeGrassLine90);
     map.addNode(3, 9, 16, &NodeGrassLine90);
-    map.setFinish(3, 9, 16, 0, &NodeFinish);
+    map.addNode(2, 9, 16, &NodeGrassLine90);
+    
+    map.setFinish(2, 9, 16, 0, &NodeFinish);
 
     // obstacles
 
@@ -447,8 +450,10 @@ int main() {
     NodeCar.transformation.setTranslation(glm::vec3(-10.f, 10.f, -10.f));
     NodeCar.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
 
-    NodeCheckpoint.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+    NodeCheckpoint.transformation.addEulerAngles(glm::vec3(glm::radians(-90.f), 0.f, 0.f));
+    NodeCheckpoint.transformation.setTranslation(glm::vec3( 0.f, 0.f,blockSize/2.f));
     NodeFinish.transformation.addEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
+    NodeFinish.transformation.setTranslation(glm::vec3(blockSize/2.f, 0.f, 0.f));
     /* glUseProgram(programID);
     GLuint TextureRouePBR = loadDDS("Assets/roadTexture/asphalt_02_diff_4k.dds");
     std::cout << "Texture ID : " << TextureRouePBR << std::endl;
@@ -485,6 +490,8 @@ int main() {
 
     std::cout << "Initialisation terminée, lancement de la boucle de rendu..." << std::endl;
     FILE * f = fopen("pos.csv", "w");
+    start = true;
+
     // 5. LA BOUCLE DE RENDU
     do{
         
@@ -568,7 +575,9 @@ int main() {
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    
+    if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+        camera.setThirdView(!camera.isThirdView());
+    }
         
 }
 
@@ -612,18 +621,16 @@ void processInput(GLFWwindow *window)
     }
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
         NodeCar.transformation.setTranslation(glm::vec3(-10.f, 2.f, -10.f));
+        NodeCar.transformation.setEulerAngles(glm::vec3(0.f, glm::radians(-90.f), 0.f));
         NodeCar.setVitesse(glm::vec3(0.f));
         for (auto roues : NodeCar.getEnfants()){
             roues->setVitesse(glm::vec3(0.f));
         }
         currentSteeringAngle = 0.f;
+        map.reset();
+
     }
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS){
-        if (camera.isThirdView())
-            camera.setThirdView(false);
-        else
-            camera.setThirdView(true);
-    }
+    glfwSetKeyCallback(window, keyCallback);
     //CAMERA
 
 

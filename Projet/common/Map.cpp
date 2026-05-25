@@ -91,15 +91,32 @@ void Map::render(GLuint MatrixID, glm::mat4 viewProj, GLuint programID) {
                         if (node->getTextureID()) texID = *(node->getTextureID());
                         glBindTexture(GL_TEXTURE_2D, texID);
 
-                        glActiveTexture(GL_TEXTURE7);
-                        GLuint normalID = 0;
-                        if (node->getTextureNormalID()) normalID = *(node->getTextureNormalID());
-                        glBindTexture(GL_TEXTURE_2D, normalID);
+                        if (normalMapLoc != -1) {
+                            bool hasNormal = (node->getTextureNormalID() != nullptr);
+                            glUniform1i(normalMapLoc, hasNormal ? 1 : 0);
+                            if (hasNormal) {
+                                glActiveTexture(GL_TEXTURE7);
+                                glBindTexture(GL_TEXTURE_2D, *(node->getTextureNormalID()));
+                            }
+                        }
+                        if (roughnessMapLoc != -1) {
+                            bool hasRoughness = (node->getTextureRoughnessID() != nullptr);
+                            glUniform1i(roughnessMapLoc, hasRoughness ? 1 : 0);
+                            if (hasRoughness) {
+                                glActiveTexture(GL_TEXTURE6);
+                                glBindTexture(GL_TEXTURE_2D, *(node->getTextureRoughnessID()));
+                            }
+                        }
 
-                        glActiveTexture(GL_TEXTURE6);
+                        /* glActiveTexture(GL_TEXTURE6);
                         GLuint roughID = 0;
                         if (node->getTextureRoughnessID()) roughID = *(node->getTextureRoughnessID());
                         glBindTexture(GL_TEXTURE_2D, roughID);
+                        if (roughID != 0) {
+                            glUniform1i(roughnessMapLoc, 1);
+                        } else {
+                            glUniform1i(roughnessMapLoc, 0);
+                        } */
 
                         (*(node->getMesh())).render();
                     }

@@ -75,6 +75,12 @@ class Map{
         }
         std::vector<double> getTimes() const { return times; }
         int getCurrentCP() const { return currentCP; }
+        void reset() {
+            currentCP = 0;
+            times.clear();
+            startTime = -1.0;
+            finishTime = -1.0;
+        }
 
 
         //RENDER

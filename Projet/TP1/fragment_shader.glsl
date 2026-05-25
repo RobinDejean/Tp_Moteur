@@ -27,6 +27,8 @@ float intensity = 2.0f;
 /* uniform vec3 F0 = vec3(0.04); */
 uniform vec3 camPos;
 const float PI = 3.14159265359;
+uniform bool useNormalMap;
+uniform bool useRoughnessMap;
 
 
 float GeometrySchlickGGX(float NdotV, float k)
@@ -69,22 +71,38 @@ void main(){
     vec3 albedo = pow(texture(myDiffuseSampler, uv).rgb, vec3(2.2)); // Correction Gamma
     //float metallic = texture(myMetallicSampler, uv).r;
     float metallic = 0.0;
-    float roughness = texture(myRoughnessSampler, uv).r;
+
+
+    float roughness;
+    if (useRoughnessMap) {
+        roughness = texture(myRoughnessSampler, uv).r;
+    } else {
+        roughness = 0.5; // Valeur par défaut si pas de map
+    }
     roughness = clamp(roughness, 0.05, 1.0);
     vec3 lightDir = normalize(lightPos - position.xyz);
     vec3 V = normalize(camPos - position.xyz);
-    vec3 Normal = texture(myNormalSampler, uv).rgb;
+
+
+    vec3 N;
+    if (useNormalMap) {
+        vec3 normalMap = texture(myNormalSampler, uv).rgb;
+        N = normalize(TBN * (normalMap * 2.0 - 1.0));
+    } else {
+        N = normalize(TBN[2]); 
+    }
+
+
     //Normal = vec3(0.0, 1.0, 0.0);
-    
-    vec3 N = Normal * 2.0 - 1.0;
-    N = normalize(TBN * N);
+
     
     //vec3 N = vec3(0.0, 1.0, 0.0);
     float cosTheta = dot(lightDir, N);  
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
-
+    vec3 ambient = 0.1 * albedo;
     vec3 Lo = vec3(0.0);
+    Lo += ambient;
 
     vec3 L = normalize(lightPos - position.xyz);
     vec3 H = normalize(V + L);
