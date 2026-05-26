@@ -265,6 +265,14 @@ int main() {
     NodeDirtCorner180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
     NodeDirtCorner270 = Node(&MeshRoadCorner, TypeSurface::TERRE);
     NodeDirtCorner270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
+
+    NodeGrassCorner = Node(&MeshRoadCorner, TypeSurface::GAZON);
+    NodeGrassCorner90 = Node(&MeshRoadCorner, TypeSurface::GAZON);
+    NodeGrassCorner90.transformation.setEulerAngles(glm::vec3(0., glm::radians(90.f), 0.));
+    NodeGrassCorner180 = Node(&MeshRoadCorner, TypeSurface::GAZON);
+    NodeGrassCorner180.transformation.setEulerAngles(glm::vec3(0., glm::radians(180.f), 0.));
+    NodeGrassCorner270 = Node(&MeshRoadCorner, TypeSurface::GAZON);
+    NodeGrassCorner270.transformation.setEulerAngles(glm::vec3(0., glm::radians(270.f), 0.));
     
     //LINE PENCHÉE
 

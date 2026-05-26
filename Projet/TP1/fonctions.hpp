@@ -21,7 +21,7 @@
 struct Node;*/
 
 void openOBJ(const std::string& filename, std::map<std::string, Mesh>& meshes);
-glm::vec3 calculerCentreMesh(const Mesh& mesh);
+glm::vec3 calculerCentreMesh(Mesh& mesh);
 void recentrerMesh(Mesh& mesh, glm::vec3 centre);
 /*
 void sphere(Mesh &mesh, float radius, int nblignes);

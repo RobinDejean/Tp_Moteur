@@ -170,7 +170,7 @@ void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 {	
 	if (m_thirdView && target)
 	{	
-		glm::vec3 carPos = target->getCarCenter(1.);
+		glm::vec3 carPos = target->getCarCenter();
 		glm::vec3 vitesse = target->getVitesse();
 		float speed = glm::length(vitesse);
 		vitesse = glm::normalize(vitesse);
@@ -205,7 +205,7 @@ void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 
 		// 3. Convertir en position MONDE
 		// On ajoute le centre de la voiture + l'offset transformé par la rotation
-		glm::vec3 carPos = target->getCarCenter(1.0);
+		glm::vec3 carPos = target->getCarCenter();
 		glm::vec3 desiredPos = carPos + (rotationMat * localOffset);
 
 		// 4. Lissage (optionnel mais recommandé pour éviter les saccades)
@@ -226,7 +226,7 @@ void Camera::update(float _deltaTime, GLFWwindow* _window)
 {
 	if (target)
 	{
-		target->getCarCenter(1.);
+		target->getCarCenter();
 	}
 	//updateInterface(_deltaTime);
 	updateFreeInput(_deltaTime, _window);

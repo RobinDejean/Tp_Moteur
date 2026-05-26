@@ -184,6 +184,7 @@ extern int mapWidth;
 extern int mapHeight;
 extern int mapDepth;
 extern Map map;
+extern Map map2;
 
 extern Mesh MeshRoadLine;
 extern Node NodeRoadLine;

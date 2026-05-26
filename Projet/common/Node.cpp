@@ -2,6 +2,7 @@
 #include "Mesh.hpp"
 #include "Transformation.hpp"
 #include "../TP1/globals.hpp"
+#include "../TP1/fonctions.hpp"
 
 
 //CONSTRUCTORS
@@ -94,6 +95,10 @@ void Node::setCoefficients(double fs, double fc, double r) {
 }
 
 //METHODS
+
+glm::vec3 Node::getCarCenter() {
+            return transformation.getTranslation() + glm::vec3(transformation.getRotationMatrix()  * glm::vec4(calculerCentreMesh(*mesh),0.f)) ;
+    }
 
 void Node::updatePosition(){
     glm::vec3 a = glm::vec3(0,-9.81f,0);

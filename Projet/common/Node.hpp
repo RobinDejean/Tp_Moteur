@@ -1,6 +1,7 @@
 #include "Transformation.hpp"
 #include "Mesh.hpp"
 #include "../TP1/globals.hpp"
+
 #include <vector>
 
 #ifndef NODE_HPP
@@ -53,9 +54,7 @@ class Node{
         double getRebond() const;
         std::vector<Node*> getEnfants() const { return enfants; }
         Transformation getTransformation() const { return transformation; }
-        glm::vec3 getCarCenter(float taille) {
-            return transformation.getTranslation() + glm::vec3(transformation.getRotationMatrix() * glm::vec4(taille, 0., 0.5 * taille,0.f));
-        }
+        glm::vec3 getCarCenter() ;
         double getAdherence() const { return adherence; }
         GLuint* getTextureNormalID() const { return textureNormalID; }
         GLuint* getTextureRoughnessID() const { return textureRoughnessID; }

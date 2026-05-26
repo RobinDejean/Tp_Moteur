@@ -94,6 +94,7 @@ int mapWidth = 20;
 int mapHeight = 20;
 int mapDepth = 20;
 Map map(mapWidth, mapHeight, mapDepth);
+Map map2(mapWidth, mapHeight, mapDepth);
 
 Mesh MeshRoadLine;
 Node NodeRoadLine;

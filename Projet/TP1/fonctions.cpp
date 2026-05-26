@@ -192,7 +192,7 @@ void recentrerMesh(Mesh& mesh, glm::vec3 centre) {
     }
 }
 
-glm::vec3 calculerCentreMesh(const Mesh& mesh) {
+glm::vec3 calculerCentreMesh(Mesh& mesh) {
     if (mesh.indexed_vertices.empty()) return glm::vec3(0.0f);
 
     // Initialisation avec des valeurs extrêmes
