@@ -20,8 +20,8 @@ uniform sampler2D myRoughnessSampler;
 uniform sampler2D myNormalSampler;
 uniform int mode;
 
-uniform vec3 lightPos = vec3(-10.0f, 10.0f, -10.0f);
-uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
+uniform vec3 lightPos = vec3(0.0f, 50.0f, 50.0f);
+uniform vec3 lightColor = vec3(1.0f, 1.0f, 0.7f);
 float intensity = 2.0f;
 /* uniform vec3 F0 = vec3(0.04); */
 uniform vec3 camPos;
@@ -132,7 +132,7 @@ void main(){
 
 
     if(mode == 3){
-        color = vec4(1.0f, 0.0f, 0.2f, 0.1f);
+        color = vec4(1.0f, 0.0f, 0.1f, 0.1f);
     }
     if(mode == 2){
         color = vec4(0.0f, 0.5f, 1.0f, 0.1f);

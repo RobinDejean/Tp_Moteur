@@ -156,8 +156,11 @@ void Mesh::deleteBuffers() {
 
 void Mesh::computeNormals()
 {
-    normals.clear();
-    normals.resize(indexed_vertices.size(), glm::vec3(0.0f));
+    // Dupliquer les vertices pour que chaque triangle ait ses propres copies
+    std::vector<glm::vec3> new_vertices;
+    std::vector<glm::vec2> new_uvs;
+    std::vector<float>     new_noise;
+    std::vector<unsigned int> new_indices;
 
     for (size_t i = 0; i < indices.size(); i += 3)
     {
@@ -165,29 +168,42 @@ void Mesh::computeNormals()
         unsigned int i1 = indices[i + 1];
         unsigned int i2 = indices[i + 2];
 
-        const glm::vec3& v0 = indexed_vertices[i0];
-        const glm::vec3& v1 = indexed_vertices[i1];
-        const glm::vec3& v2 = indexed_vertices[i2];
+        glm::vec3 v0 = indexed_vertices[i0];
+        glm::vec3 v1 = indexed_vertices[i1];
+        glm::vec3 v2 = indexed_vertices[i2];
 
-        glm::vec3 edge1 = v1 - v0;
-        glm::vec3 edge2 = v2 - v0;
+        glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
 
-        glm::vec3 normal = glm::cross(edge1, edge2);
+        unsigned int base = new_vertices.size();
 
-        // accumulation
-        normals[i0] += normal;
-        normals[i1] += normal;
-        normals[i2] += normal;
+        new_vertices.push_back(v0);
+        new_vertices.push_back(v1);
+        new_vertices.push_back(v2);
+
+        normals.push_back(normal);
+        normals.push_back(normal);
+        normals.push_back(normal);
+
+        if (!uvs.empty()) {
+            new_uvs.push_back(uvs[i0]);
+            new_uvs.push_back(uvs[i1]);
+            new_uvs.push_back(uvs[i2]);
+        }
+        if (!noise.empty()) {
+            new_noise.push_back(noise[i0]);
+            new_noise.push_back(noise[i1]);
+            new_noise.push_back(noise[i2]);
+        }
+
+        new_indices.push_back(base);
+        new_indices.push_back(base + 1);
+        new_indices.push_back(base + 2);
     }
 
-    // normalization finale
-    for (auto& n : normals)
-    {
-        if (glm::length(n) > 0.00001f)
-            n = glm::normalize(n);
-        else
-            n = glm::vec3(0.0f, 1.0f, 0.0f);
-    }
+    indexed_vertices = new_vertices;
+    if (!uvs.empty())    uvs    = new_uvs;
+    if (!noise.empty())  noise  = new_noise;
+    indices = new_indices;
 }
 
 void Mesh::computeTangents()
@@ -620,12 +636,12 @@ void Mesh::road_line() {
     uvs.push_back(vec2(0.0f, 1.0f));
 
     indices.push_back(0);
+    indices.push_back(3);
+    indices.push_back(2);
+
+    indices.push_back(0);
     indices.push_back(2);
     indices.push_back(1);
-
-    indices.push_back(2);
-    indices.push_back(0);
-    indices.push_back(3);
 
     //bordures extérieures
 
@@ -643,17 +659,17 @@ void Mesh::road_line() {
     indices.push_back(7);
     indices.push_back(3);
 
-    indices.push_back(7);
     indices.push_back(0);
     indices.push_back(4);
+    indices.push_back(7);
 
     indices.push_back(1);
-    indices.push_back(6);
     indices.push_back(2);
+    indices.push_back(6);
 
+    indices.push_back(1);
     indices.push_back(6);
     indices.push_back(5);
-    indices.push_back(1);
 
     setupMesh();
 }
@@ -779,9 +795,9 @@ void Mesh::road_line_penche() {
     indices.push_back(2);
     indices.push_back(1);
 
-    indices.push_back(2);
     indices.push_back(0);
     indices.push_back(3);
+    indices.push_back(2);
 
     indexed_vertices.push_back(vec3((blockSize / 2.0f) * -1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
     indexed_vertices.push_back(vec3((blockSize / 2.0f) * 1.0f, 0.5f, (blockSize / 2.0f) * -1.0f));
@@ -797,17 +813,17 @@ void Mesh::road_line_penche() {
     indices.push_back(7);
     indices.push_back(3);
 
-    indices.push_back(7);
     indices.push_back(0);
     indices.push_back(4);
+    indices.push_back(7);
 
     indices.push_back(1);
     indices.push_back(2);
     indices.push_back(6);
 
+    indices.push_back(1);
     indices.push_back(6);
     indices.push_back(5);
-    indices.push_back(1);
 
     setupMesh();
 }
@@ -855,12 +871,12 @@ void Mesh::road_corner() {
         indices.push_back(i1);
 
         indices.push_back(i1);
+        indices.push_back(i4);
         indices.push_back(i2);
-        indices.push_back(i4);
 
-        indices.push_back(i4);
-        indices.push_back(i3);
         indices.push_back(i1);
+        indices.push_back(i3);
+        indices.push_back(i4);
     }
 
     setupMesh();

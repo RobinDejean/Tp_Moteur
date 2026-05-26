@@ -312,6 +312,7 @@ void Car::solver(double dt, Map& map)
                     float dist = std::sqrt(distSq);
                     float penetration = rayonRoue - dist;
                     glm::vec3 normal = axeCollision / dist; // La vraie direction de repousse
+                    //glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0)); // Normal du triangle (plus stable que le vrai normal de collision)
                     if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.f) {
                         slow = 0.f;
                     }else if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.5f) {
