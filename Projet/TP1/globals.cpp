@@ -5,7 +5,7 @@
 GLFWwindow* window = nullptr;
 
 // caméra
-glm::vec3 camera_position = glm::vec3(0.0f, 0.8f, 0.f);
+glm::vec3 camera_position = glm::vec3(0.0f, 0.8f, -10.f);
 glm::vec3 camera_target   = glm::vec3(1.f, 0.8f, 0.f);
 glm::vec3 camera_up       = glm::vec3(0.f,1.0f,0.f);
 glm::vec3 camera_front    = glm::normalize(camera_target - camera_position);
@@ -30,8 +30,8 @@ float acceleration = 0.0f;
 float freinage = 0.0f;
 
 // temps
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+double deltaTime = 0.0f;
+double lastFrame = 0.0f;
 
 // variables
 float tailleCar = 1.0;

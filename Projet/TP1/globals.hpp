@@ -121,8 +121,8 @@ extern float acceleration;
 extern float freinage;
 
 // temps
-extern float deltaTime;
-extern float lastFrame;
+extern double deltaTime;
+extern double lastFrame;
 
 //variables
 extern float tailleCar;

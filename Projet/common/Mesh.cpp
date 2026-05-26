@@ -965,6 +965,8 @@ void Mesh::pillar() {
     setupMesh();
 }
 
+// 
+
 void Mesh::checkpoint()
 {
     indexed_vertices.clear();
@@ -974,10 +976,9 @@ void Mesh::checkpoint()
     noise.clear();
     deleteBuffers();
 
-    float pillarWidth = 0.5f;
+    // Dimensions globales du pavé droit
     float height = 6.0f;
-    float width = blockSize;
-    float barHeight = 1.0f;
+    float width = blockSize; 
     float depth = 0.5f;
 
     auto addBox = [&](float xMin, float xMax,
@@ -1017,34 +1018,14 @@ void Mesh::checkpoint()
             indices.push_back(start + i);
     };
 
-    // Pilier gauche
+    // Création de l'unique pavé droit
     addBox(
-        -width / 2.0f,
-        -width / 2.0f + pillarWidth,
-        0.0f,
-        height,
-        -depth / 2.0f,
-        depth / 2.0f
-    );
-
-    // Pilier droit
-    addBox(
-        width / 2.0f - pillarWidth,
-        width / 2.0f,
-        0.0f,
-        height,
-        -depth / 2.0f,
-        depth / 2.0f
-    );
-
-    // Barre du haut
-    addBox(
-        -width / 2.0f,
-        width / 2.0f,
-        height - barHeight,
-        height,
-        -depth / 2.0f,
-        depth / 2.0f
+        -width / 2.0f, // xMin : bord gauche
+         width / 2.0f, // xMax : bord droit
+         0.0f,         // yMin : base (sol)
+         height,       // yMax : sommet
+        -depth / 2.0f, // zMin : fond
+         depth / 2.0f  // zMax : devant
     );
 
     setupMesh();

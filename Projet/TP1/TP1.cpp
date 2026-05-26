@@ -179,21 +179,14 @@ int main() {
     TextureIDTerre = loadDDS("Assets/dirtTexture/dirt_floor_diff_4k.dds");
     std::cout << "Textures chargées : " << std::endl;
 
-    Texture textureRoueNormal = Texture("Assets/roadTexture/asphalt_02_nor_gl_4k.png");
-    TextureIDRoadNormal = textureRoueNormal.getTextureId();
-    Texture textureGrassNormal = Texture("Assets/grassTexture/brown_mud_leaves_01_nor_gl_4k.png");
-    TextureIDGrassNormal = textureGrassNormal.getTextureId();
-    Texture textureTerreNormal = Texture("Assets/dirtTexture/dirt_floor_nor_gl_4k.png");
-    TextureIDTerreNormal = textureTerreNormal.getTextureId();
+    TextureIDRoadNormal = loadDDS("Assets/roadTexture/asphalt_02_nor_gl_4k.dds");
+    TextureIDGrassNormal = loadDDS("Assets/grassTexture/brown_mud_leaves_01_nor_gl_4k.dds");
+    TextureIDTerreNormal = loadDDS("Assets/dirtTexture/dirt_floor_nor_gl_4k.dds");
     std::cout << "Textures normales chargées : " << std::endl;
 
     TextureIDRoadRoughness = loadDDS("Assets/roadTexture/asphalt_02_rough_4k.dds");
-    std::cout << "Textures rugosité chargées : " << std::endl;
-    static Texture textureGrassRoughness("Assets/grassTexture/brown_mud_leaves_01_rough_4k.png");
-    TextureIDGrassRoughness = textureGrassRoughness.getTextureId();
-    std::cout << "Textures rugosité chargées : " << std::endl;
-    static Texture textureTerreRoughness("Assets/dirtTexture/dirt_floor_rough_4k.png");
-    TextureIDTerreRoughness = textureTerreRoughness.getTextureId();
+    TextureIDGrassRoughness = loadDDS("Assets/grassTexture/brown_mud_leaves_01_rough_4k.dds");
+    TextureIDTerreRoughness = loadDDS("Assets/dirtTexture/dirt_floor_rough_4k.dds");
     std::cout << "Textures rugosité chargées : " << std::endl;
 
     std::cout << "Textures chargées : " << std::endl;
@@ -326,7 +319,9 @@ int main() {
     MeshRoadQuarterPipe.road_quarterpipe();
     CheckpointMesh.checkpoint();
     NodeCheckpoint.setMesh(&CheckpointMesh);
+    NodeCheckpoint.setMode(2);
     NodeFinish.setMesh(&CheckpointMesh);
+    NodeFinish.setMode(3);
     
     MeshPillar.pillar();
     //NodeTerrain.transformation.setScale(100.);
@@ -515,13 +510,13 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         //temps
-        float currentFrame = glfwGetTime();
+        double currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         if (deltaTime < targetFrameTime) {
             double sleepTime = targetFrameTime - deltaTime;
             std::this_thread::sleep_for(std::chrono::duration<double>(sleepTime));
         }
-        
+        //std::cout << "Delta time: " << deltaTime << " seconds" << std::endl;  
         lastFrame = currentFrame;
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -573,7 +568,7 @@ int main() {
         glUniform3fv(glGetUniformLocation(programID, "camPos"), 1, glm::value_ptr(camera.getPosition()));
         //glUniformMatrix4fv(glGetUniformLocation(programID,"MVP"),1,false ,glm::value_ptr(MVP));
         
-        if (start && deltaTime > 0.2f) {
+        if (start && deltaTime > 1.f) {
             car.reset(currentSteeringAngle);
             map.reset();
             start = false;

@@ -19,7 +19,6 @@ uniform sampler2D myMetallicSampler;
 uniform sampler2D myRoughnessSampler;
 uniform sampler2D myNormalSampler;
 uniform int mode;
-vec4 waterColor = vec4(0.0f, 0.5f, 1.0f, 0.3f); // bleu semi-transparent
 
 uniform vec3 lightPos = vec3(-10.0f, 10.0f, -10.0f);
 uniform vec3 lightColor = vec3(1.0f, 1.0f, 1.0f);
@@ -132,9 +131,11 @@ void main(){
  */    
 
 
-
+    if(mode == 3){
+        color = vec4(1.0f, 0.0f, 0.2f, 0.1f);
+    }
     if(mode == 2){
-        color = waterColor;
+        color = vec4(0.0f, 0.5f, 1.0f, 0.1f);
     }
     else if(mode == 1){ // mode 1 pour le terrain
         if (position.y+TerrainNoise < 0.2) {
