@@ -388,13 +388,10 @@ void Car::solver(double dt, Map& map)
                         (localWheelPos.z >= minAABB.z && localWheelPos.z <= maxAABB.z);
 
         if (isInside) {
-            std::cout << "Position locale de la roue par rapport au checkpoint : " << localWheelPos.x << ", " << localWheelPos.y << ", " << localWheelPos.z << std::endl;
-            std::cout << "Min AABB : " << minAABB.x << ", " << minAABB.y << ", " << minAABB.z << std::endl;
-            std::cout << "Max AABB : " << maxAABB.x << ", " << maxAABB.y << ", " << maxAABB.z << std::endl;
             if (!isFinishLine) {
                 map.addTime(glfwGetTime() - map.getStartTime());
-                speedCheckpoints = cp.node->getVitesse(); // Attention, utilise 'cp.node' et pas juste 'node'
-                transformationCheckpoints = cp.node->getTransformation();
+                speedCheckpoints = node->getVitesse(); // Attention, utilise 'cp.node' et pas juste 'node'
+                transformationCheckpoints = node->getTransformation();
                 std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
                 
                 // map.setCurrentCP(map.getCurrentCP() + 1); // Ne pas oublier de passer au CP suivant
