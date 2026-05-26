@@ -437,7 +437,7 @@ int main() {
     map.addNode(3, 9, 16, &NodeGrassLine90);
     map.addNode(2, 9, 16, &NodeGrassLine90);
     
-    map.setFinish(2, 9, 16, 0, &NodeFinish);
+    map.setFinish(3, 9, 16, 0, &NodeFinish);
 
     // obstacles
 

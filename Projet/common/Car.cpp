@@ -313,7 +313,7 @@ void Car::solver(double dt, Map& map)
                     float penetration = rayonRoue - dist;
                     glm::vec3 normal = axeCollision / dist; // La vraie direction de repousse
                     //glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0)); // Normal du triangle (plus stable que le vrai normal de collision)
-                    if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.f) {
+                    if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < -0.5f) {
                         slow = 0.f;
                     }else if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.5f) {
                         slow = 0.6f;
@@ -332,20 +332,7 @@ void Car::solver(double dt, Map& map)
                         map.setStartTime(glfwGetTime());
                         std::cout << "Course commencée !" << std::endl;
                     }
-                    if(map.getCurrentCP() < map.getCheckPoints().size()){
-                        auto cp = map.getCheckPoints()[map.getCurrentCP()];
-                        if (cp.z == bi && cp.x == bj && cp.y == bk && cp.n == bl) {
-                            map.addTime(glfwGetTime() - map.getStartTime());
-                            speedCheckpoints = node->getVitesse();
-                            transformationCheckpoints = node->transformation;
-                            std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
-                        }
-                    }
-                    else if (map.getFinish().z == bi && map.getFinish().x == bj && map.getFinish().y == bk && map.getFinish().n == bl && map.getFinishTime() == -1.0) {
-                        double finishTime = glfwGetTime() - map.getStartTime();
-                        map.setFinishTime(finishTime);
-                        std::cout << "Finish reached! Total time: " << finishTime << " seconds" << std::endl;
-                    }
+                    
                 }
             }
         }
@@ -370,6 +357,56 @@ void Car::solver(double dt, Map& map)
         
     }
 
+    bool isFinishLine = (map.getCurrentCP() >= map.getCheckPoints().size());
+    auto cp = isFinishLine ? map.getFinish() : map.getCheckPoints()[map.getCurrentCP()];
+
+    glm::vec3 cpWorldTranslation = glm::vec3(
+        blockSize * cp.x - (mapWidth * blockSize) / 2.0f + blockSize / 2.0f,
+        blockSize * cp.y - (mapHeight * blockSize) / 2.0f,
+        blockSize * cp.z - (mapDepth * blockSize) / 2.0f + blockSize / 2.0f
+    );
+
+    Transformation cpTransfo = cp.node->getTransformation();
+    cpTransfo.addTranslation(cpWorldTranslation);
+
+    glm::mat4 cpMatrix = cpTransfo.computeTransformationMatrix();
+    glm::mat4 inverseCpMatrix = glm::inverse(cpMatrix);
+
+    float width = blockSize;
+    float height = 6.0f;
+    float depth = 0.5f;
+
+    glm::vec3 minAABB = glm::vec3(-width / 2.0f, 0.0f,   -depth / 2.0f);
+    glm::vec3 maxAABB = glm::vec3( width / 2.0f, height,  2.f);
+
+    for (const auto& wp : wheelWorldPositions) {
+        
+        // Passage de la roue en espace local du checkpoint
+        glm::vec4 localWheelPos = inverseCpMatrix * glm::vec4(wp, 1.0f);
+        bool isInside = (localWheelPos.x >= minAABB.x && localWheelPos.x <= maxAABB.x) &&
+                        (localWheelPos.y >= minAABB.y && localWheelPos.y <= maxAABB.y) &&
+                        (localWheelPos.z >= minAABB.z && localWheelPos.z <= maxAABB.z);
+
+        if (isInside) {
+            std::cout << "Position locale de la roue par rapport au checkpoint : " << localWheelPos.x << ", " << localWheelPos.y << ", " << localWheelPos.z << std::endl;
+            std::cout << "Min AABB : " << minAABB.x << ", " << minAABB.y << ", " << minAABB.z << std::endl;
+            std::cout << "Max AABB : " << maxAABB.x << ", " << maxAABB.y << ", " << maxAABB.z << std::endl;
+            if (!isFinishLine) {
+                map.addTime(glfwGetTime() - map.getStartTime());
+                speedCheckpoints = cp.node->getVitesse(); // Attention, utilise 'cp.node' et pas juste 'node'
+                transformationCheckpoints = cp.node->getTransformation();
+                std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
+                
+                // map.setCurrentCP(map.getCurrentCP() + 1); // Ne pas oublier de passer au CP suivant
+            } else {
+                double finishTime = glfwGetTime() - map.getStartTime();
+                map.setFinishTime(finishTime);
+                std::cout << "Finish reached! Total time: " << finishTime << " seconds" << std::endl;
+            }
+            
+            break; // On sort de la boucle pour éviter de valider 2 fois
+        }
+    }
     // ═══════════════════════════════════════════════
     // ÉTAPE 2 : Reconstruire la transformation du châssis
     // ═══════════════════════════════════════════════
