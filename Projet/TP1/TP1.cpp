@@ -488,6 +488,8 @@ int main() {
     glBindTexture(GL_TEXTURE_2D, TextureRoueNormal);
     glUniform1i(TextureUniformNormal, 7); */
 
+    bestMapTime = loadBestTime("best_times.csv");
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -617,16 +619,32 @@ int main() {
         ImGui::End();
 
         ImGui::SetNextWindowPos(ImVec2(width - 250, 50), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(300, map.getCheckPoints().size() * 50), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(300, map.getCheckPoints().size() * 50 *2), ImGuiCond_Always);
         ImGui::Begin("Checkpoints", nullptr, hudFlags);
         ImGui::SetWindowFontScale(1.5f);
         std::vector<double> times = map.getTimes();
         for(int i = 0; i < times.size(); i++) {
             ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Checkpoint %d: %.3f s", i + 1, times[i]);
+            std::cout << "Checkpoint " << i + 1 << ": " << times[i] << " seconds" << std::endl;
+            std::cout << "Best time for checkpoint " << i + 1 << ": " << bestMapTime[i] << " seconds" << std::endl;
+            std::cout << times[i] - bestMapTime[i] << std::endl;
+            if (bestMapTime[i] < times[i]) {
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "+ %.3f s", times[i] - bestMapTime[i]);
+            }else{
+                ImGui::TextColored(ImVec4(.0f, .0f, 1.0f, 1.0f), " %.3f s", times[i] - bestMapTime[i]);
+            }
         }
         double finishTime = map.getFinishTime();
+        //std::cout << "Finish Time: " << finishTime << " seconds" << std::endl;
         if(finishTime > 0.0) {
             ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), "Finish Time: %.3f s", finishTime);
+            if (bestMapTime.back() > finishTime) {
+                saveBestTime(map, "best_times.csv");
+                ImGui::TextColored(ImVec4(.0f, .0f, 1.0f, 1.0f), " %.3f s", finishTime - bestMapTime.back());
+                //bestMapTime = loadBestTime("best_times.csv");
+            }else{
+                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "+ %.3f s", finishTime - bestMapTime.back());
+            }
         }
         ImGui::End();
 
@@ -706,6 +724,7 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS){
         car.reset(currentSteeringAngle);
         map.reset();
+        bestMapTime = loadBestTime("best_times.csv");
 
     }
     glfwSetKeyCallback(window, keyCallback);

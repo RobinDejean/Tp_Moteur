@@ -395,7 +395,7 @@ void Car::solver(double dt, Map& map)
                 std::cout << "Checkpoint " << map.getCurrentCP() << " reached! Time: " << map.getTimes().back() << " seconds" << std::endl;
                 
                 // map.setCurrentCP(map.getCurrentCP() + 1); // Ne pas oublier de passer au CP suivant
-            } else {
+            } else if (map.getFinishTime() < 0.0f) {
                 double finishTime = glfwGetTime() - map.getStartTime();
                 map.setFinishTime(finishTime);
                 std::cout << "Finish reached! Total time: " << finishTime << " seconds" << std::endl;

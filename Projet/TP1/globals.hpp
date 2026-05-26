@@ -128,6 +128,7 @@ extern double lastFrame;
 extern float tailleCar;
 extern float rayonRoue;
 extern float widthRoue;
+extern std::vector<double> bestMapTime;
 
 // terrain
 extern int longueur;

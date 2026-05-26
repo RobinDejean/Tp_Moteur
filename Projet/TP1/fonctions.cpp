@@ -37,6 +37,50 @@ using namespace glm;
 #include "common/Mesh.hpp"
 #include "common/Node.hpp"
 
+std::vector<double> loadBestTime(const std::string& filename) {
+    std::vector<double> bestCheckpointTimes;
+    std::ifstream file(filename);
+    double finalTime;
+    
+    if (file.is_open()) {
+        size_t nbCheckpoints;
+        
+        file >> finalTime;
+        file >> nbCheckpoints;
+        bestCheckpointTimes.resize(nbCheckpoints);
+        
+        for (size_t i = 0; i < nbCheckpoints; ++i) {
+            file >> bestCheckpointTimes[i];
+        }
+        
+        file.close();
+        std::cout << "Record charge : " << finalTime << "s" << std::endl;
+        
+    }
+    bestCheckpointTimes.push_back(finalTime);
+    return bestCheckpointTimes;
+}
+
+void saveBestTime(Map& map, const std::string& filename) {
+    std::ofstream file(filename);
+
+    if (file.is_open()) {
+        
+        file << map.getFinishTime() << "\n";
+
+        const std::vector<double>& times = map.getTimes();
+        file << times.size() << "\n";
+        for (size_t i = 0; i < times.size(); ++i) {
+            file << times[i] << "\n";
+        }
+
+        file.close();
+        std::cout << "Nouveau record et " << times.size() << " checkpoints enregistres avec succes !" << std::endl;
+    } else {
+        std::cerr << "Erreur : Impossible de sauvegarder le record dans " << filename << std::endl;
+    }
+}
+
 
 void openOBJ(const std::string& filename, std::map<std::string, Mesh>& meshes)
 {

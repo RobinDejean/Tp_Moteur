@@ -38,3 +38,5 @@ void updateTerrain();
 void updatePos(Node &Node);
 void collisionTerrain(Node &Node); */
 void SceneRender(Node* node, glm::mat4 transformationParent, GLuint MatrixID, glm::mat4 viewProj, GLuint programID);
+std::vector<double> loadBestTime(const std::string& filename = "best_time.txt");
+void saveBestTime(Map& map, const std::string& filename = "best_time.txt");

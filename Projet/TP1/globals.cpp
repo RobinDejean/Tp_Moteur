@@ -37,6 +37,7 @@ double lastFrame = 0.0f;
 float tailleCar = 1.0;
 float rayonRoue = 0.3;
 float widthRoue = 0.5;
+std::vector<double> bestMapTime;
 
 // terrain
 int longueur = 512;
