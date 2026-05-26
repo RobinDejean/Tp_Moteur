@@ -124,63 +124,6 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     if(isDrifting) {
     }
     
-    /* if (isDrifting) {
-        forceGrip = 1.5f; // Grip faible = la glissade continue en douceur
-        multiplicateurSurvirage = 2.0f; // On amplifie la rotation du capot (survirage)
-    }
-    float speedFactor = glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
-
-    float turnSpeed =
-        anglesRoues *
-        2.5f *      // vitesse de rotation max
-        speedFactor;
-
-    if (isDrifting)
-        turnSpeed *= 1.5f;
-
-    float rotationChassis = turnSpeed * dt;
-    float yawMultiplier = isDrifting ? 1.8f : 1.0f;
-    turnSpeed *= yawMultiplier;
-
-    glm::mat4 matriceVirage =
-    glm::rotate(glm::mat4(1.0f),
-                rotationChassis,
-                axeHaut);
-
-    glm::mat4 nouvelleRotation =
-        matriceVirage * rotationMatrix;
-
-    node->transformation.setRotationFromMatrix(nouvelleRotation);
-
-    directionChassis =
-        glm::normalize(glm::vec3(nouvelleRotation[0]));
-        
-    
-    //node->transformation.setRotationFromMatrix(nouvelleRotation);
-    //directionChassis = glm::normalize(glm::vec3(nouvelleRotation[0]));
-    
-   /*  glm::vec3 vitesseAvant = directionChassis * speed;
-    glm::vec3 vitesseLaterale = v_vec - vitesseAvant;
-    glm::vec3 targetVelocity = directionChassis * speed;
-
-    float frictionLaterale = std::max(0.0f, 1.0f - (forceGrip * dt));
-    //vitesseLaterale *= frictionLaterale;
-    
-    //if (glm::length(vitesseLaterale) < 0.1f) vitesseLaterale = glm::vec3(0.0f);
-
-    //glm::vec3 nouveauV = vitesseAvant + vitesseLaterale;
-
-    glm::vec3 nouveauV = glm::mix(v_vec, targetVelocity, forceGrip * dt);
-
-    float energieInitiale = glm::length(v_vec);
-    float energieNouvelle = glm::length(nouveauV); */
-    
-    /* if (energieNouvelle > 0.1f && energieInitiale > energieNouvelle) {
-        // 0.95f = on garde 95% de l'élan de la voiture pendant les virages/drifts. 
-        float energieRedirigee = energieNouvelle + (energieInitiale - energieNouvelle) * 0.5f;
-        nouveauV = glm::normalize(nouveauV) * energieRedirigee;
-    } */
-
     float speedFactor = glm::clamp(abs_speed / 40.0f, 0.2f, 1.0f);
 
     float turnSpeed = anglesRoues * 2.5f * speedFactor;
@@ -214,13 +157,6 @@ void Car::calculPosition(float dt, float acceleration, float freinage) {
     float grip =
         isDrifting ? 2.0f : 12.0f;
 
-    /* float gripLerp =
-        glm::clamp(grip * dt, 0.0f, 1.0f);
-
-    glm::vec3 nouveauV =
-        glm::mix(v_vec,
-                targetVelocity,
-                gripLerp); */
     float gripLerp = 1.0f - glm::exp(-grip * dt);
     glm::vec3 nouveauV = glm::mix(v_vec, targetVelocity, gripLerp);
     
@@ -247,10 +183,6 @@ void Car::solver(double dt, Map& map)
 
     std::vector<glm::vec3> wheelWorldPositions(roues.size());
     glm::vec3 axeHaut   = glm::normalize(glm::vec3(rotMat[1]));
-
-    // ═══════════════════════════════════════════════
-    // ÉTAPE 1 : Traitement individuel de chaque roue
-    // ═══════════════════════════════════════════════
     
     for (int i = 0; i < (int)roues.size(); i++)
     {
@@ -260,15 +192,12 @@ void Car::solver(double dt, Map& map)
         glm::vec3 wheelWorld = chassisPos
             + glm::vec3(rotMat * glm::vec4(wheel->transformation.getTranslation(), 0.f));
 
-        // 1. Gravité sur la vitesse de la roue
         
         glm::vec3 wheelVel = wheel->getVitesse();
         wheelVel += gravity * (float)dt;
 
-        // 2. Position prédite
         glm::vec3 predicted = wheelWorld + wheelVel * (float)dt;
 
-        // 3. Test de toutes les collisions pour cette roue
         float bestPenetration = 0.f;
         glm::vec3 bestNormal(0.f, 1.f, 0.f);
         bool hasCollision = false;
@@ -301,18 +230,16 @@ void Car::solver(double dt, Map& map)
 
                 glm::vec3 closest = closestPointOnTriangle(v0, v1, v2, predicted);
 
-                // 2. On calcule la distance entre ce point et le centre de la roue
                 glm::vec3 axeCollision = predicted - closest;
                 float distSq = glm::dot(axeCollision, axeCollision); // Distance au carré
                 float rayonSq = rayonRoue * rayonRoue;
 
-                // 3. Si la distance est plus petite que le rayon : COLLISION !
                 if (distSq < rayonSq && distSq > 0.0001f)
                 {
                     float dist = std::sqrt(distSq);
                     float penetration = rayonRoue - dist;
                     glm::vec3 normal = axeCollision / dist; // La vraie direction de repousse
-                    //glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0)); // Normal du triangle (plus stable que le vrai normal de collision)
+                    
                     if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < -0.5f) {
                         slow = 0.f;
                     }else if (glm::dot(glm::normalize(normal), glm::normalize(axeHaut)) < 0.5f) {
@@ -321,7 +248,6 @@ void Car::solver(double dt, Map& map)
                         slow = 1.0f;
                     }
 
-                    // CORRECTION IMMÉDIATE (Pour gérer murs + sol simultanément)
                     predicted += normal * penetration;
                     accumulatedNormal += normal;
                     hasCollision = true;
@@ -337,7 +263,6 @@ void Car::solver(double dt, Map& map)
             }
         }
 
-        // 4. Correction position et vitesse si collision
         if (hasCollision)
         {
             glm::vec3 finalNormal = glm::normalize(accumulatedNormal);
@@ -401,12 +326,10 @@ void Car::solver(double dt, Map& map)
                 std::cout << "Finish reached! Total time: " << finishTime << " seconds" << std::endl;
             }
             
-            break; // On sort de la boucle pour éviter de valider 2 fois
+            break;
         }
     }
-    // ═══════════════════════════════════════════════
-    // ÉTAPE 2 : Reconstruire la transformation du châssis
-    // ═══════════════════════════════════════════════
+
 
     // Nouvelle position = moyenne des roues + hauteur châssis
     glm::vec3 newCenter(0.f);
@@ -420,8 +343,6 @@ void Car::solver(double dt, Map& map)
     //if (terrainNormal.y < 0.f) terrainNormal = -terrainNormal;
     glm::vec3 hautVoiture = glm::vec3(rotMat[1]);
 
-    // Si le produit scalaire est négatif, ça veut dire que le terrainNormal 
-    // pointe à l'opposé du haut de la voiture -> on le retourne !
     if (glm::dot(terrainNormal, hautVoiture) < 0.0f) {
         terrainNormal = -terrainNormal;
     }
@@ -442,9 +363,6 @@ void Car::solver(double dt, Map& map)
     node->transformation.setTranslation(newCenter);
 
     node->transformation.setRotationFromMatrix(newRot);
-    // ═══════════════════════════════════════════════
-    // ÉTAPE 3 : Remettre les roues en local
-    // ═══════════════════════════════════════════════
     glm::mat4 newRotInv = glm::transpose(newRot); // matrice orthogonale → transpose = inverse
     
 
@@ -456,17 +374,7 @@ void Car::solver(double dt, Map& map)
         //stableLocal.y = localPos.y;
         roues[i]->transformation.setTranslation(stableLocal);
     }
-    /* roues[2]->transformation.setTranslation(glm::vec3(0.2, 0., 1.));
-    roues[3]->transformation.setTranslation(glm::vec3(0.2, 0., 0.));
-    roues[0]->transformation.setTranslation(glm::vec3(1.8, 0., 1.));
-    roues[1]->transformation.setTranslation(glm::vec3(1.8, 0., 0.)); */
 
-    /* roues[0]->transformation.setTranslation(calculerCentreMesh(*(roues[0]->getMesh())));
-    roues[1]->transformation.setTranslation(calculerCentreMesh(*(roues[1]->getMesh())));
-    roues[2]->transformation.setTranslation(calculerCentreMesh(*(roues[2]->getMesh())));
-    roues[3]->transformation.setTranslation(calculerCentreMesh(*(roues[3]->getMesh()))); */
-
-    // Vitesse du châssis = moyenne des vitesses des roues
     glm::vec3 chassisVel(0.f);
     for (auto* w : roues) chassisVel += w->getVitesse();
     chassisVel /= (float)roues.size();

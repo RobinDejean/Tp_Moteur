@@ -194,6 +194,7 @@ void Camera::updateFreeInput(float _deltaTime, GLFWwindow* _window)
 
 		glm::mat4 m = glm::lookAt(m_position, carPos, VEC_UP);
 		m_rotation = glm::quat_cast(glm::inverse(m));	
+
 	}else{
 		glm::mat4 carTransform = target->transformation.computeTransformationMatrix();
 		glm::mat3 rotationMat = glm::mat3(target->transformation.getRotationMatrix());

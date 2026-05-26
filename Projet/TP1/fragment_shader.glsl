@@ -76,7 +76,8 @@ void main(){
     if (useRoughnessMap) {
         roughness = texture(myRoughnessSampler, uv).r;
     } else {
-        roughness = 0.5; // Valeur par défaut si pas de map
+        roughness = 0.; // Valeur par défaut si pas de map
+        metallic = 0.5;
     }
     roughness = clamp(roughness, 0.05, 1.0);
     vec3 lightDir = normalize(lightPos - position.xyz);
